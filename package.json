@@ -1,0 +1,30 @@
+{
+    "name": "escope",
+    "description": "ECMAScript scope analyzer",
+    "homepage": "http://github.com/Constellation/escope.html",
+    "main": "escope.js",
+    "version": "0.0.1-dev",
+    "engines": {
+        "node": ">=0.4.0"
+    },
+    "maintainers": [{
+        "name": "Yusuke Suzuki",
+        "email": "utatane.tea@gmail.com",
+        "web": "http://github.com/Constellation"
+    }],
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/Constellation/escope.git"
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "chai": "*"
+    },
+    "licenses": [{
+        "type": "BSD",
+        "url": "http://github.com/Constellation/escope/raw/master/LICENSE.BSD"
+    }],
+    "scripts": {
+        "test": "./node_modules/.bin/mocha"
+    }
+}

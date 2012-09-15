@@ -61,7 +61,7 @@
         scope,
         scopes;
 
-    VERSION = '0.0.2-dev';
+    VERSION = '0.0.3-dev';
 
     function assert(cond, text) {
         if (!cond) {

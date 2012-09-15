@@ -268,6 +268,7 @@
         this.variableScope =
             (this.type === 'global' || this.type === 'function') ? this : scope.variableScope;
         this.functionExpressionScope = false;
+        this.directCallToEvalScope = false;
 
         if (opt.naming) {
             this.__define(block.id);
@@ -379,6 +380,7 @@
     Scope.prototype.__detectEval = function __detectEval() {
         var current;
         current = this;
+        this.directCallToEvalScope = true;
         do {
             current.dynamic = true;
             current = current.upper;
@@ -408,6 +410,33 @@
     // returns this scope is static
     Scope.prototype.isStatic = function isStatic() {
         return !this.dynamic;
+    };
+
+    // API Scope#isArgumentsMaterialized
+    // return this scope has materialized arguments
+    Scope.prototype.isArgumentsMaterialized = function isArgumentsMaterialized() {
+        // TODO(Constellation)
+        // We can more aggressive on this condition like this.
+        //
+        // function t() {
+        //     // arguments of t is always hidden.
+        //     function arguments() {
+        //     }
+        // }
+        var variable;
+
+        // This is not function scope
+        if (this.type !== 'function') {
+            return true;
+        }
+
+        if (!this.isStatic()) {
+            return true;
+        }
+
+        variable = this.set['arguments'];
+        assert(variable, 'always have arguments variable');
+        return variable.tainted || variable.references.length  !== 0;
     };
 
     Scope.name = '__$escope$__';

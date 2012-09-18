@@ -58,6 +58,7 @@
         VisitorKeys,
         VisitorOption,
         VERSION,
+        hasOwnProperty,
         scope,
         scopes;
 
@@ -172,6 +173,13 @@
         Break: 1,
         Skip: 2
     };
+
+    hasOwnProperty = (function () {
+        var pred = Object.prototype.hasOwnProperty;
+        return function hasOwnProperty(obj, name) {
+            return pred.call(obj, name);
+        };
+    }());
 
     function traverse(top, visitor) {
         var worklist, leavelist, node, ret, current, current2, candidates, candidate, marker = {};
@@ -331,7 +339,7 @@
     Scope.prototype.__resolve = function __resolve(ref) {
         var i, iz, variable, name;
         name = ref.identifier.name;
-        if (this.set.hasOwnProperty(name)) {
+        if (hasOwnProperty(this.set, name)) {
             variable = this.set[name];
             variable.references.push(ref);
             variable.stack = variable.stack && ref.from.variableScope === this.variableScope;
@@ -355,7 +363,7 @@
         var name, variable;
         if (node && node.type === Syntax.Identifier) {
             name = node.name;
-            if (!this.set.hasOwnProperty(name)) {
+            if (!hasOwnProperty(this.set, name)) {
                 variable = new Variable(name, this);
                 variable.identifiers.push(node);
                 this.set[name] = variable;

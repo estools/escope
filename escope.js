@@ -277,6 +277,7 @@
             (this.type === 'global' || this.type === 'function') ? this : scope.variableScope;
         this.functionExpressionScope = false;
         this.directCallToEvalScope = false;
+        this.thisFound = false;
 
         if (opt.naming) {
             this.__define(block.id);
@@ -395,6 +396,10 @@
         } while (current);
     };
 
+    Scope.prototype.__detectThis = function __detectThis() {
+        this.thisFound = true;
+    };
+
     Scope.prototype.__isClosed = function isClosed() {
         return this.left === null;
     };
@@ -445,6 +450,19 @@
         variable = this.set['arguments'];
         assert(variable, 'always have arguments variable');
         return variable.tainted || variable.references.length  !== 0;
+    };
+
+    // API Scope#isThisMaterialized
+    // return this scope has materialized `this` reference
+    Scope.prototype.isThisMaterialized = function isThisMaterialized() {
+        // This is not function scope
+        if (this.type !== 'function') {
+            return true;
+        }
+        if (!this.isStatic()) {
+            return true;
+        }
+        return this.thisFound;
     };
 
     Scope.name = '__$escope$__';
@@ -684,6 +702,7 @@
                     break;
 
                 case Syntax.ThisExpression:
+                    scope.variableScope.__detectThis();
                     break;
 
                 case Syntax.ThrowStatement:

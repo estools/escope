@@ -75,13 +75,6 @@
         throw new Error('Unreachable point. logically broken.');
     }
 
-    isArray = Array.isArray;
-    if (!isArray) {
-        isArray = function isArray(array) {
-            return Object.prototype.toString.call(array) === '[object Array]';
-        };
-    }
-
     hasOwnProperty = (function () {
         var pred = Object.prototype.hasOwnProperty;
         return function hasOwnProperty(obj, name) {

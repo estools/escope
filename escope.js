@@ -84,6 +84,7 @@
         CatchClause: 'CatchClause',
         ConditionalExpression: 'ConditionalExpression',
         ContinueStatement: 'ContinueStatement',
+        DirectiveStatement: 'DirectiveStatement',
         DoWhileStatement: 'DoWhileStatement',
         DebuggerStatement: 'DebuggerStatement',
         EmptyStatement: 'EmptyStatement',
@@ -136,6 +137,7 @@
         CatchClause: ['param', 'body'],
         ConditionalExpression: ['test', 'consequent', 'alternate'],
         ContinueStatement: ['label'],
+        DirectiveStatement: ['directive'],
         DoWhileStatement: ['body', 'test'],
         DebuggerStatement: [],
         EmptyStatement: [],
@@ -599,6 +601,9 @@
                     break;
 
                 case Syntax.ContinueStatement:
+                    break;
+
+                case Syntax.DirectiveStatement:
                     break;
 
                 case Syntax.DoWhileStatement:

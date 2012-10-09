@@ -53,16 +53,17 @@
 }(function (exports) {
     'use strict';
 
-    var Syntax,
-        isArray,
-        VisitorKeys,
-        VisitorOption,
+    var estraverse,
+        Syntax,
         VERSION,
         hasOwnProperty,
         scope,
         scopes;
 
     VERSION = '0.0.6-dev';
+
+    estraverse = require('estraverse');
+    Syntax = estraverse.Syntax;
 
     function assert(cond, text) {
         if (!cond) {
@@ -74,52 +75,6 @@
         throw new Error('Unreachable point. logically broken.');
     }
 
-    Syntax = {
-        AssignmentExpression: 'AssignmentExpression',
-        ArrayExpression: 'ArrayExpression',
-        BlockStatement: 'BlockStatement',
-        BinaryExpression: 'BinaryExpression',
-        BreakStatement: 'BreakStatement',
-        CallExpression: 'CallExpression',
-        CatchClause: 'CatchClause',
-        ConditionalExpression: 'ConditionalExpression',
-        ContinueStatement: 'ContinueStatement',
-        DirectiveStatement: 'DirectiveStatement',
-        DoWhileStatement: 'DoWhileStatement',
-        DebuggerStatement: 'DebuggerStatement',
-        EmptyStatement: 'EmptyStatement',
-        ExpressionStatement: 'ExpressionStatement',
-        ForStatement: 'ForStatement',
-        ForInStatement: 'ForInStatement',
-        FunctionDeclaration: 'FunctionDeclaration',
-        FunctionExpression: 'FunctionExpression',
-        Identifier: 'Identifier',
-        IfStatement: 'IfStatement',
-        Literal: 'Literal',
-        LabeledStatement: 'LabeledStatement',
-        LogicalExpression: 'LogicalExpression',
-        MemberExpression: 'MemberExpression',
-        NewExpression: 'NewExpression',
-        ObjectExpression: 'ObjectExpression',
-        Program: 'Program',
-        Property: 'Property',
-        ReturnStatement: 'ReturnStatement',
-        SequenceExpression: 'SequenceExpression',
-        SwitchStatement: 'SwitchStatement',
-        SwitchCase: 'SwitchCase',
-        ThisExpression: 'ThisExpression',
-        ThrowStatement: 'ThrowStatement',
-        TryStatement: 'TryStatement',
-        UnaryExpression: 'UnaryExpression',
-        UpdateExpression: 'UpdateExpression',
-        VariableDeclaration: 'VariableDeclaration',
-        VariableDeclarator: 'VariableDeclarator',
-        WhileStatement: 'WhileStatement',
-        WithStatement: 'WithStatement'
-    };
-
-    // removable traverse function
-
     isArray = Array.isArray;
     if (!isArray) {
         isArray = function isArray(array) {
@@ -127,117 +82,12 @@
         };
     }
 
-    VisitorKeys = {
-        AssignmentExpression: ['left', 'right'],
-        ArrayExpression: ['elements'],
-        BlockStatement: ['body'],
-        BinaryExpression: ['left', 'right'],
-        BreakStatement: ['label'],
-        CallExpression: ['callee', 'arguments'],
-        CatchClause: ['param', 'body'],
-        ConditionalExpression: ['test', 'consequent', 'alternate'],
-        ContinueStatement: ['label'],
-        DirectiveStatement: ['directive'],
-        DoWhileStatement: ['body', 'test'],
-        DebuggerStatement: [],
-        EmptyStatement: [],
-        ExpressionStatement: ['expression'],
-        ForStatement: ['init', 'test', 'update', 'body'],
-        ForInStatement: ['left', 'right', 'body'],
-        FunctionDeclaration: ['id', 'params', 'body'],
-        FunctionExpression: ['id', 'params', 'body'],
-        Identifier: [],
-        IfStatement: ['test', 'consequent', 'alternate'],
-        Literal: [],
-        LabeledStatement: ['label', 'body'],
-        LogicalExpression: ['left', 'right'],
-        MemberExpression: ['object', 'property'],
-        NewExpression: ['callee', 'arguments'],
-        ObjectExpression: ['properties'],
-        Program: ['body'],
-        Property: ['key', 'value'],
-        ReturnStatement: ['argument'],
-        SequenceExpression: ['expressions'],
-        SwitchStatement: ['discriminant', 'cases'],
-        SwitchCase: ['test', 'consequent'],
-        ThisExpression: [],
-        ThrowStatement: ['argument'],
-        TryStatement: ['block', 'handlers', 'finalizer'],
-        UnaryExpression: ['argument'],
-        UpdateExpression: ['argument'],
-        VariableDeclaration: ['declarations'],
-        VariableDeclarator: ['id', 'init'],
-        WhileStatement: ['test', 'body'],
-        WithStatement: ['object', 'body']
-    };
-
-    VisitorOption = {
-        Break: 1,
-        Skip: 2
-    };
-
     hasOwnProperty = (function () {
         var pred = Object.prototype.hasOwnProperty;
         return function hasOwnProperty(obj, name) {
             return pred.call(obj, name);
         };
     }());
-
-    function traverse(top, visitor) {
-        var worklist, leavelist, node, ret, current, current2, candidates, candidate, marker = {};
-
-        worklist = [ top ];
-        leavelist = [ null ];
-
-        while (worklist.length) {
-            node = worklist.pop();
-
-            if (node === marker) {
-                node = leavelist.pop();
-                if (visitor.leave) {
-                    ret = visitor.leave(node, leavelist[leavelist.length - 1]);
-                } else {
-                    ret = undefined;
-                }
-                if (ret === VisitorOption.Break) {
-                    return;
-                }
-            } else if (node) {
-                if (visitor.enter) {
-                    ret = visitor.enter(node, leavelist[leavelist.length - 1]);
-                } else {
-                    ret = undefined;
-                }
-
-                if (ret === VisitorOption.Break) {
-                    return;
-                }
-
-                worklist.push(marker);
-                leavelist.push(node);
-
-                if (ret !== VisitorOption.Skip) {
-                    candidates = VisitorKeys[node.type];
-                    current = candidates.length;
-                    while ((current -= 1) >= 0) {
-                        candidate = node[candidates[current]];
-                        if (candidate) {
-                            if (isArray(candidate)) {
-                                current2 = candidate.length;
-                                while ((current2 -= 1) >= 0) {
-                                    if (candidate[current2]) {
-                                        worklist.push(candidate[current2]);
-                                    }
-                                }
-                            } else {
-                                worklist.push(candidate);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     function Reference(ident, scope) {
         this.identifier = ident;
@@ -548,7 +398,7 @@
         scope = null;
 
         // attach scope and collect / resolve names
-        traverse(tree, {
+        estraverse.traverse(tree, {
             enter: function enter(node) {
                 var i, iz;
                 if (Scope.isRequired(node)) {

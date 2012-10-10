@@ -60,7 +60,7 @@
         scope,
         scopes;
 
-    VERSION = '0.0.6-dev';
+    VERSION = '0.0.7-dev';
 
     estraverse = require('estraverse');
     Syntax = estraverse.Syntax;

@@ -82,25 +82,61 @@
         };
     }());
 
-    function Reference(ident, scope) {
+    function Reference(ident, scope, flag, writeExpr) {
         this.identifier = ident;
         this.from = scope;
         this.tainted = false;
         this.resolved = null;
+        this.flag = flag;
+        if (this.isWrite()) {
+            this.writeExpr = writeExpr;
+        }
     }
+
+    Reference.READ = 0x1;
+    Reference.WRITE = 0x2;
+    Reference.RW = 0x3;
 
     Reference.prototype.isStatic = function isStatic() {
         return !this.tainted && this.resolved && this.resolved.scope.isStatic();
+    };
+
+    Reference.prototype.isWrite = function isWrite() {
+        return this.flag & Reference.WRITE;
+    };
+
+    Reference.prototype.isRead = function isRead() {
+        return this.flag & Reference.READ;
+    };
+
+    Reference.prototype.isReadOnly = function isReadOnly() {
+        return this.flag === Reference.READ;
+    };
+
+    Reference.prototype.isWriteOnly = function isWriteOnly() {
+        return this.flag === Reference.WRITE;
+    };
+
+    Reference.prototype.isReadWrite = function isReadWrite() {
+        return this.flag === Reference.RW;
     };
 
     function Variable(name, scope) {
         this.name = name;
         this.identifiers = [];
         this.references = [];
+
+        this.defs = [];
+
         this.tainted = false;
         this.stack = true;
         this.scope = scope;
     }
+
+    Variable.CatchClause = 'CatchClause';
+    Variable.Parameter = 'Parameter';
+    Variable.FunctionName = 'FunctionName';
+    Variable.Variable = 'Variable';
 
     function Scope(block, opt) {
         var variable;
@@ -125,7 +161,11 @@
         this.thisFound = false;
 
         if (opt.naming) {
-            this.__define(block.id);
+            this.__define(block.id, {
+                type: Variable.FunctionName,
+                name: block.id,
+                node: block
+            });
             this.functionExpressionScope = true;
         } else {
             if (this.type === 'function') {
@@ -205,27 +245,29 @@
         this.through.push(ref);
     };
 
-    Scope.prototype.__define = function __define(node) {
+    Scope.prototype.__define = function __define(node, info) {
         var name, variable;
         if (node && node.type === Syntax.Identifier) {
             name = node.name;
             if (!hasOwnProperty(this.set, name)) {
                 variable = new Variable(name, this);
                 variable.identifiers.push(node);
+                variable.defs.push(info);
                 this.set[name] = variable;
                 this.variables.push(variable);
             } else {
                 variable = this.set[name];
                 variable.identifiers.push(node);
+                variable.defs.push(info);
             }
         }
     };
 
-    Scope.prototype.__referencing = function __referencing(node) {
+    Scope.prototype.__referencing = function __referencing(node, assign, writeExpr) {
         var ref;
         // because Array element may be null
         if (node && node.type === Syntax.Identifier) {
-            ref = new Reference(node, this);
+            ref = new Reference(node, this, assign || Reference.READ, writeExpr);
             this.references.push(ref);
             this.left.push(ref);
         }
@@ -392,15 +434,15 @@
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
-            enter: function enter(node) {
-                var i, iz;
+            enter: function enter(node, parent) {
+                var i, iz, decl;
                 if (Scope.isRequired(node)) {
                     new Scope(node, {});
                 }
 
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
-                    scope.__referencing(node.left);
+                    scope.__referencing(node.left, Reference.WRITE, node.right);
                     scope.__referencing(node.right);
                     break;
 
@@ -434,7 +476,11 @@
                     break;
 
                 case Syntax.CatchClause:
-                    scope.__define(node.param);
+                    scope.__define(node.param, {
+                        type: Variable.CatchClause,
+                        name: node.param,
+                        node: node
+                    });
                     break;
 
                 case Syntax.ConditionalExpression:
@@ -470,22 +516,40 @@
                     break;
 
                 case Syntax.ForInStatement:
-                    scope.__referencing(node.left);
+                    if (node.left.type === Syntax.VariableDeclaration) {
+                        scope.__referencing(node.left.declarations[0].id, Reference.WRITE, null);
+                    } else {
+                        scope.__referencing(node.left, Reference.WRITE, null);
+                    }
                     scope.__referencing(node.right);
                     break;
 
                 case Syntax.FunctionDeclaration:
                     // FunctionDeclaration name is defined in upper scope
-                    scope.upper.__define(node.id);
+                    scope.upper.__define(node.id, {
+                        type: Variable.FunctionName,
+                        name: node.id,
+                        node: node
+                    });
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        scope.__define(node.params[i]);
+                        scope.__define(node.params[i], {
+                            type: Variable.Parameter,
+                            name: node.params[i],
+                            node: node,
+                            index: i
+                        });
                     }
                     break;
 
                 case Syntax.FunctionExpression:
                     // id is defined in upper scope
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        scope.__define(node.params[i]);
+                        scope.__define(node.params[i], {
+                            type: Variable.Parameter,
+                            name: node.params[i],
+                            node: node,
+                            index: i
+                        });
                     }
                     break;
 
@@ -565,15 +629,28 @@
                     break;
 
                 case Syntax.UpdateExpression:
-                    scope.__referencing(node.argument);
+                    scope.__referencing(node.argument, Reference.RW, null);
                     break;
 
                 case Syntax.VariableDeclaration:
+                    for (i = 0, iz = node.declarations.length; i < iz; ++i) {
+                        decl = node.declarations[i];
+                        scope.variableScope.__define(decl.id, {
+                            type: Variable.Variable,
+                            name: decl.id,
+                            node: decl,
+                            index: i,
+                            parent: node
+                        });
+                        if (decl.init) {
+                            // initializer is found
+                            scope.__referencing(decl.id, Reference.WRITE, decl.init);
+                            scope.__referencing(decl.init);
+                        }
+                    }
                     break;
 
                 case Syntax.VariableDeclarator:
-                    scope.variableScope.__define(node.id);
-                    scope.__referencing(node.init);
                     break;
 
                 case Syntax.WhileStatement:
@@ -595,7 +672,7 @@
         assert(scope === null);
 
         return new ScopeManager(scopes);
-    };
+    }
 
     exports.version = VERSION;
     exports.Reference = Reference;

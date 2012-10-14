@@ -55,12 +55,9 @@
 
     var estraverse,
         Syntax,
-        VERSION,
         hasOwnProperty,
         scope,
         scopes;
-
-    VERSION = '0.0.7-dev';
 
     estraverse = require('estraverse');
     Syntax = estraverse.Syntax;
@@ -674,7 +671,7 @@
         return new ScopeManager(scopes);
     }
 
-    exports.version = VERSION;
+    exports.version = '0.0.8-dev';
     exports.Reference = Reference;
     exports.Variable = Variable;
     exports.Scope = Scope;

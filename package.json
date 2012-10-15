@@ -3,7 +3,7 @@
     "description": "ECMAScript scope analyzer",
     "homepage": "http://github.com/Constellation/escope.html",
     "main": "escope.js",
-    "version": "0.0.8-dev",
+    "version": "0.0.9-dev",
     "engines": {
         "node": ">=0.4.0"
     },

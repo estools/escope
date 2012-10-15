@@ -422,7 +422,11 @@
     };
 
     Scope.isRequired = function isRequired(node) {
-        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
+        return Scope.isVariableScopeRequired(node) || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
+    };
+
+    Scope.isVariableScopeRequired = function isVariableScopeRequired(node) {
+        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
     };
 
     function analyze(tree) {

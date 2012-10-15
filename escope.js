@@ -374,7 +374,7 @@
         if (this.attached) {
             return node.__$escope$__ || null;
         }
-        if (Scope.isRequired(node)) {
+        if (Scope.isScopeRequired(node)) {
             for (i = 0, iz = this.scopes.length; i < iz; ++i) {
                 scope = this.scopes[i];
                 if (!scope.functionExpressionScope) {
@@ -421,7 +421,7 @@
         this.attached = false;
     };
 
-    Scope.isRequired = function isRequired(node) {
+    Scope.isScopeRequired = function isScopeRequired(node) {
         return Scope.isVariableScopeRequired(node) || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
     };
 
@@ -437,7 +437,7 @@
         estraverse.traverse(tree, {
             enter: function enter(node, parent) {
                 var i, iz, decl;
-                if (Scope.isRequired(node)) {
+                if (Scope.isScopeRequired(node)) {
                     new Scope(node, {});
                 }
 

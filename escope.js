@@ -349,7 +349,7 @@
         return this.thisFound;
     };
 
-    Scope.name = '__$escope$__';
+    Scope.mangledName = '__$escope$__';
 
     Scope.prototype.attach = function attach() {
         if (!this.functionExpressionScope) {

@@ -143,7 +143,6 @@
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' : 'function';
         this.set = {};
-        this.tip = 'a';
         this.dynamic = this.type === 'global' || this.type === 'with';
         this.block = block;
         this.through = [];

@@ -352,13 +352,13 @@
 
     Scope.prototype.attach = function attach() {
         if (!this.functionExpressionScope) {
-            this.block.__$escope$__ = this;
+            this.block[Scope.mangledName] = this;
         }
     };
 
     Scope.prototype.detach = function detach() {
         if (!this.functionExpressionScope) {
-            delete this.block.__$escope$__;
+            delete this.block[Scope.mangledName];
         }
     };
 
@@ -371,7 +371,7 @@
     ScopeManager.prototype.__get = function __get(node) {
         var i, iz, scope;
         if (this.attached) {
-            return node.__$escope$__ || null;
+            return node[Scope.mangledName] || null;
         }
         if (Scope.isScopeRequired(node)) {
             for (i = 0, iz = this.scopes.length; i < iz; ++i) {

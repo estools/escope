@@ -56,7 +56,7 @@
     var estraverse,
         Syntax,
         hasOwnProperty,
-        scope,
+        currentScope,
         scopes;
 
     estraverse = require('estraverse');
@@ -151,7 +151,7 @@
         this.taints = {};
         this.left = [];
         this.variableScope =
-            (this.type === 'global' || this.type === 'function') ? this : scope.variableScope;
+            (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
         this.functionExpressionScope = false;
         this.directCallToEvalScope = false;
         this.thisFound = false;
@@ -177,8 +177,8 @@
         }
 
         // RAII
-        this.upper = scope;
-        scope = this;
+        this.upper = currentScope;
+        currentScope = this;
         scopes.push(this);
     }
 
@@ -215,7 +215,7 @@
             }
         }
         this.left = null;
-        scope = this.upper;
+        currentScope = this.upper;
     };
 
     Scope.prototype.__resolve = function __resolve(ref) {
@@ -405,7 +405,7 @@
     };
 
     ScopeManager.prototype.attach = function attach() {
-        var i, iz, scope;
+        var i, iz;
         for (i = 0, iz = this.scopes.length; i < iz; ++i) {
             this.scopes[i].attach();
         }
@@ -413,7 +413,7 @@
     };
 
     ScopeManager.prototype.detach = function detach() {
-        var i, iz, scope;
+        var i, iz;
         for (i = 0, iz = this.scopes.length; i < iz; ++i) {
             this.scopes[i].detach();
         }
@@ -430,7 +430,7 @@
 
     function analyze(tree) {
         scopes = [];
-        scope = null;
+        currentScope = null;
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
@@ -442,13 +442,13 @@
 
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
-                    scope.__referencing(node.left, Reference.WRITE, node.right);
-                    scope.__referencing(node.right);
+                    currentScope.__referencing(node.left, Reference.WRITE, node.right);
+                    currentScope.__referencing(node.right);
                     break;
 
                 case Syntax.ArrayExpression:
                     for (i = 0, iz = node.elements.length; i < iz; ++i) {
-                        scope.__referencing(node.elements[i]);
+                        currentScope.__referencing(node.elements[i]);
                     }
                     break;
 
@@ -456,27 +456,27 @@
                     break;
 
                 case Syntax.BinaryExpression:
-                    scope.__referencing(node.left);
-                    scope.__referencing(node.right);
+                    currentScope.__referencing(node.left);
+                    currentScope.__referencing(node.right);
                     break;
 
                 case Syntax.BreakStatement:
                     break;
 
                 case Syntax.CallExpression:
-                    scope.__referencing(node.callee);
+                    currentScope.__referencing(node.callee);
                     for (i = 0, iz = node['arguments'].length; i < iz; ++i) {
-                        scope.__referencing(node['arguments'][i]);
+                        currentScope.__referencing(node['arguments'][i]);
                     }
 
                     // check this is direct call to eval
                     if (node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
-                        scope.variableScope.__detectEval();
+                        currentScope.variableScope.__detectEval();
                     }
                     break;
 
                 case Syntax.CatchClause:
-                    scope.__define(node.param, {
+                    currentScope.__define(node.param, {
                         type: Variable.CatchClause,
                         name: node.param,
                         node: node
@@ -484,9 +484,9 @@
                     break;
 
                 case Syntax.ConditionalExpression:
-                    scope.__referencing(node.test);
-                    scope.__referencing(node.consequent);
-                    scope.__referencing(node.alternate);
+                    currentScope.__referencing(node.test);
+                    currentScope.__referencing(node.consequent);
+                    currentScope.__referencing(node.alternate);
                     break;
 
                 case Syntax.ContinueStatement:
@@ -496,7 +496,7 @@
                     break;
 
                 case Syntax.DoWhileStatement:
-                    scope.__referencing(node.test);
+                    currentScope.__referencing(node.test);
                     break;
 
                 case Syntax.DebuggerStatement:
@@ -506,33 +506,33 @@
                     break;
 
                 case Syntax.ExpressionStatement:
-                    scope.__referencing(node.expression);
+                    currentScope.__referencing(node.expression);
                     break;
 
                 case Syntax.ForStatement:
-                    scope.__referencing(node.init);
-                    scope.__referencing(node.test);
-                    scope.__referencing(node.update);
+                    currentScope.__referencing(node.init);
+                    currentScope.__referencing(node.test);
+                    currentScope.__referencing(node.update);
                     break;
 
                 case Syntax.ForInStatement:
                     if (node.left.type === Syntax.VariableDeclaration) {
-                        scope.__referencing(node.left.declarations[0].id, Reference.WRITE, null);
+                        currentScope.__referencing(node.left.declarations[0].id, Reference.WRITE, null);
                     } else {
-                        scope.__referencing(node.left, Reference.WRITE, null);
+                        currentScope.__referencing(node.left, Reference.WRITE, null);
                     }
-                    scope.__referencing(node.right);
+                    currentScope.__referencing(node.right);
                     break;
 
                 case Syntax.FunctionDeclaration:
                     // FunctionDeclaration name is defined in upper scope
-                    scope.upper.__define(node.id, {
+                    currentScope.upper.__define(node.id, {
                         type: Variable.FunctionName,
                         name: node.id,
                         node: node
                     });
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        scope.__define(node.params[i], {
+                        currentScope.__define(node.params[i], {
                             type: Variable.Parameter,
                             name: node.params[i],
                             node: node,
@@ -544,7 +544,7 @@
                 case Syntax.FunctionExpression:
                     // id is defined in upper scope
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        scope.__define(node.params[i], {
+                        currentScope.__define(node.params[i], {
                             type: Variable.Parameter,
                             name: node.params[i],
                             node: node,
@@ -557,7 +557,7 @@
                     break;
 
                 case Syntax.IfStatement:
-                    scope.__referencing(node.test);
+                    currentScope.__referencing(node.test);
                     break;
 
                 case Syntax.Literal:
@@ -567,21 +567,21 @@
                     break;
 
                 case Syntax.LogicalExpression:
-                    scope.__referencing(node.left);
-                    scope.__referencing(node.right);
+                    currentScope.__referencing(node.left);
+                    currentScope.__referencing(node.right);
                     break;
 
                 case Syntax.MemberExpression:
-                    scope.__referencing(node.object);
+                    currentScope.__referencing(node.object);
                     if (node.computed) {
-                        scope.__referencing(node.property);
+                        currentScope.__referencing(node.property);
                     }
                     break;
 
                 case Syntax.NewExpression:
-                    scope.__referencing(node.callee);
+                    currentScope.__referencing(node.callee);
                     for (i = 0, iz = node['arguments'].length; i < iz; ++i) {
-                        scope.__referencing(node['arguments'][i]);
+                        currentScope.__referencing(node['arguments'][i]);
                     }
                     break;
 
@@ -592,50 +592,50 @@
                     break;
 
                 case Syntax.Property:
-                    scope.__referencing(node.value);
+                    currentScope.__referencing(node.value);
                     break;
 
                 case Syntax.ReturnStatement:
-                    scope.__referencing(node.argument);
+                    currentScope.__referencing(node.argument);
                     break;
 
                 case Syntax.SequenceExpression:
                     for (i = 0, iz = node.expressions.length; i < iz; ++i) {
-                        scope.__referencing(node.expressions[i]);
+                        currentScope.__referencing(node.expressions[i]);
                     }
                     break;
 
                 case Syntax.SwitchStatement:
-                    scope.__referencing(node.discriminant);
+                    currentScope.__referencing(node.discriminant);
                     break;
 
                 case Syntax.SwitchCase:
-                    scope.__referencing(node.test);
+                    currentScope.__referencing(node.test);
                     break;
 
                 case Syntax.ThisExpression:
-                    scope.variableScope.__detectThis();
+                    currentScope.variableScope.__detectThis();
                     break;
 
                 case Syntax.ThrowStatement:
-                    scope.__referencing(node.argument);
+                    currentScope.__referencing(node.argument);
                     break;
 
                 case Syntax.TryStatement:
                     break;
 
                 case Syntax.UnaryExpression:
-                    scope.__referencing(node.argument);
+                    currentScope.__referencing(node.argument);
                     break;
 
                 case Syntax.UpdateExpression:
-                    scope.__referencing(node.argument, Reference.RW, null);
+                    currentScope.__referencing(node.argument, Reference.RW, null);
                     break;
 
                 case Syntax.VariableDeclaration:
                     for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                         decl = node.declarations[i];
-                        scope.variableScope.__define(decl.id, {
+                        currentScope.variableScope.__define(decl.id, {
                             type: Variable.Variable,
                             name: decl.id,
                             node: decl,
@@ -644,8 +644,8 @@
                         });
                         if (decl.init) {
                             // initializer is found
-                            scope.__referencing(decl.id, Reference.WRITE, decl.init);
-                            scope.__referencing(decl.init);
+                            currentScope.__referencing(decl.id, Reference.WRITE, decl.init);
+                            currentScope.__referencing(decl.init);
                         }
                     }
                     break;
@@ -654,22 +654,22 @@
                     break;
 
                 case Syntax.WhileStatement:
-                    scope.__referencing(node.test);
+                    currentScope.__referencing(node.test);
                     break;
 
                 case Syntax.WithStatement:
-                    scope.__referencing(node.object);
+                    currentScope.__referencing(node.object);
                     break;
                 }
             },
 
             leave: function leave(node) {
-                while (scope && node === scope.block) {
-                    scope.__close();
+                while (currentScope && node === currentScope.block) {
+                    currentScope.__close();
                 }
             }
         });
-        assert(scope === null);
+        assert(currentScope === null);
 
         return new ScopeManager(scopes);
     }

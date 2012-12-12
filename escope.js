@@ -44,23 +44,57 @@
     // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
     // and plain browser loading,
     if (typeof define === 'function' && define.amd) {
-        define('escope', ['exports'], factory);
+        define('escope', ['exports'], function (exports) {
+            factory(exports, global);
+        });
     } else if (typeof exports !== 'undefined') {
-        factory(exports);
+        factory(exports, global);
     } else {
-        factory(namespace('escope', global));
+        factory(namespace('escope', global), global);
     }
-}(function (exports) {
+}(function (exports, global) {
     'use strict';
 
     var estraverse,
         Syntax,
-        hasOwnProperty,
+        Map,
         currentScope,
         scopes;
 
     estraverse = require('estraverse');
     Syntax = estraverse.Syntax;
+
+    if (typeof global.Map !== 'undefined') {
+        // ES6 Map
+        Map = global.Map;
+    } else {
+        Map = function Map() {
+            this.__data = {};
+        };
+
+        Map.prototype.get = function MapGet(key) {
+            key = '$' + key;
+            if (this.__data.hasOwnProperty(key)) {
+                return this.__data[key];
+            }
+            return undefined;
+        };
+
+        Map.prototype.has = function MapHas(key) {
+            key = '$' + key;
+            return this.__data.hasOwnProperty(key);
+        };
+
+        Map.prototype.set = function MapSet(key, val) {
+            key = '$' + key;
+            this.__data[key] = val;
+        };
+
+        Map.prototype['delete'] = function MapDelete(key) {
+            key = '$' + key;
+            return delete this.__data[key];
+        };
+    }
 
     function assert(cond, text) {
         if (!cond) {
@@ -71,13 +105,6 @@
     function unreachable() {
         throw new Error('Unreachable point. logically broken.');
     }
-
-    hasOwnProperty = (function () {
-        var pred = Object.prototype.hasOwnProperty;
-        return function hasOwnProperty(obj, name) {
-            return pred.call(obj, name);
-        };
-    }());
 
     function Reference(ident, scope, flag, writeExpr) {
         this.identifier = ident;
@@ -142,13 +169,13 @@
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' : 'function';
-        this.set = {};
+        this.set = new Map;
+        this.taints = new Map;
         this.dynamic = this.type === 'global' || this.type === 'with';
         this.block = block;
         this.through = [];
         this.variables = [];
         this.references = [];
-        this.taints = {};
         this.left = [];
         this.variableScope =
             (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
@@ -166,8 +193,8 @@
         } else {
             if (this.type === 'function') {
                 variable = new Variable('arguments', this);
-                this.taints['arguments'] = true;
-                this.set['arguments'] = variable;
+                this.taints.set('arguments', true);
+                this.set.set('arguments', variable);
                 this.variables.push(variable);
             }
 
@@ -221,13 +248,13 @@
     Scope.prototype.__resolve = function __resolve(ref) {
         var i, iz, variable, name;
         name = ref.identifier.name;
-        if (hasOwnProperty(this.set, name)) {
-            variable = this.set[name];
+        if (this.set.has(name)) {
+            variable = this.set.get(name);
             variable.references.push(ref);
             variable.stack = variable.stack && ref.from.variableScope === this.variableScope;
             if (ref.tainted) {
                 variable.tainted = true;
-                this.taints[variable.name] = true;
+                this.taints.set(variable.name, true);
             }
             ref.resolved = variable;
             return true;
@@ -245,14 +272,14 @@
         var name, variable;
         if (node && node.type === Syntax.Identifier) {
             name = node.name;
-            if (!hasOwnProperty(this.set, name)) {
+            if (!this.set.has(name)) {
                 variable = new Variable(name, this);
                 variable.identifiers.push(node);
                 variable.defs.push(info);
-                this.set[name] = variable;
+                this.set.set(name, variable);
                 this.variables.push(variable);
             } else {
-                variable = this.set[name];
+                variable = this.set.get(name);
                 variable.identifiers.push(node);
                 variable.defs.push(info);
             }
@@ -330,7 +357,7 @@
             return true;
         }
 
-        variable = this.set['arguments'];
+        variable = this.set.get('arguments');
         assert(variable, 'always have arguments variable');
         return variable.tainted || variable.references.length  !== 0;
     };

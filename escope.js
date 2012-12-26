@@ -685,7 +685,8 @@
                     break;
 
                 case Syntax.WithStatement:
-                    currentScope.__referencing(node.object);
+                    // WithStatement object is referenced at upper scope
+                    currentScope.upper.__referencing(node.object);
                     break;
                 }
             },

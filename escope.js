@@ -389,6 +389,18 @@
         }
     };
 
+    Scope.prototype.isUsedName = function(name){
+        if(this.set.has(name)) {
+            return true;
+        }
+        for (var i = 0, iz = this.through.length; i < iz; ++i) {
+            if (this.through[i].identifier.name === name) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     function ScopeManager(scopes) {
         this.scopes = scopes;
         this.attached = false;

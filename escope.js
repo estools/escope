@@ -44,15 +44,15 @@
     // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
     // and plain browser loading,
     if (typeof define === 'function' && define.amd) {
-        define('escope', ['exports'], function (exports) {
-            factory(exports, global);
+        define('escope', ['exports', 'estraverse'], function (exports, estraverse) {
+            factory(exports, global, estraverse);
         });
     } else if (typeof exports !== 'undefined') {
-        factory(exports, global);
+        factory(exports, global, require('estraverse'));
     } else {
-        factory(namespace('escope', global), global);
+        factory(namespace('escope', global), global, global.estraverse);
     }
-}(function (exports, global) {
+}(function (exports, global, estraverse) {
     'use strict';
 
     var estraverse,
@@ -61,7 +61,6 @@
         currentScope,
         scopes;
 
-    estraverse = require('estraverse');
     Syntax = estraverse.Syntax;
 
     if (typeof global.Map !== 'undefined') {

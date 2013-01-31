@@ -713,7 +713,7 @@
         return new ScopeManager(scopes);
     }
 
-    exports.version = '0.0.13-dev';
+    exports.version = '0.0.14-dev';
     exports.Reference = Reference;
     exports.Variable = Variable;
     exports.Scope = Scope;

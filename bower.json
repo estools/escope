@@ -3,8 +3,8 @@
   "version": "0.0.14-dev",
   "main": "escope.js",
   "dependencies": {
-        "estraverse": ">= 0.0.2"
-  },  
+    "estraverse": ">= 0.0.2"
+  },
   "ignore": [
     "**/.*",
     "node_modules",

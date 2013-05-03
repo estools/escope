@@ -101,10 +101,6 @@
         }
     }
 
-    function unreachable() {
-        throw new Error('Unreachable point. logically broken.');
-    }
-
     function Reference(ident, scope, flag, writeExpr) {
         this.identifier = ident;
         this.from = scope;
@@ -325,7 +321,7 @@
                 return ref;
             }
         }
-        unreachable();
+        return null;
     };
 
     // API Scope#isStatic

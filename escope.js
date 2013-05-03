@@ -480,8 +480,30 @@
 
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
-                    currentScope.__referencing(node.left, Reference.WRITE, node.right);
-                    currentScope.__referencing(node.right);
+                    //check for implicit global variable declaration
+                    if (currentScope.type === 'global' && node.left.name && !currentScope.isUsedName(node.left.name)){
+                        //create a variableDeclarator from assignment expression
+                        decl = {
+                            type: "VariableDeclarator",
+                            id: node.left,
+                            init: node.right
+                        };
+                        currentScope.variableScope.__define(decl.id, {
+                            type: Variable.Variable,
+                            name: decl.id,
+                            node: decl,
+                            index: 0,
+                            parent: node
+                        });
+                        if (decl.init) {
+                            // initializer is found
+                            currentScope.__referencing(decl.id, Reference.WRITE, decl.init);
+                            currentScope.__referencing(decl.init);
+                        }
+                    }else{
+                        currentScope.__referencing(node.left, Reference.WRITE, node.right);
+                        currentScope.__referencing(node.right);
+                    }
                     break;
 
                 case Syntax.ArrayExpression:

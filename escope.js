@@ -476,7 +476,11 @@
 
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
-                    currentScope.__referencing(node.left, Reference.WRITE, node.right);
+                    if (node.operator === '=') {
+                        currentScope.__referencing(node.left, Reference.WRITE, node.right);
+                    } else {
+                        currentScope.__referencing(node.left, Reference.RW, node.right);
+                    }
                     currentScope.__referencing(node.right);
                     break;
 

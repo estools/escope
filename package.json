@@ -1,33 +1,38 @@
 {
-    "name": "escope",
-    "description": "ECMAScript scope analyzer",
-    "homepage": "http://github.com/Constellation/escope.html",
-    "main": "escope.js",
-    "version": "0.0.14-dev",
-    "engines": {
-        "node": ">=0.4.0"
-    },
-    "maintainers": [{
-        "name": "Yusuke Suzuki",
-        "email": "utatane.tea@gmail.com",
-        "web": "http://github.com/Constellation"
-    }],
-    "repository": {
-        "type": "git",
-        "url": "http://github.com/Constellation/escope.git"
-    },
-    "dependencies": {
-        "estraverse": ">= 0.0.2"
-    },
-    "devDependencies": {
-        "mocha": "*",
-        "chai": "*"
-    },
-    "licenses": [{
-        "type": "BSD",
-        "url": "http://github.com/Constellation/escope/raw/master/LICENSE.BSD"
-    }],
-    "scripts": {
-        "test": "./node_modules/.bin/mocha"
+  "name": "escope",
+  "description": "ECMAScript scope analyzer",
+  "homepage": "http://github.com/Constellation/escope.html",
+  "main": "escope.js",
+  "version": "0.0.14-dev",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "maintainers": [
+    {
+      "name": "Yusuke Suzuki",
+      "email": "utatane.tea@gmail.com",
+      "web": "http://github.com/Constellation"
     }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/Constellation/escope.git"
+  },
+  "dependencies": {
+    "estraverse": ">= 0.0.2"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*",
+    "jshint": "~1.1.0"
+  },
+  "licenses": [
+    {
+      "type": "BSD",
+      "url": "http://github.com/Constellation/escope/raw/master/LICENSE.BSD"
+    }
+  ],
+  "scripts": {
+    "test": "./node_modules/.bin/jshint escope.js && ./node_modules/.bin/mocha"
+  }
 }

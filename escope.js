@@ -24,7 +24,7 @@
 */
 
 /*jslint bitwise:true */
-/*global escope:true, exports:true, define:true*/
+/*global exports:true, define:true, require:true*/
 (function (factory, global) {
     'use strict';
 
@@ -56,8 +56,7 @@
 }(function (exports, global, estraverse) {
     'use strict';
 
-    var estraverse,
-        Syntax,
+    var Syntax,
         Map,
         currentScope,
         globalScope,
@@ -161,14 +160,14 @@
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
     function Scope(block, opt) {
-        var variable,body;
+        var variable, body;
 
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' : 'function';
-        this.set = new Map;
-        this.taints = new Map;
+        this.set = new Map();
+        this.taints = new Map();
         this.dynamic = this.type === 'global' || this.type === 'with';
         this.block = block;
         this.through = [];
@@ -216,7 +215,7 @@
     }
 
     Scope.prototype.__close = function __close() {
-        var i, iz, ref, set, current;
+        var i, iz, ref, current;
 
         // Because if this is global environment, upper is null
         if (!this.dynamic) {
@@ -252,7 +251,7 @@
     };
 
     Scope.prototype.__resolve = function __resolve(ref) {
-        var i, iz, variable, name;
+        var variable, name;
         name = ref.identifier.name;
         if (this.set.has(name)) {
             variable = this.set.get(name);
@@ -324,8 +323,8 @@
     // returns resolved reference
     Scope.prototype.resolve = function resolve(ident) {
         var ref, i, iz;
-        assert(this.__isClosed(), "scope should be closed");
-        assert(ident.type === Syntax.Identifier, "target should be identifier");
+        assert(this.__isClosed(), 'scope should be closed');
+        assert(ident.type === Syntax.Identifier, 'target should be identifier');
         for (i = 0, iz = this.references.length; i < iz; ++i) {
             ref = this.references[i];
             if (ref.identifier === ident) {
@@ -395,8 +394,8 @@
         }
     };
 
-    Scope.prototype.isUsedName = function(name){
-        if(this.set.has(name)) {
+    Scope.prototype.isUsedName = function (name) {
+        if (this.set.has(name)) {
             return true;
         }
         for (var i = 0, iz = this.through.length; i < iz; ++i) {
@@ -480,7 +479,7 @@
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
-            enter: function enter(node, parent) {
+            enter: function enter(node) {
                 var i, iz, decl;
                 if (Scope.isScopeRequired(node)) {
                     new Scope(node, {});

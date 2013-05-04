@@ -22,8 +22,6 @@
     "estraverse": ">= 0.0.2"
   },
   "devDependencies": {
-    "mocha": "*",
-    "chai": "*",
     "jshint": "~1.1.0"
   },
   "licenses": [
@@ -33,6 +31,6 @@
     }
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jshint escope.js && ./node_modules/.bin/mocha"
+    "test": "./node_modules/.bin/jshint escope.js"
   }
 }

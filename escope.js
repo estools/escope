@@ -59,6 +59,7 @@
         Syntax,
         Map,
         currentScope,
+        globalScope,
         scopes;
 
     Syntax = estraverse.Syntax;
@@ -156,9 +157,10 @@
     Variable.Parameter = 'Parameter';
     Variable.FunctionName = 'FunctionName';
     Variable.Variable = 'Variable';
+    Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
     function Scope(block, opt) {
-        var variable;
+        var variable,body;
 
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
@@ -177,7 +179,12 @@
         this.functionExpressionScope = false;
         this.directCallToEvalScope = false;
         this.thisFound = false;
-
+        body = this.type === 'function' ? block.body : block;
+        this.isStrict =
+                    ((this.type === 'global' || this.type === 'function') &&
+                    body.body[0].type === 'ExpressionStatement' &&
+                    body.body[0].expression.type === 'Literal' &&
+                    body.body[0].expression.value === 'use strict');
         if (opt.naming) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
@@ -201,6 +208,9 @@
         // RAII
         this.upper = currentScope;
         currentScope = this;
+        if (this.type === 'global') {
+            globalScope = this;
+        }
         scopes.push(this);
     }
 
@@ -464,7 +474,8 @@
 
     function analyze(tree) {
         scopes = [];
-        currentScope = null;
+        currentScope = null,
+        globalScope = null;
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
@@ -476,6 +487,15 @@
 
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
+                    //check for implicit global variable declaration
+                    if (!currentScope.isStrict && node.left.name && !currentScope.isUsedName(node.left.name) && node.operator === '=') {
+                        //create an implicit global variable from assignment expression
+                        globalScope.__define(node.left, {
+                            type: Variable.ImplicitGlobalVariable,
+                            name: node.left,
+                            node: node
+                        });
+                    }
                     if (node.operator === '=') {
                         currentScope.__referencing(node.left, Reference.WRITE, node.right);
                     } else {

@@ -184,10 +184,12 @@
         this.directCallToEvalScope = false;
         this.thisFound = false;
         this.isStrict =
-            (block.type === 'ExpressionStatement' &&
-             block.expression &&
-             block.expression.type === 'Literal' &&
-             block.expression.value === 'use strict');
+            (block.body && block.body.type === 'BlockStatement' &&
+             block.body.body && block.body.body.length > 0 &&
+             block.body.body[0].type === 'ExpressionStatement' &&
+             block.body.body[0].expression &&
+             block.body.body[0].expression.type === 'Literal' &&
+             block.body.body[0].expression.value === 'use strict');
 
         if (opt.naming) {
             this.__define(block.id, {

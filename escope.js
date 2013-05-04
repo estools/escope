@@ -521,6 +521,9 @@
     };
 
     function analyze(tree, options) {
+        var resultScopes;
+
+        resultScopes = scopes = [];
         currentScope = null,
         globalScope = null;
         directive = options && options.directive;
@@ -777,8 +780,10 @@
             }
         });
         assert(currentScope === null);
+        globalScope = null;
+        scopes = null;
 
-        return new ScopeManager(scopes);
+        return new ScopeManager(resultScopes);
     }
 
     exports.version = '0.0.14-dev';

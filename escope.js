@@ -161,10 +161,10 @@
     Variable.Parameter = 'Parameter';
     Variable.FunctionName = 'FunctionName';
     Variable.Variable = 'Variable';
-    Variable.ImplicitGlobal = 'ImplicitGlobalVariable';
+    Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
     function Scope(block, opt) {
-        var variable;
+        var variable,body;
 
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
@@ -183,14 +183,12 @@
         this.functionExpressionScope = false;
         this.directCallToEvalScope = false;
         this.thisFound = false;
+        body = this.type === 'function' ? block.body : block;
         this.isStrict =
-            (block.body && block.body.type === 'BlockStatement' &&
-             block.body.body && block.body.body.length > 0 &&
-             block.body.body[0].type === 'ExpressionStatement' &&
-             block.body.body[0].expression &&
-             block.body.body[0].expression.type === 'Literal' &&
-             block.body.body[0].expression.value === 'use strict');
-
+                    ((this.type === 'global' || this.type === 'function') &&
+                    body.body[0].type === 'ExpressionStatement' &&
+                    body.body[0].expression.type === 'Literal' &&
+                    body.body[0].expression.value === 'use strict');
         if (opt.naming) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
@@ -497,16 +495,13 @@
                     if (!currentScope.isStrict && node.left.name && !currentScope.isUsedName(node.left.name)){
                         //create an implicit global variable from assignment expression
                         globalScope.__define(node.left, {
-                            type: Variable.ImplicitGlobal,
+                            type: Variable.ImplicitGlobalVariable,
                             name: node.left,
                             node: node
                         });
-                        globalScope.__referencing(node.left, Reference.WRITE, node.right);
-                        globalScope.__referencing(node.right);
-                    }else{
-                        currentScope.__referencing(node.left, Reference.WRITE, node.right);
-                        currentScope.__referencing(node.right);
                     }
+                    currentScope.__referencing(node.left, Reference.WRITE, node.right);
+                    currentScope.__referencing(node.right);
                     break;
 
                 case Syntax.ArrayExpression:

@@ -2,6 +2,8 @@ Escope ([escope](http://github.com/Constellation/escope)) is
 [ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm)
 scope analyzer extracted from [esmangle project](http://github.com/Constellation/esmangle).
 
+[![Build Status](https://travis-ci.org/Constellation/escope.png?branch=master)](https://travis-ci.org/Constellation/escope)
+
 ### License
 
 Copyright (C) 2012 [Yusuke Suzuki](http://github.com/Constellation)

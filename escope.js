@@ -60,7 +60,8 @@
         Map,
         currentScope,
         globalScope,
-        scopes;
+        scopes,
+        directive;
 
     Syntax = estraverse.Syntax;
 
@@ -159,6 +160,56 @@
     Variable.Variable = 'Variable';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
+    function isStrictScope(scope, block) {
+        var body, i, iz, stmt, expr;
+
+        // When upper scope is exists and strict, inner scope is also strict.
+        if (scope.upper && scope.upper.isStrict) {
+            return true;
+        }
+
+        if (scope.type === 'function') {
+            body = block.body;
+        } else if (scope.type === 'global') {
+            body = block;
+        } else {
+            return false;
+        }
+
+        if (directive) {
+            for (i = 0, iz = body.body.length; i < iz; ++i) {
+                stmt = body.body[i];
+                if (stmt.type !== 'DirectiveStatement') {
+                    break;
+                }
+                if (stmt.raw === '"use strict"' || stmt.raw === '\'use strict\'') {
+                    return true;
+                }
+            }
+        } else {
+            for (i = 0, iz = body.body.length; i < iz; ++i) {
+                stmt = body.body[i];
+                if (stmt.type !== Syntax.ExpressionStatement) {
+                    break;
+                }
+                expr = stmt.expression;
+                if (expr.type !== Syntax.Literal || typeof expr.value !== 'string') {
+                    break;
+                }
+                if (expr.raw != null) {
+                    if (expr.raw === '"use strict"' || expr.raw === '\'use strict\'') {
+                        return true;
+                    }
+                } else {
+                    if (expr.value === 'use strict') {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     function Scope(block, opt) {
         var variable, body;
 
@@ -180,11 +231,6 @@
         this.directCallToEvalScope = false;
         this.thisFound = false;
         body = this.type === 'function' ? block.body : block;
-        this.isStrict =
-                    ((this.type === 'global' || this.type === 'function') &&
-                    body.body[0].type === 'ExpressionStatement' &&
-                    body.body[0].expression.type === 'Literal' &&
-                    body.body[0].expression.value === 'use strict');
         if (opt.naming) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
@@ -205,8 +251,10 @@
             }
         }
 
-        // RAII
         this.upper = currentScope;
+        this.isStrict = isStrictScope(this, block);
+
+        // RAII
         currentScope = this;
         if (this.type === 'global') {
             globalScope = this;
@@ -472,10 +520,10 @@
         return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
     };
 
-    function analyze(tree) {
-        scopes = [];
+    function analyze(tree, options) {
         currentScope = null,
         globalScope = null;
+        directive = options && options.directive;
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {

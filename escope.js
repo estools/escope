@@ -59,6 +59,7 @@
         Syntax,
         Map,
         currentScope,
+        globalScope,
         scopes;
 
     Syntax = estraverse.Syntax;
@@ -160,6 +161,7 @@
     Variable.Parameter = 'Parameter';
     Variable.FunctionName = 'FunctionName';
     Variable.Variable = 'Variable';
+    Variable.ImplicitGlobal = 'ImplicitGlobalVariable';
 
     function Scope(block, opt) {
         var variable;
@@ -181,6 +183,11 @@
         this.functionExpressionScope = false;
         this.directCallToEvalScope = false;
         this.thisFound = false;
+        this.isStrict =
+            (block.type === 'ExpressionStatement' &&
+             block.expression &&
+             block.expression.type === 'Literal' &&
+             block.expression.value === 'use strict');
 
         if (opt.naming) {
             this.__define(block.id, {
@@ -205,6 +212,9 @@
         // RAII
         this.upper = currentScope;
         currentScope = this;
+        if (this.type === 'global'){
+            globalScope = this;
+        }
         scopes.push(this);
     }
 
@@ -468,7 +478,8 @@
 
     function analyze(tree) {
         scopes = [];
-        currentScope = null;
+        currentScope = null,
+        globalScope = null;
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
@@ -481,25 +492,15 @@
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
                     //check for implicit global variable declaration
-                    if (currentScope.type === 'global' && node.left.name && !currentScope.isUsedName(node.left.name)){
-                        //create a variableDeclarator from assignment expression
-                        decl = {
-                            type: "VariableDeclarator",
-                            id: node.left,
-                            init: node.right
-                        };
-                        currentScope.variableScope.__define(decl.id, {
-                            type: Variable.Variable,
-                            name: decl.id,
-                            node: decl,
-                            index: 0,
-                            parent: node
+                    if (!currentScope.isStrict && node.left.name && !currentScope.isUsedName(node.left.name)){
+                        //create an implicit global variable from assignment expression
+                        globalScope.__define(node.left, {
+                            type: Variable.ImplicitGlobal,
+                            name: node.left,
+                            node: node
                         });
-                        if (decl.init) {
-                            // initializer is found
-                            currentScope.__referencing(decl.id, Reference.WRITE, decl.init);
-                            currentScope.__referencing(decl.init);
-                        }
+                        globalScope.__referencing(node.left, Reference.WRITE, node.right);
+                        globalScope.__referencing(node.right);
                     }else{
                         currentScope.__referencing(node.left, Reference.WRITE, node.right);
                         currentScope.__referencing(node.right);

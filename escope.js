@@ -523,10 +523,11 @@
     function analyze(tree, options) {
         var resultScopes;
 
+        options = options || {};
         resultScopes = scopes = [];
         currentScope = null,
         globalScope = null;
-        directive = options && options.directive;
+        directive = options.directive;
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
@@ -579,7 +580,7 @@
                     }
 
                     // check this is direct call to eval
-                    if (node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
+                    if (!options.ignoreEval && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
                         currentScope.variableScope.__detectEval();
                     }
                     break;

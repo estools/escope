@@ -253,6 +253,10 @@
 
         this.upper = currentScope;
         this.isStrict = isStrictScope(this, block);
+        
+        this.childScopes = [];
+        currentScope && currentScope.childScopes.push(this);
+        
 
         // RAII
         currentScope = this;

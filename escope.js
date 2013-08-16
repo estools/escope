@@ -61,7 +61,7 @@
         currentScope,
         globalScope,
         scopes,
-        directive;
+        options;
 
     Syntax = estraverse.Syntax;
 
@@ -101,6 +101,37 @@
         if (!cond) {
             throw new Error(text);
         }
+    }
+
+    function defaultOptions() {
+        return {
+            optimistic: false,
+            directive: false
+        };
+    };
+
+    function updateDeeply(target, override) {
+        var key, val;
+
+        function isHashObject(target) {
+            return typeof target === 'object' && target instanceof Object && !(target instanceof RegExp);
+        }
+
+        for (key in override) {
+            if (override.hasOwnProperty(key)) {
+                val = override[key];
+                if (isHashObject(val)) {
+                    if (isHashObject(target[key])) {
+                        updateDeeply(target[key], val);
+                    } else {
+                        target[key] = updateDeeply({}, val);
+                    }
+                } else {
+                    target[key] = val;
+                }
+            }
+        }
+        return target;
     }
 
     function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
@@ -177,7 +208,7 @@
             return false;
         }
 
-        if (directive) {
+        if (options.directive) {
             for (i = 0, iz = body.body.length; i < iz; ++i) {
                 stmt = body.body[i];
                 if (stmt.type !== 'DirectiveStatement') {
@@ -273,7 +304,7 @@
         var i, iz, ref, current, node;
 
         // Because if this is global environment, upper is null
-        if (!this.dynamic) {
+        if (!this.dynamic || options.optimistic) {
             // static resolve
             for (i = 0, iz = this.left.length; i < iz; ++i) {
                 ref = this.left[i];
@@ -298,17 +329,22 @@
                         current.through.push(ref);
                         current = current.upper;
                     } while (current);
+                }
+            }
+        }
 
-                    // create an implicit global variable from assignment expression
-                    // TODO(Constellation): This is too conservative, "optimistic" option is needed.
-                    if (this.type === 'global' && ref.__maybeImplicitGlobal) {
-                        node = ref.__maybeImplicitGlobal;
-                        this.__define(node.left, {
-                            type: Variable.ImplicitGlobalVariable,
-                            name: node.left,
-                            node: node
-                        });
-                    }
+
+        if (this.type === 'global') {
+            for (i = 0, iz = this.left.length; i < iz; ++i) {
+                // create an implicit global variable from assignment expression
+                ref = this.left[i];
+                if (ref.__maybeImplicitGlobal) {
+                    node = ref.__maybeImplicitGlobal;
+                    this.__define(node.left, {
+                        type: Variable.ImplicitGlobalVariable,
+                        name: node.left,
+                        node: node
+                    });
                 }
             }
         }
@@ -335,8 +371,9 @@
     };
 
     Scope.prototype.__delegateToUpperScope = function __delegateToUpperScope(ref) {
-        assert(this.upper, 'upper should be here');
-        this.upper.left.push(ref);
+        if (this.upper) {
+            this.upper.left.push(ref);
+        }
         this.through.push(ref);
     };
 
@@ -539,14 +576,13 @@
         return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
     };
 
-    function analyze(tree, options) {
+    function analyze(tree, providedOptions) {
         var resultScopes;
 
-        options = options || {};
+        options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
         currentScope = null;
         globalScope = null;
-        directive = options.directive;
 
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
@@ -794,6 +830,7 @@
         assert(currentScope === null);
         globalScope = null;
         scopes = null;
+        options = null;
 
         return new ScopeManager(resultScopes);
     }

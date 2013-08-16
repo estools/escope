@@ -835,7 +835,7 @@
         return new ScopeManager(resultScopes);
     }
 
-    exports.version = '0.0.16-dev';
+    exports.version = '0.0.17-dev';
     exports.Reference = Reference;
     exports.Variable = Variable;
     exports.Scope = Scope;

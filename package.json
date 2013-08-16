@@ -22,7 +22,14 @@
     "estraverse": ">= 0.0.2"
   },
   "devDependencies": {
-    "jshint": "~1.1.0"
+    "jshint": "~1.1.0",
+    "grunt-mocha-test": "~0.6.3",
+    "grunt-cli": "~0.1.9",
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.6.3",
+    "coffee-script": "~1.6.3",
+    "chai": "~1.7.2",
+    "esprima": "~1.0.3"
   },
   "licenses": [
     {
@@ -31,6 +38,8 @@
     }
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jshint escope.js"
+    "test": "grunt travis",
+    "unit-test": "grunt test",
+    "lint": "grunt lint"
   }
 }

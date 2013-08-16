@@ -108,7 +108,7 @@
             optimistic: false,
             directive: false
         };
-    };
+    }
 
     function updateDeeply(target, override) {
         var key, val;

@@ -296,12 +296,16 @@
         currentScope = this;
         if (this.type === 'global') {
             globalScope = this;
+            globalScope.implicit = {
+                set: new Map(),
+                variables: []
+            };
         }
         scopes.push(this);
     }
 
     Scope.prototype.__close = function __close() {
-        var i, iz, ref, current, node;
+        var i, iz, ref, current, node, implicit;
 
         // Because if this is global environment, upper is null
         if (!this.dynamic || options.optimistic) {
@@ -333,19 +337,23 @@
             }
         }
 
-
         if (this.type === 'global') {
+            implicit = [];
             for (i = 0, iz = this.left.length; i < iz; ++i) {
-                // create an implicit global variable from assignment expression
                 ref = this.left[i];
-                if (ref.__maybeImplicitGlobal) {
-                    node = ref.__maybeImplicitGlobal;
-                    this.__define(node.left, {
-                        type: Variable.ImplicitGlobalVariable,
-                        name: node.left,
-                        node: node
-                    });
+                if (ref.__maybeImplicitGlobal && !this.set.has(ref.identifier.name)) {
+                    implicit.push(ref.__maybeImplicitGlobal);
                 }
+            }
+
+            // create an implicit global variable from assignment expression
+            for (i = 0, iz = implicit.length; i < iz; ++i) {
+                node = implicit[i];
+                this.__defineImplicit(node.left, {
+                    type: Variable.ImplicitGlobalVariable,
+                    name: node.left,
+                    node: node
+                });
             }
         }
 
@@ -375,6 +383,24 @@
             this.upper.left.push(ref);
         }
         this.through.push(ref);
+    };
+
+    Scope.prototype.__defineImplicit = function __defineImplicit(node, info) {
+        var name, variable;
+        if (node && node.type === Syntax.Identifier) {
+            name = node.name;
+            if (!this.implicit.set.has(name)) {
+                variable = new Variable(name, this);
+                variable.identifiers.push(node);
+                variable.defs.push(info);
+                this.implicit.set.set(name, variable);
+                this.implicit.variables.push(variable);
+            } else {
+                variable = this.implicit.set.get(name);
+                variable.identifiers.push(node);
+                variable.defs.push(info);
+            }
+        }
     };
 
     Scope.prototype.__define = function __define(node, info) {

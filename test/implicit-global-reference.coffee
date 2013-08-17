@@ -27,6 +27,79 @@ escope = require '..'
 esprima = require 'esprima'
 
 describe 'implicit global reference', ->
+    it 'assignments global scope', ->
+        ast = esprima.parse """
+        var x = 20;
+        x = 300;
+        """
+
+        scopes = escope.analyze(ast).scopes
+
+        expect(scopes.map((scope) ->
+            scope.variables.map((variable) ->
+                variable.defs.map((def) -> def.type)))).to.be.eql(
+            [
+                [
+                    [
+                        'Variable'
+                    ]
+                ]
+            ]
+        )
+
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql([])
+
+    it 'assignments global scope without definition', ->
+        ast = esprima.parse """
+        x = 300;
+        x = 300;
+        """
+
+        scopes = escope.analyze(ast).scopes
+
+        expect(scopes.map((scope) ->
+            scope.variables.map((variable) ->
+                variable.defs.map((def) -> def.type)))).to.be.eql(
+            [
+                [
+                ]
+            ]
+        )
+
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql(
+            [
+                'x'
+            ]
+        )
+
+    it 'assignments global scope without definition eval', ->
+        ast = esprima.parse """
+        function inner() {
+            eval(str);
+            x = 300;
+        }
+        """
+
+        scopes = escope.analyze(ast).scopes
+
+        expect(scopes.map((scope) ->
+            scope.variables.map((variable) ->
+                variable.defs.map((def) -> def.type)))).to.be.eql(
+            [
+                [
+                    [
+                        'FunctionName'
+                    ]
+                ]
+                [
+                    [
+                    ]
+                ]
+            ]
+        )
+
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql([])
+
     it 'assignment leaks', ->
         ast = esprima.parse """
         function outer() {
@@ -41,11 +114,16 @@ describe 'implicit global reference', ->
             [
                 [
                     'outer'
-                    'x'
                 ]
                 [
                     'arguments'
                 ]
+            ]
+        )
+
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql(
+            [
+                'x'
             ]
         )
 
@@ -78,6 +156,9 @@ describe 'implicit global reference', ->
             ]
         )
 
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql([])
+
+
     it 'for-in-statement leaks', ->
         ast = esprima.parse """
         function outer() {
@@ -92,11 +173,16 @@ describe 'implicit global reference', ->
             [
                 [
                     'outer'
-                    'x'
                 ]
                 [
                     'arguments'
                 ]
+            ]
+        )
+
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql(
+            [
+                'x'
             ]
         )
 
@@ -128,3 +214,5 @@ describe 'implicit global reference', ->
                 ]
             ]
         )
+
+        expect(scopes[0].implicit.variables.map((variable) -> variable.name)).to.be.eql([])

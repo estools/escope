@@ -599,7 +599,8 @@
     };
 
     Scope.isVariableScopeRequired = function isVariableScopeRequired(node) {
-        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
+        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration ||
+          node.type === Syntax.ArrowFunctionExpression;
     };
 
     function analyze(tree, providedOptions) {

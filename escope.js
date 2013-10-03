@@ -248,7 +248,9 @@
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
-            (block.type === Syntax.Program) ? 'global' : 'function';
+            (block.type === Syntax.Program) ? 'global' :
+            (block.type === Syntax.ArrowFunctionExpression &&
+             block.body.type !== 'BlockStatement') ? 'expression' : 'function';
         this.set = new Map();
         this.taints = new Map();
         this.dynamic = this.type === 'global' || this.type === 'with';

@@ -230,18 +230,41 @@
          * @member {String} Variable#name 
          */
         this.name = name;
+        /**
+         * List of defining occurrences of this identifier (like in 'var ...'
+         * statements or as parameter), as AST nodes.
+         * @member {esprima.Identifier[]} Variable#identifiers
+         */
         this.identifiers = [];
+        /**
+         * List of occurrences of this identifier in this
+         * scope (excluding parameter entries). For defining occurrences only
+         * see {@link Variable#defs}.
+         * @member {Reference[]} Variable#references
+         */
         this.references = [];
 
         /**
-         * List of defining occurrences of this identifier (like 'var ...'
-         * statements).
-         * @member {Reference[]} Variable#defs
+         * List of defining occurrences of this identifier (like in 'var ...'
+         * statements or as parameter), as custom objects.
+         * @typedef {Object} DefEntry
+         * @property {String} DefEntry.type - the type of the occurrence (e.g.
+         *      "Parameter", "Variable", ...)
+         * @property {esprima.Identifier} DefEntry.name - the identifier AST node of the occurrence
+         * @property {esprima.Node} DefEntry.node - the enclosing node of the
+         *      identifier
+         * @property {esprima.Node} [DefEntry.parent] - the enclosing statement
+         *      node of the identifier
+         * @member {DefEntry[]} Variable#defs
          */
         this.defs = [];
 
         this.tainted = false;
         this.stack = true;
+        /** 
+         * Reference to the enclosing Scope.
+         * @member {Scope} Variable#scope 
+         */
         this.scope = scope;
     }
 
@@ -668,11 +691,14 @@
     };
 
     /**
-     * Main interface function. Takes a Esprima syntax tree and returns the
+     * Main interface function. Takes an Esprima syntax tree and returns the
      * analyzed scopes.
      * @function analyze
      * @param {esprima.Tree} tree
-     * @param {Object} providedOptions
+     * @param {Object} providedOptions - Options that tailor the scope analysis
+     * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
+     * @param {boolean} [providedOptions.directive=false]- the directive flag
+     * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {

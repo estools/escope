@@ -134,51 +134,110 @@
         return target;
     }
 
+    /**
+     * A Reference represents a single occurrence of an identifier in code.
+     * @class Reference
+     */
     function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
+        /** Identifier syntax node.
+         * @member {esprima#Identifier} Reference#identifier */
         this.identifier = ident;
+        /** Reference to the enclosing Scope.
+         * @member {Scope} Reference#from */
         this.from = scope;
+        /** ???
+         * @member {boolean} Reference#tainted */
         this.tainted = false;
+        /** ???
+         * @member {boolean} Reference#resolved */
         this.resolved = null;
+        /** ???
+         * @member {boolean} Reference#flag */
         this.flag = flag;
         if (this.isWrite()) {
+            /** ???
+             * @member {boolean} Reference#writeExpr */
             this.writeExpr = writeExpr;
         }
+        /** Whether the Reference might refer to a global variable.
+         * @member {boolean} Reference#__maybeImplicitGlobal */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
     }
 
+    /** @constant Reference.READ */
     Reference.READ = 0x1;
+    /** @constant Reference.WRITE */
     Reference.WRITE = 0x2;
+    /** @constant Reference.RW */
     Reference.RW = 0x3;
 
+    /**
+     * @method Reference#isStatic
+     * @return {boolean}
+     */
     Reference.prototype.isStatic = function isStatic() {
         return !this.tainted && this.resolved && this.resolved.scope.isStatic();
     };
 
+    /**
+     * @method Reference#isStatic
+     * @return {boolean}
+     */
     Reference.prototype.isWrite = function isWrite() {
         return this.flag & Reference.WRITE;
     };
 
+    /**
+     * @method Reference#isRead
+     * @return {boolean}
+     */
     Reference.prototype.isRead = function isRead() {
         return this.flag & Reference.READ;
     };
 
+    /**
+     * @method Reference#isReadOnly
+     * @return {boolean}
+     */
     Reference.prototype.isReadOnly = function isReadOnly() {
         return this.flag === Reference.READ;
     };
 
+    /**
+     * @method Reference#isWriteOnly
+     * @return {boolean}
+     */
     Reference.prototype.isWriteOnly = function isWriteOnly() {
         return this.flag === Reference.WRITE;
     };
 
+    /**
+     * @method Reference#isReadWrite
+     * @return {boolean}
+     */
     Reference.prototype.isReadWrite = function isReadWrite() {
         return this.flag === Reference.RW;
     };
 
+    /**
+     * A Variable represents a locally scoped identifier. These include arguments to
+     * functions.
+     * @class Variable
+     */
     function Variable(name, scope) {
+        /**  
+         * The source representation of the identifier.
+         * @member {String} Variable#name 
+         */
         this.name = name;
         this.identifiers = [];
         this.references = [];
 
+        /**
+         * List of defining occurrences of this identifier (like 'var ...'
+         * statements).
+         * @member {Reference[]} Variable#defs
+         */
         this.defs = [];
 
         this.tainted = false;
@@ -242,6 +301,9 @@
         return false;
     }
 
+    /**
+     * @class Scope
+     */
     function Scope(block, opt) {
         var variable, body;
 
@@ -536,6 +598,9 @@
         return false;
     };
 
+    /**
+     * @class ScopeManager
+     */
     function ScopeManager(scopes) {
         this.scopes = scopes;
         this.attached = false;
@@ -602,6 +667,14 @@
         return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
     };
 
+    /**
+     * Main interface function. Takes a Esprima syntax tree and returns the
+     * analyzed scopes.
+     * @function analyze
+     * @param {esprima.Tree} tree
+     * @param {Object} providedOptions
+     * @return {ScopeManager}
+     */
     function analyze(tree, providedOptions) {
         var resultScopes;
 

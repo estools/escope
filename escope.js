@@ -23,6 +23,28 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/**
+ * Escope (<a href="http://github.com/Constellation/escope">escope</a>) is an <a
+ * href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMAScript</a>
+ * scope analyzer extracted from the <a
+ * href="http://github.com/Constellation/esmangle">esmangle project</a/>.
+ * <p>
+ * <em>escope</em> finds lexical scopes in a source program, i.e. areas of that
+ * program where different occurrences of the same identifier refer to the same
+ * variable. With each scope the contained variables are collected, and each
+ * identifier reference in code is linked to its corresponding variable (if
+ * possible).
+ * <p>
+ * <em>escope</em> works on a syntax tree of the parsed source code which has
+ * to adhere to the <a
+ * href="https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API">
+ * Mozilla Parser API</a>. E.g. <a href="http://esprima.org">esprima</a> is a parser
+ * that produces such syntax trees.
+ * <p>
+ * The main interface is the {@link analyze} function.
+ * @module escope
+ */
+
 /*jslint bitwise:true */
 /*global exports:true, define:true, require:true*/
 (function (factory, global) {
@@ -237,7 +259,7 @@
          */
         this.identifiers = [];
         /**
-         * List of occurrences of this variable (excluding parameter entries)
+         * List of {@link Reference|references} of this variable (excluding parameter entries)
          * in its defining scope and all nested scopes. For defining
          * occurrences only see {@link Variable#defs}.
          * @member {Reference[]} Variable#references
@@ -345,11 +367,13 @@
          * @member {Map} Scope#taints */
         this.taints = new Map();
         /**
-         * Generally, through the lexical scoping of JS you can always know which
-         * variable an identifier in the source code refers to.  There are two
-         * exceptions to this rule: the 'global' and the 'with' scope.
-         * In both cases, you can only decide at runtime which variable a
-         * reference refers to. Hence those scope types are 'dynamic'.
+         * Generally, through the lexical scoping of JS you can always know
+         * which variable an identifier in the source code refers to. There are
+         * a few exceptions to this rule. With 'global' and 'with' scopes you
+         * can only decide at runtime which variable a reference refers to.
+         * Moreover, if 'eval()' is used in a scope, it might introduce new
+         * bindings in this or its prarent scopes.
+         * All those scopes are considered 'dynamic'.
          * @member {boolean} Scope#dynamic
          */
         this.dynamic = this.type === 'global' || this.type === 'with';
@@ -381,21 +405,28 @@
          */
         this.references = [];
          /**
-         * List of {@link Reference}s.
+         * List of {@link Reference}s that are left to be resolved (i.e. which
+         * need to be linked to the variable they refer to). Used internally to
+         * resolve bindings during scope analysis. On a finalized scope
+         * analysis, all sopes have <em>left</em> value <strong>null</strong>.
          * @member {Reference[]} Scope#left
          */
         this.left = [];
          /**
-         * For 'global' and 'function' scopes, this is a self-reference.
+         * For 'global' and 'function' scopes, this is a self-reference. For
+         * other scope types this is the <em>variableScope</em> value of the
+         * parent scope.
          * @member {Scope} Scope#variableScope
          */
         this.variableScope =
             (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
          /**
+         * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
          */
         this.functionExpressionScope = false;
          /**
+         * Whether this is a scope that contains an 'eval()' invocation.
          * @member {boolean} Scope#directCallToEvalScope
          */
         this.directCallToEvalScope = false;
@@ -463,7 +494,7 @@
         // Because if this is global environment, upper is null
         if (!this.dynamic || options.optimistic) {
             // static resolve
-            for (i = 0, iz = this.left.length; i < iz; ++i) {
+            for (i = 0, izleft.length; i < iz; ++i) {
                 ref = this.left[i];
                 if (!this.__resolve(ref)) {
                     this.__delegateToUpperScope(ref);
@@ -1028,6 +1059,9 @@
         return new ScopeManager(resultScopes);
     }
 
+    /**
+     * @member escope.version
+     */
     exports.version = '1.0.1-dev';
     exports.Reference = Reference;
     exports.Variable = Variable;

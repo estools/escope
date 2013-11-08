@@ -226,26 +226,26 @@
      */
     function Variable(name, scope) {
         /**  
-         * The source representation of the identifier.
+         * The variable name, as given in the source code.
          * @member {String} Variable#name 
          */
         this.name = name;
         /**
-         * List of defining occurrences of this identifier (like in 'var ...'
+         * List of defining occurrences of this variable (like in 'var ...'
          * statements or as parameter), as AST nodes.
          * @member {esprima.Identifier[]} Variable#identifiers
          */
         this.identifiers = [];
         /**
-         * List of occurrences of this identifier in this
-         * scope (excluding parameter entries). For defining occurrences only
-         * see {@link Variable#defs}.
+         * List of occurrences of this variable (excluding parameter entries)
+         * in its defining scope and all nested scopes. For defining
+         * occurrences only see {@link Variable#defs}.
          * @member {Reference[]} Variable#references
          */
         this.references = [];
 
         /**
-         * List of defining occurrences of this identifier (like in 'var ...'
+         * List of defining occurrences of this variable (like in 'var ...'
          * statements or as parameter), as custom objects.
          * @typedef {Object} DefEntry
          * @property {String} DefEntry.type - the type of the occurrence (e.g.
@@ -330,22 +330,78 @@
     function Scope(block, opt) {
         var variable, body;
 
+        /**
+         * One of 'catch', 'with', 'function' or 'global'.
+         * @member {String} Scope#type
+         */
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' : 'function';
+        /** ???
+         * @member {Map} Scope#set */
         this.set = new Map();
+        /** ???
+         * @member {Map} Scope#taints */
         this.taints = new Map();
+        /**
+         * Generally, through the lexical scoping of JS you can always know which
+         * variable an identifier in the source code refers to.  There are two
+         * exceptions to this rule: the 'global' and the 'with' scope.
+         * In both cases, you can only decide at runtime which variable a
+         * reference refers to. Hence those scope types are 'dynamic'.
+         * @member {boolean} Scope#dynamic
+         */
         this.dynamic = this.type === 'global' || this.type === 'with';
+        /**
+         * A reference to the scope-defining syntax node.
+         * @member {esprima.Node} Scope#block
+         */
         this.block = block;
+         /**
+         * ??
+         * @member {Array} Scope#through
+         */
         this.through = [];
+         /**
+         * The scoped {@link Variable}s of this scope. In the case of a
+         * 'function' scope this includes the automatic argument <em>arguments</em> as
+         * its first element, as well as all further formal arguments.
+         * @member {Variable[]} Scope#variables
+         */
         this.variables = [];
+         /**
+         * Any variable {@link Reference|reference} found in this scope. This
+         * includes occurrences of local variables as well as variables from
+         * parent scopes (including the global scope). For local variables
+         * this also includes defining occurrences (like in a 'var' statement).
+         * In a 'function' scope this does not include the occurrences of the
+         * formal parameter in the parameter list.
+         * @member {Reference[]} Scope#references
+         */
         this.references = [];
+         /**
+         * List of {@link Reference}s.
+         * @member {Reference[]} Scope#left
+         */
         this.left = [];
+         /**
+         * For 'global' and 'function' scopes, this is a self-reference.
+         * @member {Scope} Scope#variableScope
+         */
         this.variableScope =
             (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
+         /**
+         * @member {boolean} Scope#functionExpressionScope
+         */
         this.functionExpressionScope = false;
+         /**
+         * @member {boolean} Scope#directCallToEvalScope
+         */
         this.directCallToEvalScope = false;
+         /**
+         * @member {boolean} Scope#thisFound
+         */
         this.thisFound = false;
         body = this.type === 'function' ? block.body : block;
         if (opt.naming) {
@@ -368,9 +424,21 @@
             }
         }
 
+         /**
+         * Reference to the parent {@link Scope|scope}.
+         * @member {Scope} Scope#upper
+         */
         this.upper = currentScope;
+         /**
+         * Whether 'use strict' is in effect in this scope.
+         * @member {boolean} Scope#isStrict
+         */
         this.isStrict = isStrictScope(this, block);
 
+         /**
+         * List of nested {@link Scope}s.
+         * @member {Scope[]} Scope#childScopes
+         */
         this.childScopes = [];
         if (currentScope) {
             currentScope.childScopes.push(this);

@@ -42,7 +42,7 @@
  * that produces such syntax trees.
  * <p>
  * The main interface is the {@link analyze} function.
- * @module escope
+ * @module
  */
 
 /*jslint bitwise:true */
@@ -1059,14 +1059,17 @@
         return new ScopeManager(resultScopes);
     }
 
-    /**
-     * @member escope.version
-     */
+    /** @name module:escope.version */
     exports.version = '1.0.1-dev';
+    /** @name module:escope.Reference */
     exports.Reference = Reference;
+    /** @name module:escope.Variable */
     exports.Variable = Variable;
+    /** @name module:escope.Scope */
     exports.Scope = Scope;
+    /** @name module:escope.ScopeManager */
     exports.ScopeManager = ScopeManager;
+    /** @name module:escope.analyze */
     exports.analyze = analyze;
 }, this));
 /* vim: set sw=4 ts=4 et tw=80 : */

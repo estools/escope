@@ -282,6 +282,10 @@
         this.defs = [];
 
         this.tainted = false;
+        /**
+         * Whether this is a stack variable.
+         * @member {boolean} Variable#stack
+         */
         this.stack = true;
         /** 
          * Reference to the enclosing Scope.
@@ -360,10 +364,15 @@
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' : 'function';
-        /** ???
-         * @member {Map} Scope#set */
+         /**
+         * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
+         * : Variable }</code>.
+         * @member {Map} Scope#set
+         */
         this.set = new Map();
-        /** ???
+        /**
+         * The tainted variables of this scope, as <code>{ Variable.name :
+         * boolean }</code>.
          * @member {Map} Scope#taints */
         this.taints = new Map();
         /**
@@ -494,7 +503,7 @@
         // Because if this is global environment, upper is null
         if (!this.dynamic || options.optimistic) {
             // static resolve
-            for (i = 0, izleft.length; i < iz; ++i) {
+            for (i = 0, iz = this.left.length; i < iz; ++i) {
                 ref = this.left[i];
                 if (!this.__resolve(ref)) {
                     this.__delegateToUpperScope(ref);

@@ -161,39 +161,67 @@
      * @class Reference
      */
     function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
-        /** Identifier syntax node.
-         * @member {esprima#Identifier} Reference#identifier */
+        /** 
+         * Identifier syntax node.
+         * @member {esprima#Identifier} Reference#identifier 
+         */
         this.identifier = ident;
-        /** Reference to the enclosing Scope.
-         * @member {Scope} Reference#from */
+        /** 
+         * Reference to the enclosing Scope.
+         * @member {Scope} Reference#from 
+         */
         this.from = scope;
-        /** ???
-         * @member {boolean} Reference#tainted */
+        /**
+         * Whether the reference comes from a dynamic scope (such as 'eval',
+         * 'with', etc.), and may be trapped by dynamic scopes.
+         * @member {boolean} Reference#tainted
+         */
         this.tainted = false;
-        /** ???
-         * @member {boolean} Reference#resolved */
+        /** 
+         * The variable this reference is resolved with.
+         * @member {Variable} Reference#resolved 
+         */
         this.resolved = null;
-        /** ???
-         * @member {boolean} Reference#flag */
+        /** 
+         * The read-write mode of the reference. (Value is one of {@link
+         * Reference.READ}, {@link Reference.RW}, {@link Reference.WRITE}).
+         * @member {number} Reference#flag 
+         * @private
+         */
         this.flag = flag;
         if (this.isWrite()) {
-            /** ???
-             * @member {boolean} Reference#writeExpr */
+            /** 
+             * If reference is writeable, this is the tree being written to it.
+             * @member {esprima#Node} Reference#writeExpr 
+             */
             this.writeExpr = writeExpr;
         }
-        /** Whether the Reference might refer to a global variable.
-         * @member {boolean} Reference#__maybeImplicitGlobal */
+        /** 
+         * Whether the Reference might refer to a global variable.
+         * @member {boolean} Reference#__maybeImplicitGlobal 
+         * @private
+         */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
     }
 
-    /** @constant Reference.READ */
+    /** 
+     * @constant Reference.READ 
+     * @private
+     */
     Reference.READ = 0x1;
-    /** @constant Reference.WRITE */
+    /** 
+     * @constant Reference.WRITE 
+     * @private
+     */
     Reference.WRITE = 0x2;
-    /** @constant Reference.RW */
+    /** 
+     * @constant Reference.RW 
+     * @private
+     */
     Reference.RW = 0x3;
 
     /**
+     * Whether the reference is static.
      * @method Reference#isStatic
      * @return {boolean}
      */
@@ -202,7 +230,8 @@
     };
 
     /**
-     * @method Reference#isStatic
+     * Whether the reference is writeable.
+     * @method Reference#isWrite
      * @return {boolean}
      */
     Reference.prototype.isWrite = function isWrite() {
@@ -210,6 +239,7 @@
     };
 
     /**
+     * Whether the reference is readable.
      * @method Reference#isRead
      * @return {boolean}
      */
@@ -218,6 +248,7 @@
     };
 
     /**
+     * Whether the reference is read-only.
      * @method Reference#isReadOnly
      * @return {boolean}
      */
@@ -226,6 +257,7 @@
     };
 
     /**
+     * Whether the reference is write-only.
      * @method Reference#isWriteOnly
      * @return {boolean}
      */
@@ -234,6 +266,7 @@
     };
 
     /**
+     * Whether the reference is read-write.
      * @method Reference#isReadWrite
      * @return {boolean}
      */
@@ -392,8 +425,8 @@
          */
         this.block = block;
          /**
-         * ??
-         * @member {Array} Scope#through
+         * The {@link Reference|references} that are not resolved with this scope.
+         * @member {Reference[]} Scope#through
          */
         this.through = [];
          /**

@@ -6,7 +6,7 @@ scope analyzer extracted from [esmangle project](http://github.com/Constellation
 
 ### Document
 
-Generated JSDoc is [here](http://github.com/Constellation/escope).
+Generated JSDoc is [here](http://constellation.github.io/escope/).
 
 ### Demos and Tools
 

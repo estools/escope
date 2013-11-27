@@ -4,6 +4,10 @@ scope analyzer extracted from [esmangle project](http://github.com/Constellation
 
 [![Build Status](https://travis-ci.org/Constellation/escope.png?branch=master)](https://travis-ci.org/Constellation/escope)
 
+### Document
+
+Generated JSDoc is [here](http://github.com/Constellation/escope).
+
 ### Demos and Tools
 
 Demonstration is [here](http://mazurov.github.io/escope-demo/) by [Sasha Mazurov](https://github.com/mazurov) (twitter: [@mazurov](http://twitter.com/mazurov)). [issue](https://github.com/Constellation/escope/issues/14)

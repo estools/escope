@@ -12,3 +12,4 @@ esprima.js
 /test/
 /cover_html/
 /.coverage_data/
+/out/

@@ -23,6 +23,28 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/**
+ * Escope (<a href="http://github.com/Constellation/escope">escope</a>) is an <a
+ * href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMAScript</a>
+ * scope analyzer extracted from the <a
+ * href="http://github.com/Constellation/esmangle">esmangle project</a/>.
+ * <p>
+ * <em>escope</em> finds lexical scopes in a source program, i.e. areas of that
+ * program where different occurrences of the same identifier refer to the same
+ * variable. With each scope the contained variables are collected, and each
+ * identifier reference in code is linked to its corresponding variable (if
+ * possible).
+ * <p>
+ * <em>escope</em> works on a syntax tree of the parsed source code which has
+ * to adhere to the <a
+ * href="https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API">
+ * Mozilla Parser API</a>. E.g. <a href="http://esprima.org">esprima</a> is a parser
+ * that produces such syntax trees.
+ * <p>
+ * The main interface is the {@link analyze} function.
+ * @module
+ */
+
 /*jslint bitwise:true */
 /*global exports:true, define:true, require:true*/
 (function (factory, global) {
@@ -134,55 +156,174 @@
         return target;
     }
 
+    /**
+     * A Reference represents a single occurrence of an identifier in code.
+     * @class Reference
+     */
     function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
+        /** 
+         * Identifier syntax node.
+         * @member {esprima#Identifier} Reference#identifier 
+         */
         this.identifier = ident;
+        /** 
+         * Reference to the enclosing Scope.
+         * @member {Scope} Reference#from 
+         */
         this.from = scope;
+        /**
+         * Whether the reference comes from a dynamic scope (such as 'eval',
+         * 'with', etc.), and may be trapped by dynamic scopes.
+         * @member {boolean} Reference#tainted
+         */
         this.tainted = false;
+        /** 
+         * The variable this reference is resolved with.
+         * @member {Variable} Reference#resolved 
+         */
         this.resolved = null;
+        /** 
+         * The read-write mode of the reference. (Value is one of {@link
+         * Reference.READ}, {@link Reference.RW}, {@link Reference.WRITE}).
+         * @member {number} Reference#flag 
+         * @private
+         */
         this.flag = flag;
         if (this.isWrite()) {
+            /** 
+             * If reference is writeable, this is the tree being written to it.
+             * @member {esprima#Node} Reference#writeExpr 
+             */
             this.writeExpr = writeExpr;
         }
+        /** 
+         * Whether the Reference might refer to a global variable.
+         * @member {boolean} Reference#__maybeImplicitGlobal 
+         * @private
+         */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
     }
 
+    /** 
+     * @constant Reference.READ 
+     * @private
+     */
     Reference.READ = 0x1;
+    /** 
+     * @constant Reference.WRITE 
+     * @private
+     */
     Reference.WRITE = 0x2;
+    /** 
+     * @constant Reference.RW 
+     * @private
+     */
     Reference.RW = 0x3;
 
+    /**
+     * Whether the reference is static.
+     * @method Reference#isStatic
+     * @return {boolean}
+     */
     Reference.prototype.isStatic = function isStatic() {
         return !this.tainted && this.resolved && this.resolved.scope.isStatic();
     };
 
+    /**
+     * Whether the reference is writeable.
+     * @method Reference#isWrite
+     * @return {boolean}
+     */
     Reference.prototype.isWrite = function isWrite() {
         return this.flag & Reference.WRITE;
     };
 
+    /**
+     * Whether the reference is readable.
+     * @method Reference#isRead
+     * @return {boolean}
+     */
     Reference.prototype.isRead = function isRead() {
         return this.flag & Reference.READ;
     };
 
+    /**
+     * Whether the reference is read-only.
+     * @method Reference#isReadOnly
+     * @return {boolean}
+     */
     Reference.prototype.isReadOnly = function isReadOnly() {
         return this.flag === Reference.READ;
     };
 
+    /**
+     * Whether the reference is write-only.
+     * @method Reference#isWriteOnly
+     * @return {boolean}
+     */
     Reference.prototype.isWriteOnly = function isWriteOnly() {
         return this.flag === Reference.WRITE;
     };
 
+    /**
+     * Whether the reference is read-write.
+     * @method Reference#isReadWrite
+     * @return {boolean}
+     */
     Reference.prototype.isReadWrite = function isReadWrite() {
         return this.flag === Reference.RW;
     };
 
+    /**
+     * A Variable represents a locally scoped identifier. These include arguments to
+     * functions.
+     * @class Variable
+     */
     function Variable(name, scope) {
+        /**  
+         * The variable name, as given in the source code.
+         * @member {String} Variable#name 
+         */
         this.name = name;
+        /**
+         * List of defining occurrences of this variable (like in 'var ...'
+         * statements or as parameter), as AST nodes.
+         * @member {esprima.Identifier[]} Variable#identifiers
+         */
         this.identifiers = [];
+        /**
+         * List of {@link Reference|references} of this variable (excluding parameter entries)
+         * in its defining scope and all nested scopes. For defining
+         * occurrences only see {@link Variable#defs}.
+         * @member {Reference[]} Variable#references
+         */
         this.references = [];
 
+        /**
+         * List of defining occurrences of this variable (like in 'var ...'
+         * statements or as parameter), as custom objects.
+         * @typedef {Object} DefEntry
+         * @property {String} DefEntry.type - the type of the occurrence (e.g.
+         *      "Parameter", "Variable", ...)
+         * @property {esprima.Identifier} DefEntry.name - the identifier AST node of the occurrence
+         * @property {esprima.Node} DefEntry.node - the enclosing node of the
+         *      identifier
+         * @property {esprima.Node} [DefEntry.parent] - the enclosing statement
+         *      node of the identifier
+         * @member {DefEntry[]} Variable#defs
+         */
         this.defs = [];
 
         this.tainted = false;
+        /**
+         * Whether this is a stack variable.
+         * @member {boolean} Variable#stack
+         */
         this.stack = true;
+        /** 
+         * Reference to the enclosing Scope.
+         * @member {Scope} Variable#scope 
+         */
         this.scope = scope;
     }
 
@@ -242,25 +383,98 @@
         return false;
     }
 
+    /**
+     * @class Scope
+     */
     function Scope(block, opt) {
         var variable, body;
 
+        /**
+         * One of 'catch', 'with', 'function' or 'global'.
+         * @member {String} Scope#type
+         */
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' : 'function';
+         /**
+         * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
+         * : Variable }</code>.
+         * @member {Map} Scope#set
+         */
         this.set = new Map();
+        /**
+         * The tainted variables of this scope, as <code>{ Variable.name :
+         * boolean }</code>.
+         * @member {Map} Scope#taints */
         this.taints = new Map();
+        /**
+         * Generally, through the lexical scoping of JS you can always know
+         * which variable an identifier in the source code refers to. There are
+         * a few exceptions to this rule. With 'global' and 'with' scopes you
+         * can only decide at runtime which variable a reference refers to.
+         * Moreover, if 'eval()' is used in a scope, it might introduce new
+         * bindings in this or its prarent scopes.
+         * All those scopes are considered 'dynamic'.
+         * @member {boolean} Scope#dynamic
+         */
         this.dynamic = this.type === 'global' || this.type === 'with';
+        /**
+         * A reference to the scope-defining syntax node.
+         * @member {esprima.Node} Scope#block
+         */
         this.block = block;
+         /**
+         * The {@link Reference|references} that are not resolved with this scope.
+         * @member {Reference[]} Scope#through
+         */
         this.through = [];
+         /**
+         * The scoped {@link Variable}s of this scope. In the case of a
+         * 'function' scope this includes the automatic argument <em>arguments</em> as
+         * its first element, as well as all further formal arguments.
+         * @member {Variable[]} Scope#variables
+         */
         this.variables = [];
+         /**
+         * Any variable {@link Reference|reference} found in this scope. This
+         * includes occurrences of local variables as well as variables from
+         * parent scopes (including the global scope). For local variables
+         * this also includes defining occurrences (like in a 'var' statement).
+         * In a 'function' scope this does not include the occurrences of the
+         * formal parameter in the parameter list.
+         * @member {Reference[]} Scope#references
+         */
         this.references = [];
+         /**
+         * List of {@link Reference}s that are left to be resolved (i.e. which
+         * need to be linked to the variable they refer to). Used internally to
+         * resolve bindings during scope analysis. On a finalized scope
+         * analysis, all sopes have <em>left</em> value <strong>null</strong>.
+         * @member {Reference[]} Scope#left
+         */
         this.left = [];
+         /**
+         * For 'global' and 'function' scopes, this is a self-reference. For
+         * other scope types this is the <em>variableScope</em> value of the
+         * parent scope.
+         * @member {Scope} Scope#variableScope
+         */
         this.variableScope =
             (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
+         /**
+         * Whether this scope is created by a FunctionExpression.
+         * @member {boolean} Scope#functionExpressionScope
+         */
         this.functionExpressionScope = false;
+         /**
+         * Whether this is a scope that contains an 'eval()' invocation.
+         * @member {boolean} Scope#directCallToEvalScope
+         */
         this.directCallToEvalScope = false;
+         /**
+         * @member {boolean} Scope#thisFound
+         */
         this.thisFound = false;
         body = this.type === 'function' ? block.body : block;
         if (opt.naming) {
@@ -283,9 +497,21 @@
             }
         }
 
+         /**
+         * Reference to the parent {@link Scope|scope}.
+         * @member {Scope} Scope#upper
+         */
         this.upper = currentScope;
+         /**
+         * Whether 'use strict' is in effect in this scope.
+         * @member {boolean} Scope#isStrict
+         */
         this.isStrict = isStrictScope(this, block);
 
+         /**
+         * List of nested {@link Scope}s.
+         * @member {Scope[]} Scope#childScopes
+         */
         this.childScopes = [];
         if (currentScope) {
             currentScope.childScopes.push(this);
@@ -536,6 +762,9 @@
         return false;
     };
 
+    /**
+     * @class ScopeManager
+     */
     function ScopeManager(scopes) {
         this.scopes = scopes;
         this.attached = false;
@@ -602,6 +831,17 @@
         return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
     };
 
+    /**
+     * Main interface function. Takes an Esprima syntax tree and returns the
+     * analyzed scopes.
+     * @function analyze
+     * @param {esprima.Tree} tree
+     * @param {Object} providedOptions - Options that tailor the scope analysis
+     * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
+     * @param {boolean} [providedOptions.directive=false]- the directive flag
+     * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
+     * @return {ScopeManager}
+     */
     function analyze(tree, providedOptions) {
         var resultScopes;
 
@@ -861,11 +1101,17 @@
         return new ScopeManager(resultScopes);
     }
 
+    /** @name module:escope.version */
     exports.version = '1.0.1-dev';
+    /** @name module:escope.Reference */
     exports.Reference = Reference;
+    /** @name module:escope.Variable */
     exports.Variable = Variable;
+    /** @name module:escope.Scope */
     exports.Scope = Scope;
+    /** @name module:escope.ScopeManager */
     exports.ScopeManager = ScopeManager;
+    /** @name module:escope.analyze */
     exports.analyze = analyze;
 }, this));
 /* vim: set sw=4 ts=4 et tw=80 : */

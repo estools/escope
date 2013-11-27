@@ -11,3 +11,6 @@ cover_html/
 
 npm-debug.log
 .vimrc.local
+
+# JSDoc
+/out/

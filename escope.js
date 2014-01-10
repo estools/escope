@@ -161,14 +161,14 @@
      * @class Reference
      */
     function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
-        /** 
+        /**
          * Identifier syntax node.
-         * @member {esprima#Identifier} Reference#identifier 
+         * @member {esprima#Identifier} Reference#identifier
          */
         this.identifier = ident;
-        /** 
+        /**
          * Reference to the enclosing Scope.
-         * @member {Scope} Reference#from 
+         * @member {Scope} Reference#from
          */
         this.from = scope;
         /**
@@ -177,45 +177,45 @@
          * @member {boolean} Reference#tainted
          */
         this.tainted = false;
-        /** 
+        /**
          * The variable this reference is resolved with.
-         * @member {Variable} Reference#resolved 
+         * @member {Variable} Reference#resolved
          */
         this.resolved = null;
-        /** 
+        /**
          * The read-write mode of the reference. (Value is one of {@link
          * Reference.READ}, {@link Reference.RW}, {@link Reference.WRITE}).
-         * @member {number} Reference#flag 
+         * @member {number} Reference#flag
          * @private
          */
         this.flag = flag;
         if (this.isWrite()) {
-            /** 
+            /**
              * If reference is writeable, this is the tree being written to it.
-             * @member {esprima#Node} Reference#writeExpr 
+             * @member {esprima#Node} Reference#writeExpr
              */
             this.writeExpr = writeExpr;
         }
-        /** 
+        /**
          * Whether the Reference might refer to a global variable.
-         * @member {boolean} Reference#__maybeImplicitGlobal 
+         * @member {boolean} Reference#__maybeImplicitGlobal
          * @private
          */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
     }
 
-    /** 
-     * @constant Reference.READ 
+    /**
+     * @constant Reference.READ
      * @private
      */
     Reference.READ = 0x1;
-    /** 
-     * @constant Reference.WRITE 
+    /**
+     * @constant Reference.WRITE
      * @private
      */
     Reference.WRITE = 0x2;
-    /** 
-     * @constant Reference.RW 
+    /**
+     * @constant Reference.RW
      * @private
      */
     Reference.RW = 0x3;
@@ -280,9 +280,9 @@
      * @class Variable
      */
     function Variable(name, scope) {
-        /**  
+        /**
          * The variable name, as given in the source code.
-         * @member {String} Variable#name 
+         * @member {String} Variable#name
          */
         this.name = name;
         /**
@@ -320,9 +320,9 @@
          * @member {boolean} Variable#stack
          */
         this.stack = true;
-        /** 
+        /**
          * Reference to the enclosing Scope.
-         * @member {Scope} Variable#scope 
+         * @member {Scope} Variable#scope
          */
         this.scope = scope;
     }
@@ -1008,13 +1008,17 @@
                     break;
 
                 case Syntax.ObjectExpression:
+                    for (i = 0; i < node.properties.length; i++) {
+                        if (node.properties[i].kind === 'init') {
+                            currentScope.__referencing(node.properties[i].value);
+                        }
+                    }
                     break;
 
                 case Syntax.Program:
                     break;
 
                 case Syntax.Property:
-                    currentScope.__referencing(node.value);
                     break;
 
                 case Syntax.ReturnStatement:

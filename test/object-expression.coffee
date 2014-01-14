@@ -25,13 +25,15 @@ describe 'object expression', ->
                                 type: 'Identifier'
                                 name: 'foo'
                             value:
-                                type: 'Literal'
-                                value: 'bar'
-                                raw: 'bar'
+                                type: 'Identifier'
+                                name: 'a'
                         }]
                 }]
             }]
 
         scope = escope.analyze(ast).scopes[0]
-
-        # TODO - Verify results.  What am I looking for?
+        expect(scope.variables).to.have.length(1)
+        expect(scope.references).to.have.length(2)
+        expect(scope.variables[0].name).to.be.equal('a')
+        expect(scope.references[0].identifier.name).to.be.equal('a')
+        expect(scope.references[1].identifier.name).to.be.equal('a')

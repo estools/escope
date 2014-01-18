@@ -23,14 +23,13 @@
   },
   "devDependencies": {
     "jshint": "~1.1.0",
-    "grunt-mocha-test": "~0.6.3",
-    "grunt-cli": "~0.1.9",
-    "grunt": "~0.4.2",
-    "grunt-contrib-jshint": "~0.6.3",
     "coffee-script": "~1.6.3",
     "chai": "~1.7.2",
     "esprima": "~1.0.3",
-    "jsdoc": "~3.3.0-alpha2"
+    "jsdoc": "~3.3.0-alpha2",
+    "gulp-mocha": "~0.3.0",
+    "gulp-jshint": "~1.3.4",
+    "gulp": "~3.4.1"
   },
   "licenses": [
     {
@@ -39,9 +38,9 @@
     }
   ],
   "scripts": {
-    "test": "grunt travis",
-    "unit-test": "grunt test",
-    "lint": "grunt lint",
+    "test": "gulp travis",
+    "unit-test": "gulp test",
+    "lint": "gulp lint",
     "jsdoc": "jsdoc escope.js README.md"
   }
 }

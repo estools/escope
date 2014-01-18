@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+  Copyright (C) 2014 Yusuke Suzuki <utatane.tea@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -22,40 +22,28 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-module.exports = function (grunt) {
-    'use strict';
+'use strict'
 
-    grunt.initConfig({
-        jshint: {
-            all: [
-                'Gruntfile.js',
-                'escope.js'
-            ],
-            options: {
-                jshintrc: '.jshintrc',
-                force: false
-            }
-        },
-        mochaTest: {
-            test: {
-                options: {
-                    reporter: 'spec',
-                    compilers: 'coffee:coffee-script'
-                },
-                src: ['test/*.coffee']
-            }
-        }
-    });
+var gulp = require('gulp');
+var mocha = require('gulp-mocha');
+var jshint = require('gulp-jshint');
+require('coffee-script');
 
+var TEST = [ 'test/*.coffee' ];
 
-    // load tasks
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-mocha-test');
+var LINT = [
+    'Gruntfile.js',
+    'escope.js'
+];
 
-    // alias
-    grunt.registerTask('test', 'mochaTest');
-    grunt.registerTask('lint', 'jshint');
-    grunt.registerTask('travis', ['lint', 'test']);
-    grunt.registerTask('default', 'travis');
-};
-/* vim: set sw=4 ts=4 et tw=80 : */
+gulp.task('test', function () {
+    return gulp.src(TEST)
+        .pipe(mocha({ reporter: 'spec' }));
+});
+
+gulp.task('lint', function () {
+    return gulp.src(LINT).pipe(jshint('.jshintrc'));
+});
+
+gulp.task('travis', [ 'lint', 'test' ]);
+gulp.task('default', [ 'travis' ]);

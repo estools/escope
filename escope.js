@@ -948,7 +948,7 @@
 
                 case Syntax.FunctionDeclaration:
                     // FunctionDeclaration name is defined in upper scope
-                    currentScope.upper.__define(node.id, {
+                    currentScope.upper.variableScope.__define(node.id, {
                         type: Variable.FunctionName,
                         name: node.id,
                         node: node

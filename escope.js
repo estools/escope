@@ -157,6 +157,28 @@
     }
 
     /**
+     * Check if block is not a block node and synthesizes a new BlockStatement
+     * for it.
+     */
+    function synthesizeBlock(block) {
+        if (block.type === Syntax.BlockStatement) {
+            return block;
+        } else {
+            return {
+                type: Syntax.BlockStatement,
+                body: [{
+                    type: Syntax.ExpressionStatement,
+                    expression: block,
+                    range: block.range,
+                    loc: block.loc
+                }],
+                range: block.range,
+                loc: block.loc
+            };
+        }
+    }
+
+    /**
      * A Reference represents a single occurrence of an identifier in code.
      * @class Reference
      */
@@ -342,7 +364,7 @@
         }
 
         if (scope.type === 'function') {
-            body = block.body;
+            body = synthesizeBlock(block.body);
         } else if (scope.type === 'global') {
             body = block;
         } else {
@@ -476,7 +498,7 @@
          * @member {boolean} Scope#thisFound
          */
         this.thisFound = false;
-        body = this.type === 'function' ? block.body : block;
+        body = this.type === 'function' ? synthesizeBlock(block.body) : block;
         if (opt.naming) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
@@ -828,7 +850,7 @@
     };
 
     Scope.isVariableScopeRequired = function isVariableScopeRequired(node) {
-        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
+        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration || node.type === Syntax.ArrowFunctionExpression;
     };
 
     /**
@@ -964,6 +986,7 @@
                     break;
 
                 case Syntax.FunctionExpression:
+                case Syntax.ArrowFunctionExpression:
                     // id is defined in upper scope
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
                         currentScope.__define(node.params[i], {

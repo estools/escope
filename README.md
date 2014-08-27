@@ -19,7 +19,7 @@ And there are tools constructed on Escope.
 
 - [Esmangle](https://github.com/Constellation/esmangle) is a minifier / mangler / optimizer.
 - [Eslevels](https://github.com/mazurov/eslevels) is a scope levels analyzer and [SublimeText plugin for scope context coloring](https://github.com/mazurov/sublime-levels) is constructed on it.
-- [Estoggles](https://github.com/keeyipchan/esgoggles) is JavaScript code browser.
+- [Esgoggles](https://github.com/keeyipchan/esgoggles) is JavaScript code browser.
 
 
 ### License

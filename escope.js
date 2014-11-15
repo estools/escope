@@ -128,7 +128,8 @@
     function defaultOptions() {
         return {
             optimistic: false,
-            directive: false
+            directive: false,
+            ecmaVersion: 5
         };
     }
 

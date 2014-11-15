@@ -27,7 +27,7 @@
 var gulp = require('gulp');
 var mocha = require('gulp-mocha');
 var jshint = require('gulp-jshint');
-require('coffee-script');
+require('coffee-script/register');
 
 var TEST = [ 'test/*.coffee' ];
 
@@ -38,7 +38,9 @@ var LINT = [
 
 gulp.task('test', function () {
     return gulp.src(TEST)
-        .pipe(mocha({ reporter: 'spec' }));
+    .pipe(mocha({
+        reporter: 'spec'
+    }));
 });
 
 gulp.task('lint', function () {

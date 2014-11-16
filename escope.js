@@ -999,6 +999,7 @@
                     break;
 
                 case Syntax.FunctionExpression:
+                case Syntax.ArrowFunctionExpression:
                     // id is defined in upper scope
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
                         currentScope.__define(node.params[i], {

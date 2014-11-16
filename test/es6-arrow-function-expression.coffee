@@ -53,4 +53,30 @@ describe 'ES6 arrow function expression', ->
         expect(scope.variables[1].name).to.be.equal 'i'
         expect(scope.variables[2].name).to.be.equal 'j'
 
+    it 'generate bindings for parameters', ->
+        ast = harmony.parse """
+        var arrow = (a, b, c, d) => {
+        }
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.block.type).to.be.equal 'Program'
+        expect(scope.isStrict).to.be.false
+        expect(scope.variables).to.have.length 1
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.block.type).to.be.equal 'ArrowFunctionExpression'
+        expect(scope.isStrict).to.be.true
+        expect(scope.variables).to.have.length 5
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'a'
+        expect(scope.variables[2].name).to.be.equal 'b'
+        expect(scope.variables[3].name).to.be.equal 'c'
+        expect(scope.variables[4].name).to.be.equal 'd'
+
 # vim: set sw=4 ts=4 et tw=80 :

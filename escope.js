@@ -983,6 +983,10 @@
 
                 case Syntax.FunctionDeclaration:
                     // FunctionDeclaration name is defined in upper scope
+                    // NOTE: Not referring variableScope. It is intended.
+                    // Since
+                    //  in ES5, FunctionDeclaration should be in FunctionBody.
+                    //  in ES6, FunctionDeclaration should be block scoped.
                     currentScope.upper.__define(node.id, {
                         type: Variable.FunctionName,
                         name: node.id,

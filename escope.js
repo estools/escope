@@ -863,7 +863,7 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager;
+        var resultScopes, scopeManager, variableTargetScope;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
@@ -1081,13 +1081,15 @@
                     break;
 
                 case Syntax.VariableDeclaration:
+                    variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
                     for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                         decl = node.declarations[i];
-                        currentScope.variableScope.__define(decl.id, {
+                        variableTargetScope.__define(decl.id, {
                             type: Variable.Variable,
                             name: decl.id,
                             node: decl,
                             index: i,
+                            kind: node.kind,
                             parent: node
                         });
                         if (decl.init) {

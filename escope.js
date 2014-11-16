@@ -412,6 +412,10 @@
          * @member {Map} Scope#set
          */
         this.set = new Map();
+
+        this.__hoistable = new Map();
+        this.__nonHoistable = new Map();
+
         /**
          * The tainted variables of this scope, as <code>{ Variable.name :
          * boolean }</code>.
@@ -483,7 +487,7 @@
         this.__left = [];
 
         if (opt.naming) {
-            this.__define(block.id, {
+            this.__define(block.id, false, {
                 type: Variable.FunctionName,
                 name: block.id,
                 node: block
@@ -495,6 +499,7 @@
                 this.taints.set('arguments', true);
                 this.set.set('arguments', variable);
                 this.variables.push(variable);
+                this.__defineHoistable(variable, false);
             }
 
             if (block.type === Syntax.FunctionExpression && block.id) {
@@ -589,29 +594,37 @@
         }
 
         this.__left = null;
+        this.__hoistable = null;
+        this.__nonHoistable = null;
         currentScope = this.upper;
     };
 
     Scope.prototype.__resolve = function __resolve(ref) {
         var variable, name;
         name = ref.identifier.name;
-        if (this.set.has(name)) {
-            variable = this.set.get(name);
-            variable.references.push(ref);
-            variable.stack = variable.stack && ref.from.variableScope === this.variableScope;
-            if (ref.tainted) {
-                variable.tainted = true;
-                this.taints.set(variable.name, true);
-            }
-            ref.resolved = variable;
-            return true;
+        if ((variable = this.__hoistable.get(name))) {
+            return this.__resolveVariable(ref, variable);
         }
         return false;
     };
 
+    Scope.prototype.__resolveVariable = function (ref, variable) {
+        variable.references.push(ref);
+        // FIXME: It is broken in ES6.
+        if (ref.from.variableScope === this.variableScope) {
+            variable.stack = false;
+        }
+        if (ref.tainted) {
+            variable.tainted = true;
+            this.taints.set(variable.name, true);
+        }
+        ref.resolved = variable;
+        return true;
+    };
+
     Scope.prototype.__delegateToUpperScope = function __delegateToUpperScope(ref) {
         if (this.upper) {
-            this.upper.__left.push(ref);
+            this.upper.__referencingEagerly(ref);
         }
         this.through.push(ref);
     };
@@ -634,7 +647,20 @@
         }
     };
 
-    Scope.prototype.__define = function __define(node, info) {
+    Scope.prototype.__defineHoistable = function (variable, hoistable) {
+        var name;
+        name = variable.name;
+        if (hoistable) {
+            this.__nonHoistable['delete'](name);
+            this.__hoistable.set(name, variable);
+        } else {
+            if (!this.__hoistable.has(name)) {
+                this.__nonHoistable.set(name, variable);
+            }
+        }
+    };
+
+    Scope.prototype.__define = function __define(node, hoistable, info) {
         var name, variable;
         if (node && node.type === Syntax.Identifier) {
             name = node.name;
@@ -649,6 +675,20 @@
                 variable.identifiers.push(node);
                 variable.defs.push(info);
             }
+            this.__defineHoistable(variable, hoistable);
+        }
+    };
+
+    // Resolve if the current scope has non hoistable variable.
+    Scope.prototype.__referencingEagerly = function (ref) {
+        var name, variable;
+
+        name = ref.identifier.name;
+        variable = this.__nonHoistable.get(name);
+        if (variable) {
+            this.__resolveVariable(ref, variable);
+        } else {
+            this.__left.push(ref);
         }
     };
 
@@ -658,7 +698,7 @@
         if (node && node.type === Syntax.Identifier) {
             ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal);
             this.references.push(ref);
-            this.__left.push(ref);
+            this.__referencingEagerly(ref);
         }
     };
 
@@ -876,7 +916,7 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager, variableTargetScope;
+        var resultScopes, scopeManager, variableTargetScope, hoistable;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
@@ -933,7 +973,7 @@
                     break;
 
                 case Syntax.CatchClause:
-                    currentScope.__define(node.param, {
+                    currentScope.__define(node.param, false, {
                         type: Variable.CatchClause,
                         name: node.param,
                         node: node
@@ -987,13 +1027,13 @@
                     // Since
                     //  in ES5, FunctionDeclaration should be in FunctionBody.
                     //  in ES6, FunctionDeclaration should be block scoped.
-                    currentScope.upper.__define(node.id, {
+                    currentScope.upper.__define(node.id, true, {
                         type: Variable.FunctionName,
                         name: node.id,
                         node: node
                     });
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        currentScope.__define(node.params[i], {
+                        currentScope.__define(node.params[i], false, {
                             type: Variable.Parameter,
                             name: node.params[i],
                             node: node,
@@ -1006,7 +1046,7 @@
                 case Syntax.ArrowFunctionExpression:
                     // id is defined in upper scope
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        currentScope.__define(node.params[i], {
+                        currentScope.__define(node.params[i], false, {
                             type: Variable.Parameter,
                             name: node.params[i],
                             node: node,
@@ -1099,10 +1139,11 @@
                     break;
 
                 case Syntax.VariableDeclaration:
-                    variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
+                    hoistable = node.kind === 'var';
+                    variableTargetScope = hoistable ? currentScope.variableScope : currentScope;
                     for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                         decl = node.declarations[i];
-                        variableTargetScope.__define(decl.id, {
+                        variableTargetScope.__define(decl.id, hoistable, {
                             type: Variable.Variable,
                             name: decl.id,
                             node: decl,

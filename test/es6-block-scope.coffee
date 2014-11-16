@@ -104,4 +104,90 @@ describe 'ES6 block scope', ->
         expect(scope.variables[0].name).to.be.equal 'arguments'
         expect(scope.references).to.have.length 0
 
+    it 'let is not hoistable#1', ->
+        ast = harmony.parse """
+        var i = 42;
+        {
+            i;  // points global's i
+            let i = 20;
+            i;  // points block scoped i
+        }
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        globalScope = scopeManager.scopes[0]
+        expect(globalScope.type).to.be.equal 'global'
+        expect(globalScope.variables).to.have.length 1
+        expect(globalScope.variables[0].name).to.be.equal 'i'
+        expect(globalScope.references).to.have.length 1
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'block'
+        expect(scope.variables).to.have.length 1
+        expect(scope.variables[0].name).to.be.equal 'i'
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].resolved).to.be.null  # Since global scope
+        expect(scope.references[1].resolved).to.be.equal scope.variables[0]
+        expect(scope.references[2].resolved).to.be.equal scope.variables[0]
+
+    it 'let is not hoistable#2', ->
+        ast = harmony.parse """
+        (function () {
+            var i = 42; // (1)
+            i;  // (1)
+            {
+                i;  // (1)
+                {
+                    i;  // (1)
+                    let i = 20;  // (2)
+                    i;  // (2)
+                }
+                let i = 30;  // (3)
+                i;  // (3)
+            }
+            i;  // (1)
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 4
+
+        globalScope = scopeManager.scopes[0]
+        expect(globalScope.type).to.be.equal 'global'
+        expect(globalScope.variables).to.have.length 0
+        expect(globalScope.references).to.have.length 0
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 2
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'i'
+        v1 = scope.variables[1]
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].resolved).to.be.equal v1
+        expect(scope.references[1].resolved).to.be.equal v1
+        expect(scope.references[2].resolved).to.be.equal v1
+
+        scope = scopeManager.scopes[2]
+        expect(scope.type).to.be.equal 'block'
+        expect(scope.variables).to.have.length 1
+        expect(scope.variables[0].name).to.be.equal 'i'
+        v3 = scope.variables[0]
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].resolved).to.be.equal v1
+        expect(scope.references[1].resolved).to.be.equal v3
+        expect(scope.references[2].resolved).to.be.equal v3
+
+        scope = scopeManager.scopes[3]
+        expect(scope.type).to.be.equal 'block'
+        expect(scope.variables).to.have.length 1
+        expect(scope.variables[0].name).to.be.equal 'i'
+        v2 = scope.variables[0]
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].resolved).to.be.equal v1
+        expect(scope.references[1].resolved).to.be.equal v2
+        expect(scope.references[2].resolved).to.be.equal v2
+
 # vim: set sw=4 ts=4 et tw=80 :

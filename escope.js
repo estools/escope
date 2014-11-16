@@ -391,13 +391,14 @@
         var variable, body;
 
         /**
-         * One of 'catch', 'with', 'function' or 'global'.
+         * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
          */
         this.type =
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
-            (block.type === Syntax.Program) ? 'global' : 'function';
+            (block.type === Syntax.Program) ? 'global' :
+            (block.type === Syntax.BlockStatement) ? 'block' : 'function';
          /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
@@ -766,9 +767,10 @@
     /**
      * @class ScopeManager
      */
-    function ScopeManager(scopes) {
+    function ScopeManager(scopes, options) {
         this.scopes = scopes;
         this.attached = false;
+        this.__options = options;
     }
 
     // Returns appropliate scope for this node
@@ -824,12 +826,33 @@
         this.attached = false;
     };
 
-    Scope.isScopeRequired = function isScopeRequired(node) {
-        return Scope.isVariableScopeRequired(node) || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
+    ScopeManager.prototype.__isES6 = function () {
+        return this.__options.ecmaVersion >= 6;
     };
 
-    Scope.isVariableScopeRequired = function isVariableScopeRequired(node) {
-        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
+    ScopeManager.prototype.__isScopeRequired = function (node, parent) {
+        function isFunctionScopeRequired(node) {
+            return node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
+        }
+
+        function isVariableScopeRequired(node) {
+            return node.type === Syntax.Program || isFunctionScopeRequired(node);
+        }
+
+        function isScopeRequired(node) {
+            return isVariableScopeRequired(node) || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
+        }
+
+        if (this.__isES6()) {
+            if (node.type === Syntax.BlockStatement) {
+                // In the current AST spec, these are represented as BlockStatement, but it's FunctionBody.
+                if (parent && isFunctionScopeRequired(parent)) {
+                    return false;
+                }
+                return true;
+            }
+        }
+        return isScopeRequired(node);
     };
 
     /**
@@ -844,18 +867,20 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes;
+        var resultScopes, scopeManager;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
         currentScope = null;
         globalScope = null;
 
+        scopeManager = new ScopeManager(resultScopes, options);
+
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
-            enter: function enter(node) {
+            enter: function enter(node, parent) {
                 var i, iz, decl;
-                if (Scope.isScopeRequired(node)) {
+                if (scopeManager.__isScopeRequired(node, parent)) {
                     new Scope(node, {});
                 }
 
@@ -1103,7 +1128,7 @@
         scopes = null;
         options = null;
 
-        return new ScopeManager(resultScopes);
+        return scopeManager;
     }
 
     /** @name module:escope.version */

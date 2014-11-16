@@ -387,7 +387,7 @@
     /**
      * @class Scope
      */
-    function Scope(block, opt) {
+    function Scope(scopeManager, block, opt) {
         var variable, body;
 
         /**
@@ -448,14 +448,7 @@
          * @member {Reference[]} Scope#references
          */
         this.references = [];
-         /**
-         * List of {@link Reference}s that are left to be resolved (i.e. which
-         * need to be linked to the variable they refer to). Used internally to
-         * resolve bindings during scope analysis. On a finalized scope
-         * analysis, all sopes have <em>left</em> value <strong>null</strong>.
-         * @member {Reference[]} Scope#left
-         */
-        this.left = [];
+
          /**
          * For 'global' and 'function' scopes, this is a self-reference. For
          * other scope types this is the <em>variableScope</em> value of the
@@ -479,6 +472,9 @@
          */
         this.thisFound = false;
         body = this.type === 'function' ? block.body : block;
+
+        this.__left = [];
+
         if (opt.naming) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
@@ -495,7 +491,7 @@
             }
 
             if (block.type === Syntax.FunctionExpression && block.id) {
-                new Scope(block, { naming: true });
+                new Scope(scopeManager, block, { naming: true });
             }
         }
 
@@ -538,8 +534,8 @@
         // Because if this is global environment, upper is null
         if (!this.dynamic || options.optimistic) {
             // static resolve
-            for (i = 0, iz = this.left.length; i < iz; ++i) {
-                ref = this.left[i];
+            for (i = 0, iz = this.__left.length; i < iz; ++i) {
+                ref = this.__left[i];
                 if (!this.__resolve(ref)) {
                     this.__delegateToUpperScope(ref);
                 }
@@ -547,15 +543,15 @@
         } else {
             // this is "global" / "with" / "function with eval" environment
             if (this.type === 'with') {
-                for (i = 0, iz = this.left.length; i < iz; ++i) {
-                    ref = this.left[i];
+                for (i = 0, iz = this.__left.length; i < iz; ++i) {
+                    ref = this.__left[i];
                     ref.tainted = true;
                     this.__delegateToUpperScope(ref);
                 }
             } else {
-                for (i = 0, iz = this.left.length; i < iz; ++i) {
+                for (i = 0, iz = this.__left.length; i < iz; ++i) {
                     // notify all names are through to global
-                    ref = this.left[i];
+                    ref = this.__left[i];
                     current = this;
                     do {
                         current.through.push(ref);
@@ -567,8 +563,8 @@
 
         if (this.type === 'global') {
             implicit = [];
-            for (i = 0, iz = this.left.length; i < iz; ++i) {
-                ref = this.left[i];
+            for (i = 0, iz = this.__left.length; i < iz; ++i) {
+                ref = this.__left[i];
                 if (ref.__maybeImplicitGlobal && !this.set.has(ref.identifier.name)) {
                     implicit.push(ref.__maybeImplicitGlobal);
                 }
@@ -585,7 +581,7 @@
             }
         }
 
-        this.left = null;
+        this.__left = null;
         currentScope = this.upper;
     };
 
@@ -608,7 +604,7 @@
 
     Scope.prototype.__delegateToUpperScope = function __delegateToUpperScope(ref) {
         if (this.upper) {
-            this.upper.left.push(ref);
+            this.upper.__left.push(ref);
         }
         this.through.push(ref);
     };
@@ -655,7 +651,7 @@
         if (node && node.type === Syntax.Identifier) {
             ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal);
             this.references.push(ref);
-            this.left.push(ref);
+            this.__left.push(ref);
         }
     };
 
@@ -674,7 +670,7 @@
     };
 
     Scope.prototype.__isClosed = function isClosed() {
-        return this.left === null;
+        return this.__left === null;
     };
 
     // API Scope#resolve(name)
@@ -881,7 +877,7 @@
             enter: function enter(node, parent) {
                 var i, iz, decl;
                 if (scopeManager.__isScopeRequired(node, parent)) {
-                    new Scope(node, {});
+                    new Scope(scopeManager, node, {});
                 }
 
                 switch (node.type) {

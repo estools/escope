@@ -332,6 +332,7 @@
     Variable.CatchClause = 'CatchClause';
     Variable.Parameter = 'Parameter';
     Variable.FunctionName = 'FunctionName';
+    Variable.ClassName = 'ClassName';
     Variable.Variable = 'Variable';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
@@ -348,7 +349,9 @@
             return true;
         }
 
-        if (scope.type === 'function') {
+        if (scope.type === 'class') {
+            return true;
+        } else if (scope.type === 'function') {
             body = block.body;
         } else if (scope.type === 'global') {
             body = block;
@@ -395,7 +398,7 @@
      * @class Scope
      */
     function Scope(scopeManager, block, opt) {
-        var variable, body;
+        var variable;
 
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
@@ -405,7 +408,8 @@
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' :
-            (block.type === Syntax.BlockStatement) ? 'block' : 'function';
+            (block.type === Syntax.BlockStatement) ? 'block' :
+            (block.type === Syntax.ClassDeclaration || block.type === Syntax.ClassExpression) ? 'class' : 'function';
          /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
@@ -478,7 +482,6 @@
          * @member {boolean} Scope#thisFound
          */
         this.thisFound = false;
-        body = this.type === 'function' ? block.body : block;
 
         this.__left = [];
 
@@ -860,6 +863,9 @@
             if (node.type === Syntax.ArrowFunctionExpression) {
                 return true;
             }
+            if (node.type === Syntax.ClassDeclaration || (node.type === Syntax.ClassExpression && node.id)) {
+                return true;
+            }
         }
         return isScopeRequired(node);
     };
@@ -876,7 +882,7 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager, variableTargetScope;
+        var resultScopes, scopeManager, variableTargetScope, classOuterScope;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
@@ -938,6 +944,35 @@
                         name: node.param,
                         node: node
                     });
+                    break;
+
+                case Syntax.ClassDeclaration:
+                    // Outer block scope.
+                    currentScope.upper.__define(node.id, {
+                        type: Variable.ClassName,
+                        name: node.id,
+                        node: node
+                    });
+                    // Inner ClassBody scope.
+                    currentScope.__define(node.id, {
+                        type: Variable.ClassName,
+                        name: node.id,
+                        node: node
+                    });
+                    currentScope.upper.__referencing(node.superClass);
+                    break;
+
+                case Syntax.ClassExpression:
+                    classOuterScope = (node.id) ? currentScope.upper : currentScope;
+                    if (node.id) {
+                        // Inner ClassBody scope.
+                        currentScope.__define(node.id, {
+                            type: Variable.ClassName,
+                            name: node.id,
+                            node: node
+                        });
+                    }
+                    classOuterScope.__referencing(node.superClass);
                     break;
 
                 case Syntax.ConditionalExpression:

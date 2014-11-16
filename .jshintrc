@@ -12,7 +12,8 @@
     "unused": true,
     "strict": true,
     "trailing": true,
-    "white": true,
+    "validthis": true,
+
     "onevar": true,
 
     "node": true

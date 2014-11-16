@@ -20,28 +20,44 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-gulp = require('gulp')
-mocha = require('gulp-mocha')
-jshint = require('gulp-jshint')
-require('coffee-script/register')
+gulp = require 'gulp'
+mocha = require 'gulp-mocha'
+jshint = require 'gulp-jshint'
+eslint = require 'gulp-eslint'
+require 'coffee-script/register'
 
 TEST = [
     'test/*.coffee'
 ]
 
-LINT = [
-    'Gruntfile.js'
-    'escope.js'
+SOURCE = [
+    '*.js'
 ]
 
+ESLINT_OPTION =
+    rules:
+        'quotes': 0
+        'eqeqeq': 0
+        'no-use-before-define': 0
+        'no-shadow': 0
+        'no-new': 0
+        'no-underscore-dangle': 0
+        'no-multi-spaces': false
+        'no-native-reassign': 0
+    env:
+        'node': true
+
 gulp.task 'test', ->
-    return gulp.src(TEST)
-    .pipe(mocha(
-        reporter: 'spec'
-    ))
+    return gulp.src(TEST).pipe(mocha reporter: 'spec')
 
 gulp.task 'lint', ->
-    return gulp.src(LINT).pipe(jshint('.jshintrc'))
+    return gulp.src(SOURCE)
+    .pipe(jshint('.jshintrc'))
+    .pipe(jshint.reporter(require('jshint-stylish')))
+    .pipe(jshint.reporter('fail'))
+    .pipe(eslint(ESLINT_OPTION))
+    .pipe(eslint.formatEach('compact', process.stderr))
+    .pipe(eslint.failOnError())
 
 gulp.task 'travis', [ 'lint', 'test' ]
 gulp.task 'default', [ 'travis' ]

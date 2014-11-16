@@ -22,13 +22,15 @@
     "estraverse": ">=1.7.1"
   },
   "devDependencies": {
-    "coffee-script": "~1.8.0",
     "chai": "~1.10.0",
+    "coffee-script": "~1.8.0",
     "esprima": "~1.2.2",
-    "jsdoc": "~3.3.0-alpha10",
-    "gulp-mocha": "~1.1.1",
+    "gulp": "~3.8.10",
+    "gulp-eslint": "^0.1.8",
     "gulp-jshint": "~1.9.0",
-    "gulp": "~3.8.10"
+    "gulp-mocha": "~1.1.1",
+    "jsdoc": "~3.3.0-alpha10",
+    "jshint-stylish": "^1.0.0"
   },
   "licenses": [
     {

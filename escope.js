@@ -775,7 +775,7 @@
         if (this.attached) {
             return node[Scope.mangledName] || null;
         }
-        if (Scope.isScopeRequired(node)) {
+        if (this.__isScopeRequired(node)) {
             for (i = 0, iz = this.scopes.length; i < iz; ++i) {
                 scope = this.scopes[i];
                 if (!scope.functionExpressionScope) {

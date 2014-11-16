@@ -1,6 +1,7 @@
 /*
-  Copyright (C) 2012-2013 Yusuke Suzuki <utatane.tea@gmail.com>
+  Copyright (C) 2012-2014 Yusuke Suzuki <utatane.tea@gmail.com>
   Copyright (C) 2013 Alex Seville <hi@alexanderseville.com>
+  Copyright (C) 2014 Thiago de Arruda <tpadilha84@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -342,6 +343,11 @@
             return true;
         }
 
+        // ArrowFunctionExpression's scope is always strict scope.
+        if (block.type === Syntax.ArrowFunctionExpression) {
+            return true;
+        }
+
         if (scope.type === 'function') {
             body = block.body;
         } else if (scope.type === 'global') {
@@ -350,6 +356,7 @@
             return false;
         }
 
+        // Search 'use strict' directive.
         if (options.directive) {
             for (i = 0, iz = body.body.length; i < iz; ++i) {
                 stmt = body.body[i];
@@ -775,7 +782,10 @@
         if (this.attached) {
             return node[Scope.mangledName] || null;
         }
-        if (this.__isScopeRequired(node)) {
+
+        // It may return false result. (for example, if node is the FunctionBody, it may return true under ES6 mode.)
+        // But it will be filtered the subsequent exploring.
+        if (this.__isScopeRequired(node, null)) {
             for (i = 0, iz = this.scopes.length; i < iz; ++i) {
                 scope = this.scopes[i];
                 if (!scope.functionExpressionScope) {
@@ -828,7 +838,7 @@
 
     ScopeManager.prototype.__isScopeRequired = function (node, parent) {
         function isFunctionScopeRequired(node) {
-            return node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
+            return node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration || node.type === Syntax.ArrowFunctionExpression;
         }
 
         function isVariableScopeRequired(node) {
@@ -845,6 +855,9 @@
                 if (parent && isFunctionScopeRequired(parent)) {
                     return false;
                 }
+                return true;
+            }
+            if (node.type === Syntax.ArrowFunctionExpression) {
                 return true;
             }
         }

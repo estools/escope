@@ -25,54 +25,32 @@ expect = require('chai').expect
 harmony = require '../third_party/esprima'
 escope = require '..'
 
-describe 'ES6 block scope', ->
-    it 'let is materialized in ES6 block scope#1', ->
+describe 'ES6 arrow function expression', ->
+    it 'materialize scope for arrow function expression', ->
         ast = harmony.parse """
-        {
-            let i = 20;
-            i;
+        var arrow = () => {
+            let i = 0;
+            var j = 20;
+            console.log(i);
         }
         """
 
         scopeManager = escope.analyze ast, ecmaVersion: 6
-        expect(scopeManager.scopes).to.have.length 2  # Program and BlcokStatement scope.
+        expect(scopeManager.scopes).to.have.length 2
 
         scope = scopeManager.scopes[0]
         expect(scope.type).to.be.equal 'global'
-        expect(scope.variables).to.have.length 0  # No variable in Program scope.
+        expect(scope.block.type).to.be.equal 'Program'
+        expect(scope.isStrict).to.be.false
+        expect(scope.variables).to.have.length 1
 
         scope = scopeManager.scopes[1]
-        expect(scope.type).to.be.equal 'block'
-        expect(scope.variables).to.have.length 1  # `i` in block scope.
-        expect(scope.variables[0].name).to.be.equal 'i'
-        expect(scope.references).to.have.length 2
-        expect(scope.references[0].identifier.name).to.be.equal('i')
-        expect(scope.references[1].identifier.name).to.be.equal('i')
-
-    it 'let is materialized in ES6 block scope#2', ->
-        ast = harmony.parse """
-        {
-            let i = 20;
-            var i = 20;
-            i;
-        }
-        """
-
-        scopeManager = escope.analyze ast, ecmaVersion: 6
-        expect(scopeManager.scopes).to.have.length 2  # Program and BlcokStatement scope.
-
-        scope = scopeManager.scopes[0]
-        expect(scope.type).to.be.equal 'global'
-        expect(scope.variables).to.have.length 1  # No variable in Program scope.
-        expect(scope.variables[0].name).to.be.equal 'i'
-
-        scope = scopeManager.scopes[1]
-        expect(scope.type).to.be.equal 'block'
-        expect(scope.variables).to.have.length 1  # `i` in block scope.
-        expect(scope.variables[0].name).to.be.equal 'i'
-        expect(scope.references).to.have.length 3
-        expect(scope.references[0].identifier.name).to.be.equal('i')
-        expect(scope.references[1].identifier.name).to.be.equal('i')
-        expect(scope.references[2].identifier.name).to.be.equal('i')
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.block.type).to.be.equal 'ArrowFunctionExpression'
+        expect(scope.isStrict).to.be.true
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'i'
+        expect(scope.variables[2].name).to.be.equal 'j'
 
 # vim: set sw=4 ts=4 et tw=80 :

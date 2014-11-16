@@ -4,6 +4,7 @@
 
 # Node modules
 node_modules/
+npm-debug.log
 
 # Cover
 .coverage_data/

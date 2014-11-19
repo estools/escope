@@ -203,12 +203,6 @@
              */
             this.partial = partial;
         }
-        /**
-         * If reference may become implicit global variable definition,
-         * this is the tree being written to it.
-         * @member {esprima#Node} Reference#__maybeImplicitGlobal
-         * @private
-         */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
     }
 
@@ -546,7 +540,7 @@
     }
 
     Scope.prototype.__close = function __close() {
-        var i, iz, ref, current, node, implicit;
+        var i, iz, ref, current, implicit, info;
 
         // Because if this is global environment, upper is null
         if (!this.dynamic || options.optimistic) {
@@ -589,11 +583,11 @@
 
             // create an implicit global variable from assignment expression
             for (i = 0, iz = implicit.length; i < iz; ++i) {
-                node = implicit[i];
-                this.__defineImplicit(node.left, {
+                info = implicit[i];
+                this.__defineImplicit(info.pattern, {
                     type: Variable.ImplicitGlobalVariable,
-                    name: node.left,
-                    node: node
+                    name: info.pattern,
+                    node: info.node
                 });
             }
 
@@ -878,44 +872,22 @@
         return isScopeRequired(node);
     };
 
-    function doVariableDeclaration(variableTargetScope, node, index) {
-        var decl, init;
-
-        decl = node.declarations[index];
-        init = decl.init;
-        // FIXME: Don't consider initializer with complex patterns.
-        // Such as,
-        // var [a, b, c = 20] = array;
-        estraverse.traverse(decl.id, {
+    function traverseIdentifierInPattern(rootPattern, callback) {
+        estraverse.traverse(rootPattern, {
             enter: function (pattern, parent) {
                 var i, iz, element, property;
-                function define(pattern, toplevel) {
-                    variableTargetScope.__define(pattern, {
-                        type: Variable.Variable,
-                        name: pattern,
-                        node: decl,
-                        index: index,
-                        kind: node.kind,
-                        parent: node
-                    });
-
-                    if (init) {
-                        currentScope.__referencing(pattern, Reference.WRITE, init, null, !toplevel);
-                    }
-                }
 
                 switch (pattern.type) {
                     case Syntax.Identifier:
                         // Toplevel identifier.
                         if (parent === null) {
-                            define(pattern, true);
-                            return;
+                            callback(pattern, true);
                         }
                         break;
 
                     case Syntax.SpreadElement:
                         if (pattern.argument.type === Syntax.Identifier) {
-                            define(pattern.argument, false);
+                            callback(pattern.argument, false);
                         }
                         break;
 
@@ -923,11 +895,11 @@
                         for (i = 0, iz = pattern.properties.length; i < iz; ++i) {
                             property = pattern.properties[i];
                             if (property.shorthand) {
-                                define(property.key, false);
+                                callback(property.key, false);
                                 continue;
                             }
                             if (property.value.type === Syntax.Identifier) {
-                                define(property.value, false);
+                                callback(property.value, false);
                                 continue;
                             }
                         }
@@ -937,11 +909,35 @@
                         for (i = 0, iz = pattern.elements.length; i < iz; ++i) {
                             element = pattern.elements[i];
                             if (element && element.type === Syntax.Identifier) {
-                                define(element, false);
+                                callback(element, false);
                             }
                         }
                         break;
                 }
+            }
+        });
+    }
+
+    function doVariableDeclaration(variableTargetScope, node, index) {
+        var decl, init;
+
+        decl = node.declarations[index];
+        init = decl.init;
+        // FIXME: Don't consider initializer with complex patterns.
+        // Such as,
+        // var [a, b, c = 20] = array;
+        traverseIdentifierInPattern(decl.id, function (pattern, toplevel) {
+            variableTargetScope.__define(pattern, {
+                type: Variable.Variable,
+                name: pattern,
+                node: decl,
+                index: index,
+                kind: node.kind,
+                parent: node
+            });
+
+            if (init) {
+                currentScope.__referencing(pattern, Reference.WRITE, init, null, !toplevel);
             }
         });
     }
@@ -978,7 +974,16 @@
                 switch (node.type) {
                 case Syntax.AssignmentExpression:
                     if (node.operator === '=') {
-                        currentScope.__referencing(node.left, Reference.WRITE, node.right, (!currentScope.isStrict && node.left.name != null) && node);
+                        traverseIdentifierInPattern(node.left, function (pattern, toplevel) {
+                            var maybeImplicitGlobal = null;
+                            if (!currentScope.isStrict) {
+                                maybeImplicitGlobal = {
+                                    pattern: pattern,
+                                    node: node
+                                };
+                            }
+                            currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !toplevel);
+                        });
                     } else {
                         currentScope.__referencing(node.left, Reference.RW, node.right);
                     }
@@ -1085,9 +1090,20 @@
 
                 case Syntax.ForInStatement:
                     if (node.left.type === Syntax.VariableDeclaration) {
-                        currentScope.__referencing(node.left.declarations[0].id, Reference.WRITE, node.right, null, true);
+                        traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {
+                            currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+                        });
                     } else {
-                        currentScope.__referencing(node.left, Reference.WRITE, node.right, (!currentScope.isStrict && node.left.name != null) && node, true);
+                        traverseIdentifierInPattern(node.left, function (pattern) {
+                            var maybeImplicitGlobal = null;
+                            if (!currentScope.isStrict) {
+                                maybeImplicitGlobal = {
+                                    pattern: pattern,
+                                    node: node
+                                };
+                            }
+                            currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
+                        });
                     }
                     currentScope.__referencing(node.right);
                     break;

@@ -27,10 +27,8 @@
     "esprima": "~1.2.2",
     "gulp": "~3.8.10",
     "gulp-eslint": "^0.2.0",
-    "gulp-jshint": "~1.9.0",
     "gulp-mocha": "~2.0.0",
     "jsdoc": "~3.3.0-alpha10",
-    "jshint-stylish": "^1.0.0",
     "minimist": "^1.1.0"
   },
   "licenses": [

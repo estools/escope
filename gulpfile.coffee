@@ -22,7 +22,6 @@
 
 gulp = require 'gulp'
 mocha = require 'gulp-mocha'
-jshint = require 'gulp-jshint'
 eslint = require 'gulp-eslint'
 minimist = require 'minimist'
 require 'coffee-script/register'
@@ -41,6 +40,7 @@ ESLINT_OPTION =
         'no-underscore-dangle': 0
         'no-multi-spaces': false
         'no-native-reassign': 0
+        'no-loop-func': 0
     env:
         'node': true
 
@@ -53,11 +53,8 @@ gulp.task 'test', ->
 
 gulp.task 'lint', ->
     return gulp.src(SOURCE)
-    .pipe(jshint('.jshintrc'))
-    .pipe(jshint.reporter(require('jshint-stylish')))
-    .pipe(jshint.reporter('fail'))
     .pipe(eslint(ESLINT_OPTION))
-    .pipe(eslint.formatEach('compact', process.stderr))
+    .pipe(eslint.formatEach('stylish', process.stderr))
     .pipe(eslint.failOnError())
 
 gulp.task 'travis', [ 'lint', 'test' ]

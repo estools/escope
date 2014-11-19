@@ -24,11 +24,8 @@ gulp = require 'gulp'
 mocha = require 'gulp-mocha'
 jshint = require 'gulp-jshint'
 eslint = require 'gulp-eslint'
+minimist = require 'minimist'
 require 'coffee-script/register'
-
-TEST = [
-    'test/*.coffee'
-]
 
 SOURCE = [
     '*.js'
@@ -48,7 +45,11 @@ ESLINT_OPTION =
         'node': true
 
 gulp.task 'test', ->
-    return gulp.src(TEST).pipe(mocha reporter: 'spec')
+    options = minimist process.argv.slice(2),
+        string: 'test',
+        default:
+            test: 'test/*.coffee'
+    return gulp.src(options.test).pipe(mocha reporter: 'spec')
 
 gulp.task 'lint', ->
     return gulp.src(SOURCE)

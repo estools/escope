@@ -888,6 +888,7 @@
         // var [a, b, c = 20] = array;
         estraverse.traverse(decl.id, {
             enter: function (pattern, parent) {
+                var i, iz, element, property;
                 function define(pattern, toplevel) {
                     variableTargetScope.__define(pattern, {
                         type: Variable.Variable,
@@ -910,18 +911,29 @@
                             define(pattern, true);
                             return;
                         }
-
-                        // Identifiers inside ArrayPattern.
-                        if (parent.type === Syntax.ArrayPattern) {
-                            define(pattern, false);
-                            return;
-                        }
                         break;
 
                     case Syntax.ObjectPattern:
+                        for (i = 0, iz = pattern.properties.length; i < iz; ++i) {
+                            property = pattern.properties[i];
+                            if (property.shorthand) {
+                                define(property.key, false);
+                                continue;
+                            }
+                            if (property.value.type === Syntax.Identifier) {
+                                define(property.value, false);
+                                continue;
+                            }
+                        }
                         break;
 
                     case Syntax.ArrayPattern:
+                        for (i = 0, iz = pattern.elements.length; i < iz; ++i) {
+                            element = pattern.elements[i];
+                            if (element && element.type === Syntax.Identifier) {
+                                define(element, false);
+                            }
+                        }
                         break;
                 }
             }

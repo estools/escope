@@ -67,4 +67,106 @@ describe 'ES6 destructuring assignments', ->
         expect(scope.references[3].identifier.name).to.be.equal 'array'
         expect(scope.references[3].isWrite()).to.be.false
 
+    it 'ObjectPattern in var', ->
+        ast = harmony.parse """
+        (function () {
+            var {
+                shorthand,
+                key: value,
+                hello: {
+                    world
+                }
+            } = object;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 1
+        expect(scope.implicit.left[0].identifier.name).to.be.equal 'object'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 4
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'shorthand'
+        expect(scope.variables[2].name).to.be.equal 'value'
+        expect(scope.variables[3].name).to.be.equal 'world'
+        expect(scope.references).to.have.length 4
+        expect(scope.references[0].identifier.name).to.be.equal 'shorthand'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].partial).to.be.true
+        expect(scope.references[0].resolved).to.be.equal scope.variables[1]
+        expect(scope.references[1].identifier.name).to.be.equal 'value'
+        expect(scope.references[1].isWrite()).to.be.true
+        expect(scope.references[1].partial).to.be.true
+        expect(scope.references[1].resolved).to.be.equal scope.variables[2]
+        expect(scope.references[2].identifier.name).to.be.equal 'world'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].partial).to.be.true
+        expect(scope.references[2].resolved).to.be.equal scope.variables[3]
+        expect(scope.references[3].identifier.name).to.be.equal 'object'
+        expect(scope.references[3].isWrite()).to.be.false
+
+
+    it 'complex pattern in var', ->
+        ast = harmony.parse """
+        (function () {
+            var {
+                shorthand,
+                key: [ a, b, c, d, e ],
+                hello: {
+                    world
+                }
+            } = object;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 1
+        expect(scope.implicit.left[0].identifier.name).to.be.equal 'object'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 8
+        for name, index in [
+                'arguments'
+                'shorthand'
+                'a'
+                'b'
+                'c'
+                'd'
+                'e'
+                'world'
+            ]
+            expect(scope.variables[index].name).to.be.equal name
+        expect(scope.references).to.have.length 8
+        for name, index in [
+                'shorthand'
+                'a'
+                'b'
+                'c'
+                'd'
+                'e'
+                'world'
+            ]
+            expect(scope.references[index].identifier.name).to.be.equal name
+            expect(scope.references[index].isWrite()).to.be.true
+            expect(scope.references[index].partial).to.be.true
+        expect(scope.references[7].identifier.name).to.be.equal 'object'
+        expect(scope.references[7].isWrite()).to.be.false
+
 # vim: set sw=4 ts=4 et tw=80 :

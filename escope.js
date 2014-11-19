@@ -494,10 +494,7 @@
             this.functionExpressionScope = true;
         } else {
             if (this.type === 'function') {
-                variable = new Variable('arguments', this);
-                this.taints.set('arguments', true);
-                this.set.set('arguments', variable);
-                this.variables.push(variable);
+                this.__defineArguments();
             }
 
             if (block.type === Syntax.FunctionExpression && block.id) {
@@ -619,39 +616,38 @@
         this.through.push(ref);
     };
 
-    Scope.prototype.__defineImplicit = function __defineImplicit(node, info) {
-        var name, variable;
-        if (node && node.type === Syntax.Identifier) {
-            name = node.name;
-            if (!this.implicit.set.has(name)) {
-                variable = new Variable(name, this);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-                this.implicit.set.set(name, variable);
-                this.implicit.variables.push(variable);
-            } else {
-                variable = this.implicit.set.get(name);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-            }
+    Scope.prototype.__defineGeneric = function (name, set, variables, node, info) {
+        var variable;
+
+        variable = set.get(name);
+        if (!variable) {
+            variable = new Variable(name, this);
+            set.set(name, variable);
+            variables.push(variable);
+        }
+
+        if (info) {
+            variable.defs.push(info);
+        }
+        if (node) {
+            variable.identifiers.push(node);
         }
     };
 
-    Scope.prototype.__define = function __define(node, info) {
-        var name, variable;
+    Scope.prototype.__defineArguments = function () {
+        this.__defineGeneric('arguments', this.set, this.variables);
+        this.taints.set('arguments', true);
+    };
+
+    Scope.prototype.__defineImplicit = function (node, info) {
         if (node && node.type === Syntax.Identifier) {
-            name = node.name;
-            if (!this.set.has(name)) {
-                variable = new Variable(name, this);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-                this.set.set(name, variable);
-                this.variables.push(variable);
-            } else {
-                variable = this.set.get(name);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-            }
+            this.__defineGeneric(node.name, this.implicit.set, this.implicit.variables, node, info);
+        }
+    };
+
+    Scope.prototype.__define = function (node, info) {
+        if (node && node.type === Syntax.Identifier) {
+            this.__defineGeneric(node.name, this.set, this.variables, node, info);
         }
     };
 

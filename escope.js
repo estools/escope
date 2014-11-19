@@ -1119,25 +1119,19 @@
                         name: node.id,
                         node: node
                     });
-                    for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        currentScope.__define(node.params[i], {
-                            type: Variable.Parameter,
-                            name: node.params[i],
-                            node: node,
-                            index: i
-                        });
-                    }
-                    break;
+                    // falls through
 
                 case Syntax.FunctionExpression:
                 case Syntax.ArrowFunctionExpression:
                     // id is defined in upper scope
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        currentScope.__define(node.params[i], {
-                            type: Variable.Parameter,
-                            name: node.params[i],
-                            node: node,
-                            index: i
+                        traverseIdentifierInPattern(node.params[i], function (pattern) {
+                            currentScope.__define(pattern, {
+                                type: Variable.Parameter,
+                                name: pattern,
+                                node: node,
+                                index: i
+                            });
                         });
                     }
                     break;

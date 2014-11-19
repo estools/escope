@@ -162,7 +162,7 @@
      * A Reference represents a single occurrence of an identifier in code.
      * @class Reference
      */
-    function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
+    function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal, partial) {
         /**
          * Identifier syntax node.
          * @member {esprima#Identifier} Reference#identifier
@@ -197,10 +197,16 @@
              * @member {esprima#Node} Reference#writeExpr
              */
             this.writeExpr = writeExpr;
+            /**
+             * Whether the Reference might refer to a partial value of writeExpr.
+             * @member {boolean} Reference#partial
+             */
+            this.partial = partial;
         }
         /**
-         * Whether the Reference might refer to a global variable.
-         * @member {boolean} Reference#__maybeImplicitGlobal
+         * If reference may become implicit global variable definition,
+         * this is the tree being written to it.
+         * @member {esprima#Node} Reference#__maybeImplicitGlobal
          * @private
          */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
@@ -220,7 +226,7 @@
      * @constant Reference.RW
      * @private
      */
-    Reference.RW = 0x3;
+    Reference.RW = Reference.READ | Reference.WRITE;
 
     /**
      * Whether the reference is static.
@@ -237,7 +243,7 @@
      * @return {boolean}
      */
     Reference.prototype.isWrite = function isWrite() {
-        return this.flag & Reference.WRITE;
+        return !!(this.flag & Reference.WRITE);
     };
 
     /**
@@ -246,7 +252,7 @@
      * @return {boolean}
      */
     Reference.prototype.isRead = function isRead() {
-        return this.flag & Reference.READ;
+        return !!(this.flag & Reference.READ);
     };
 
     /**
@@ -398,8 +404,6 @@
      * @class Scope
      */
     function Scope(scopeManager, block, opt) {
-        var variable;
-
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
@@ -529,7 +533,13 @@
             globalScope = this;
             globalScope.implicit = {
                 set: new Map(),
-                variables: []
+                variables: [],
+                /**
+                * List of {@link Reference}s that are left to be resolved (i.e. which
+                * need to be linked to the variable they refer to).
+                * @member {Reference[]} Scope#implicit#left
+                */
+                left: []
             };
         }
         scopes.push(this);
@@ -586,6 +596,8 @@
                     node: node
                 });
             }
+
+            this.implicit.left = this.__left;
         }
 
         this.__left = null;
@@ -651,11 +663,11 @@
         }
     };
 
-    Scope.prototype.__referencing = function __referencing(node, assign, writeExpr, maybeImplicitGlobal) {
+    Scope.prototype.__referencing = function __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial) {
         var ref;
         // because Array element may be null
         if (node && node.type === Syntax.Identifier) {
-            ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal);
+            ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial);
             this.references.push(ref);
             this.__left.push(ref);
         }
@@ -866,6 +878,56 @@
         return isScopeRequired(node);
     };
 
+    function doVariableDeclaration(variableTargetScope, node, index) {
+        var decl, init;
+
+        decl = node.declarations[index];
+        init = decl.init;
+        // FIXME: Don't consider initializer with complex patterns.
+        // Such as,
+        // var [a, b, c = 20] = array;
+        estraverse.traverse(decl.id, {
+            enter: function (pattern, parent) {
+                function define(pattern, toplevel) {
+                    variableTargetScope.__define(pattern, {
+                        type: Variable.Variable,
+                        name: pattern,
+                        node: decl,
+                        index: index,
+                        kind: node.kind,
+                        parent: node
+                    });
+
+                    if (init) {
+                        currentScope.__referencing(pattern, Reference.WRITE, init, null, !toplevel);
+                    }
+                }
+
+                switch (pattern.type) {
+                    case Syntax.Identifier:
+                        // Toplevel identifier.
+                        if (parent === null) {
+                            define(pattern, true);
+                            return;
+                        }
+
+                        // Identifiers inside ArrayPattern.
+                        if (parent.type === Syntax.ArrayPattern) {
+                            define(pattern, false);
+                            return;
+                        }
+                        break;
+
+                    case Syntax.ObjectPattern:
+                        break;
+
+                    case Syntax.ArrayPattern:
+                        break;
+                }
+            }
+        });
+    }
+
     /**
      * Main interface function. Takes an Esprima syntax tree and returns the
      * analyzed scopes.
@@ -878,7 +940,7 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager, variableTargetScope, classOuterScope;
+        var resultScopes, scopeManager;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
@@ -890,7 +952,7 @@
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
             enter: function enter(node, parent) {
-                var i, iz, decl;
+                var i, iz, decl, variableTargetScope, classOuterScope;
                 if (scopeManager.__isScopeRequired(node, parent)) {
                     new Scope(scopeManager, node, {});
                 }
@@ -1005,9 +1067,9 @@
 
                 case Syntax.ForInStatement:
                     if (node.left.type === Syntax.VariableDeclaration) {
-                        currentScope.__referencing(node.left.declarations[0].id, Reference.WRITE, null, false);
+                        currentScope.__referencing(node.left.declarations[0].id, Reference.WRITE, node.right, null, true);
                     } else {
-                        currentScope.__referencing(node.left, Reference.WRITE, null, (!currentScope.isStrict && node.left.name != null) && node);
+                        currentScope.__referencing(node.left, Reference.WRITE, node.right, (!currentScope.isStrict && node.left.name != null) && node, true);
                     }
                     currentScope.__referencing(node.right);
                     break;
@@ -1133,17 +1195,8 @@
                     variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
                     for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                         decl = node.declarations[i];
-                        variableTargetScope.__define(decl.id, {
-                            type: Variable.Variable,
-                            name: decl.id,
-                            node: decl,
-                            index: i,
-                            kind: node.kind,
-                            parent: node
-                        });
+                        doVariableDeclaration(variableTargetScope, node, i);
                         if (decl.init) {
-                            // initializer is found
-                            currentScope.__referencing(decl.id, Reference.WRITE, decl.init, false);
                             currentScope.__referencing(decl.init);
                         }
                     }

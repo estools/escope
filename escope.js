@@ -913,6 +913,12 @@
                         }
                         break;
 
+                    case Syntax.SpreadElement:
+                        if (pattern.argument.type === Syntax.Identifier) {
+                            define(pattern.argument, false);
+                        }
+                        break;
+
                     case Syntax.ObjectPattern:
                         for (i = 0, iz = pattern.properties.length; i < iz; ++i) {
                             property = pattern.properties[i];

@@ -1,8 +1,8 @@
-Escope ([escope](http://github.com/Constellation/escope)) is
+Escope ([escope](http://github.com/estools/escope)) is
 [ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm)
-scope analyzer extracted from [esmangle project](http://github.com/Constellation/esmangle).
+scope analyzer extracted from [esmangle project](http://github.com/estools/esmangle).
 
-[![Build Status](https://travis-ci.org/Constellation/escope.png?branch=master)](https://travis-ci.org/Constellation/escope)
+[![Build Status](https://travis-ci.org/estools/escope.png?branch=master)](https://travis-ci.org/estools/escope)
 
 ### Document
 
@@ -10,14 +10,14 @@ Generated JSDoc is [here](http://constellation.github.io/escope/).
 
 ### Demos and Tools
 
-Demonstration is [here](http://mazurov.github.io/escope-demo/) by [Sasha Mazurov](https://github.com/mazurov) (twitter: [@mazurov](http://twitter.com/mazurov)). [issue](https://github.com/Constellation/escope/issues/14)
+Demonstration is [here](http://mazurov.github.io/escope-demo/) by [Sasha Mazurov](https://github.com/mazurov) (twitter: [@mazurov](http://twitter.com/mazurov)). [issue](https://github.com/estools/escope/issues/14)
 
 ![Demo](https://f.cloud.github.com/assets/75759/462920/7aa6dd40-b4f5-11e2-9f07-9f4e8d0415f9.gif)
 
 
 And there are tools constructed on Escope.
 
-- [Esmangle](https://github.com/Constellation/esmangle) is a minifier / mangler / optimizer.
+- [Esmangle](https://github.com/estools/esmangle) is a minifier / mangler / optimizer.
 - [Eslevels](https://github.com/mazurov/eslevels) is a scope levels analyzer and [SublimeText plugin for scope context coloring](https://github.com/mazurov/sublime-levels) is constructed on it.
 - [Esgoggles](https://github.com/keeyipchan/esgoggles) is JavaScript code browser.
 

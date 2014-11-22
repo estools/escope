@@ -1,7 +1,7 @@
 {
   "name": "escope",
   "description": "ECMAScript scope analyzer",
-  "homepage": "http://github.com/Constellation/escope.html",
+  "homepage": "http://github.com/estools/escope.html",
   "main": "escope.js",
   "version": "2.0.0-dev",
   "engines": {
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "http://github.com/Constellation/escope.git"
+    "url": "http://github.com/estools/escope.git"
   },
   "dependencies": {
     "estraverse": ">=1.8.0"
@@ -34,7 +34,7 @@
   "licenses": [
     {
       "type": "BSD",
-      "url": "http://github.com/Constellation/escope/raw/master/LICENSE.BSD"
+      "url": "http://github.com/estools/escope/raw/master/LICENSE.BSD"
     }
   ],
   "scripts": {

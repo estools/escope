@@ -1049,10 +1049,12 @@
                     break;
 
                 case Syntax.CatchClause:
-                    currentScope.__define(node.param, {
-                        type: Variable.CatchClause,
-                        name: node.param,
-                        node: node
+                    traverseIdentifierInPattern(node.param, function (pattern) {
+                        currentScope.__define(pattern, {
+                            type: Variable.CatchClause,
+                            name: node.param,
+                            node: node
+                        });
                     });
                     break;
 
@@ -1113,6 +1115,7 @@
                     currentScope.__referencing(node.update);
                     break;
 
+                case Syntax.ForOfStatement:
                 case Syntax.ForInStatement:
                     if (node.left.type === Syntax.VariableDeclaration) {
                         traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {

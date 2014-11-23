@@ -26,7 +26,7 @@ harmony = require '../third_party/esprima'
 escope = require '..'
 
 describe 'ES6 iteration scope', ->
-    it 'let materialize iteration scope for ForInStatement', ->
+    it 'let materialize iteration scope for ForInStatement#1', ->
         ast = harmony.parse """
         (function () {
             let i = 20;
@@ -68,6 +68,68 @@ describe 'ES6 iteration scope', ->
         expect(scope.references).to.have.length 1
         expect(scope.references[0].identifier.name).to.be.equal 'i'
         expect(scope.references[0].resolved).to.be.equal scope.variables[0]
+
+        scope = scopeManager.scopes[4]
+        expect(scope.type).to.be.equal 'block'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 2
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal iterScope.variables[0]
+        expect(scope.references[1].identifier.name).to.be.equal 'console'
+        expect(scope.references[1].resolved).to.be.equal null
+
+    it 'let materialize iteration scope for ForInStatement#2', ->
+        ast = harmony.parse """
+        (function () {
+            let i = 20;
+            for (let { i, j, k } in i) {
+                console.log(i);
+            }
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 5
+
+        scope = scopeManager.scopes[0]
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.variables).to.have.length 0
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 2
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'i'
+        expect(scope.references).to.have.length 1
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal scope.variables[1]
+
+        iterScope = scope = scopeManager.scopes[2]
+        expect(scope.type).to.be.equal 'TDZ'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.be.equal 'i'
+        expect(scope.variables[0].defs[0].type).to.be.equal 'TDZ'
+        expect(scope.variables[1].name).to.be.equal 'j'
+        expect(scope.variables[1].defs[0].type).to.be.equal 'TDZ'
+        expect(scope.variables[2].name).to.be.equal 'k'
+        expect(scope.variables[2].defs[0].type).to.be.equal 'TDZ'
+        expect(scope.references).to.have.length 1
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal scope.variables[0]
+
+        iterScope = scope = scopeManager.scopes[3]
+        expect(scope.type).to.be.equal 'for'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.be.equal 'i'
+        expect(scope.variables[1].name).to.be.equal 'j'
+        expect(scope.variables[2].name).to.be.equal 'k'
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal scope.variables[0]
+        expect(scope.references[1].identifier.name).to.be.equal 'j'
+        expect(scope.references[1].resolved).to.be.equal scope.variables[1]
+        expect(scope.references[2].identifier.name).to.be.equal 'k'
+        expect(scope.references[2].resolved).to.be.equal scope.variables[2]
 
         scope = scopeManager.scopes[4]
         expect(scope.type).to.be.equal 'block'

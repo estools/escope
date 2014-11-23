@@ -140,4 +140,72 @@ describe 'ES6 iteration scope', ->
         expect(scope.references[1].identifier.name).to.be.equal 'console'
         expect(scope.references[1].resolved).to.be.equal null
 
+    it 'let materialize iteration scope for ForStatement#2', ->
+        ast = harmony.parse """
+        (function () {
+            let i = 20;
+            let obj = {};
+            for (let { i, j, k } = obj; i < okok; ++i) {
+                console.log(i, j, k);
+            }
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 4
+
+        scope = scopeManager.scopes[0]
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.variables).to.have.length 0
+
+        functionScope = scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'i'
+        expect(scope.variables[2].name).to.be.equal 'obj'
+        expect(scope.references).to.have.length 2
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal scope.variables[1]
+        expect(scope.references[1].identifier.name).to.be.equal 'obj'
+        expect(scope.references[1].resolved).to.be.equal scope.variables[2]
+
+        iterScope = scope = scopeManager.scopes[2]
+        expect(scope.type).to.be.equal 'for'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.be.equal 'i'
+        expect(scope.variables[0].defs[0].type).to.be.equal 'Variable'
+        expect(scope.variables[1].name).to.be.equal 'j'
+        expect(scope.variables[1].defs[0].type).to.be.equal 'Variable'
+        expect(scope.variables[2].name).to.be.equal 'k'
+        expect(scope.variables[2].defs[0].type).to.be.equal 'Variable'
+        expect(scope.references).to.have.length 7
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal scope.variables[0]
+        expect(scope.references[1].identifier.name).to.be.equal 'j'
+        expect(scope.references[1].resolved).to.be.equal scope.variables[1]
+        expect(scope.references[2].identifier.name).to.be.equal 'k'
+        expect(scope.references[2].resolved).to.be.equal scope.variables[2]
+        expect(scope.references[3].identifier.name).to.be.equal 'obj'
+        expect(scope.references[3].resolved).to.be.equal functionScope.variables[2]
+        expect(scope.references[4].identifier.name).to.be.equal 'i'
+        expect(scope.references[4].resolved).to.be.equal scope.variables[0]
+        expect(scope.references[5].identifier.name).to.be.equal 'okok'
+        expect(scope.references[5].resolved).to.be.null
+        expect(scope.references[6].identifier.name).to.be.equal 'i'
+        expect(scope.references[6].resolved).to.be.equal scope.variables[0]
+
+        scope = scopeManager.scopes[3]
+        expect(scope.type).to.be.equal 'block'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 4
+        expect(scope.references[0].identifier.name).to.be.equal 'i'
+        expect(scope.references[0].resolved).to.be.equal iterScope.variables[0]
+        expect(scope.references[1].identifier.name).to.be.equal 'j'
+        expect(scope.references[1].resolved).to.be.equal iterScope.variables[1]
+        expect(scope.references[2].identifier.name).to.be.equal 'k'
+        expect(scope.references[2].resolved).to.be.equal iterScope.variables[2]
+        expect(scope.references[3].identifier.name).to.be.equal 'console'
+        expect(scope.references[3].resolved).to.be.null
+
 # vim: set sw=4 ts=4 et tw=80 :

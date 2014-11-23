@@ -442,7 +442,7 @@
             (block.type === Syntax.BlockStatement) ? 'block' :
             (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
             (block.type === Syntax.CatchClause) ? 'catch' :
-            (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement) ? 'for' :
+            (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement || block.type === Syntax.ForStatement) ? 'for' :
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.ClassBody) ? 'class' : 'global';
          /**
@@ -1139,6 +1139,13 @@
                     break;
 
                 case Syntax.ForStatement:
+                    if (node.init && node.init.type === Syntax.VariableDeclaration && node.init.kind !== 'var') {
+                        // Create ForStatement declaration.
+                        // NOTE: In ES6, ForStatement dynamically generates
+                        // per iteration environment. However, escope is
+                        // a static analyzer, we only generate one scope for ForStatement.
+                        scopeManager.__nestScope(node, parent);
+                    }
                     currentScope.__referencing(node.init);
                     currentScope.__referencing(node.test);
                     currentScope.__referencing(node.update);

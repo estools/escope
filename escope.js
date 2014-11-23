@@ -436,7 +436,7 @@
             (block.type === Syntax.WithStatement) ? 'with' :
             (block.type === Syntax.Program) ? 'global' :
             (block.type === Syntax.BlockStatement) ? 'block' :
-            (block.type === Syntax.ClassDeclaration || block.type === Syntax.ClassExpression) ? 'class' : 'function';
+            (block.type === Syntax.ClassBody) ? 'class' : 'function';
          /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
@@ -894,7 +894,7 @@
             if (node.type === Syntax.ArrowFunctionExpression) {
                 return true;
             }
-            if (node.type === Syntax.ClassDeclaration || (node.type === Syntax.ClassExpression && node.id)) {
+            if (node.type === Syntax.ClassBody) {
                 return true;
             }
         }
@@ -995,12 +995,12 @@
         // attach scope and collect / resolve names
         estraverse.traverse(tree, {
             enter: function enter(node, parent) {
-                var i, iz, decl, variableTargetScope, classOuterScope;
+                var i, iz, decl, variableTargetScope;
                 if (scopeManager.__isScopeRequired(node, parent)) {
                     new Scope(scopeManager, node, parent, {});
                 }
 
-                switch (node.type) {
+                switch (this.type()) {
                 case Syntax.AssignmentExpression:
                     if (node.operator === '=') {
                         traverseIdentifierInPattern(node.left, function (pattern, toplevel) {
@@ -1058,31 +1058,27 @@
 
                 case Syntax.ClassDeclaration:
                     // Outer block scope.
-                    currentScope.upper.__define(node.id, {
-                        type: Variable.ClassName,
-                        name: node.id,
-                        node: node
-                    });
-                    // Inner ClassBody scope.
                     currentScope.__define(node.id, {
                         type: Variable.ClassName,
                         name: node.id,
                         node: node
                     });
-                    currentScope.upper.__referencing(node.superClass);
+                    currentScope.__referencing(node.superClass);
                     break;
 
-                case Syntax.ClassExpression:
-                    classOuterScope = (node.id) ? currentScope.upper : currentScope;
-                    if (node.id) {
-                        // Inner ClassBody scope.
-                        currentScope.__define(node.id, {
+                case Syntax.ClassBody:
+                    // ClassBody scope.
+                    if (parent && parent.id) {
+                        currentScope.__define(parent.id, {
                             type: Variable.ClassName,
                             name: node.id,
                             node: node
                         });
                     }
-                    classOuterScope.__referencing(node.superClass);
+                    break;
+
+                case Syntax.ClassExpression:
+                    currentScope.__referencing(node.superClass);
                     break;
 
                 case Syntax.ConditionalExpression:
@@ -1198,17 +1194,28 @@
                     break;
 
                 case Syntax.ObjectExpression:
-                    for (i = 0; i < node.properties.length; i++) {
-                        if (node.properties[i].kind === 'init') {
-                            currentScope.__referencing(node.properties[i].value);
-                        }
-                    }
                     break;
 
                 case Syntax.Program:
                     break;
 
                 case Syntax.Property:
+                    // Don't referencing variables when the parent type is ObjectPattern.
+                    if (parent.type !== Syntax.ObjectExpression) {
+                        break;
+                    }
+                    if (node.computed) {
+                        currentScope.__referencing(node.key);
+                    }
+                    if (node.kind === 'init') {
+                        currentScope.__referencing(node.value);
+                    }
+                    break;
+
+                case Syntax.MethodDefinition:
+                    if (node.computed) {
+                        currentScope.__referencing(node.key);
+                    }
                     break;
 
                 case Syntax.ReturnStatement:

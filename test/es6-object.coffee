@@ -50,4 +50,38 @@ describe 'ES6 object', ->
         expect(scope.variables[0].name).to.be.equal 'arguments'
         expect(scope.references).to.have.length 0
 
+    it 'computed property key may refer variables', ->
+        ast = harmony.parse """
+        (function () {
+            var yuyushiki = 42;
+            ({
+                [yuyushiki]() {
+                },
+
+                [yuyushiki + 40]() {
+                }
+            })
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 4
+
+        scope = scopeManager.scopes[0]
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.block.type).to.be.equal 'Program'
+        expect(scope.isStrict).to.be.false
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.block.type).to.be.equal 'FunctionExpression'
+        expect(scope.isStrict).to.be.false
+        expect(scope.variables).to.have.length 2
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.variables[1].name).to.be.equal 'yuyushiki'
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].identifier.name).to.be.equal 'yuyushiki'
+        expect(scope.references[1].identifier.name).to.be.equal 'yuyushiki'
+        expect(scope.references[2].identifier.name).to.be.equal 'yuyushiki'
+
 # vim: set sw=4 ts=4 et tw=80 :

@@ -334,6 +334,7 @@
     Variable.FunctionName = 'FunctionName';
     Variable.ClassName = 'ClassName';
     Variable.Variable = 'Variable';
+    Variable.TDZ = 'TDZ';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
     function isMethodDefinition(block, parent) {
@@ -423,15 +424,21 @@
         return false;
     }
 
+    /* Special Scope types. */
+    var SCOPE_NORMAL = 0,
+        SCOPE_FUNCTION_EXPRESSION_NAME = 1,
+        SCOPE_TDZ = 2;
+
     /**
      * @class Scope
      */
-    function Scope(scopeManager, block, parent, namingScopeForFunctionExpression) {
+    function Scope(scopeManager, block, parent, scopeType) {
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
          */
         this.type =
+            (scopeType === SCOPE_TDZ) ? 'TDZ' :
             (block.type === Syntax.BlockStatement) ? 'block' :
             (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
             (block.type === Syntax.CatchClause) ? 'catch' :
@@ -513,7 +520,7 @@
 
         this.__left = [];
 
-        if (namingScopeForFunctionExpression) {
+        if (scopeType === SCOPE_FUNCTION_EXPRESSION_NAME) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
                 name: block.id,
@@ -526,7 +533,7 @@
             }
 
             if (block.type === Syntax.FunctionExpression && block.id && !isMethodDefinition(block, parent)) {
-                scopeManager.__createScopeForNaming(block, parent);
+                scopeManager.__nestFunctionExpressionNameScope(block, parent);
             }
         }
 
@@ -864,11 +871,15 @@
     };
 
     ScopeManager.prototype.__nestScope = function (node, parent) {
-        return new Scope(this, node, parent, false);
+        return new Scope(this, node, parent, SCOPE_NORMAL);
     };
 
-    ScopeManager.prototype.__createScopeForNaming = function (node, parent) {
-        return new Scope(this, node, parent, true);
+    ScopeManager.prototype.__nestTDZScope = function (node, iterationNode) {
+        return new Scope(this, node, iterationNode, SCOPE_TDZ);
+    };
+
+    ScopeManager.prototype.__nestFunctionExpressionNameScope = function (node, parent) {
+        return new Scope(this, node, parent, SCOPE_FUNCTION_EXPRESSION_NAME);
     };
 
     ScopeManager.prototype.__isES6 = function () {
@@ -921,7 +932,7 @@
         });
     }
 
-    function doVariableDeclaration(variableTargetScope, node, index) {
+    function doVariableDeclaration(variableTargetScope, type, node, index) {
         var decl, init;
 
         decl = node.declarations[index];
@@ -931,7 +942,7 @@
         // var [a, b, c = 20] = array;
         traverseIdentifierInPattern(decl.id, function (pattern, toplevel) {
             variableTargetScope.__define(pattern, {
-                type: Variable.Variable,
+                type: type,
                 name: pattern,
                 node: decl,
                 index: index,
@@ -945,6 +956,14 @@
         });
     }
 
+    function materializeTDZScope(scopeManager, node, iterationNode) {
+        // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-runtime-semantics-forin-div-ofexpressionevaluation-abstract-operation
+        // TDZ scope hides the declaration's names.
+        scopeManager.__nestTDZScope(node, iterationNode);
+        doVariableDeclaration(currentScope, Variable.TDZ, iterationNode.left, 0);
+        currentScope.__referencing(node);
+    }
+
     function materializeIterationScope(scopeManager, node) {
         // Generate iteration scope for upper ForIn/ForOf Statements.
         // parent node for __nestScope is only necessary to
@@ -952,7 +971,7 @@
         var letOrConstDecl;
         scopeManager.__nestScope(node, null);
         letOrConstDecl = node.left;
-        doVariableDeclaration(currentScope, letOrConstDecl, 0);
+        doVariableDeclaration(currentScope, Variable.Variable, letOrConstDecl, 0);
         traverseIdentifierInPattern(letOrConstDecl.declarations[0].id, function (pattern) {
             currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
         });
@@ -987,10 +1006,15 @@
                 // Special path for ForIn/ForOf Statement block scopes.
                 if (parent &&
                     (parent.type === Syntax.ForInStatement || parent.type === Syntax.ForOfStatement) &&
-                    parent.body === node &&
                     parent.left.type === Syntax.VariableDeclaration &&
                     parent.left.kind !== 'var') {
-                    materializeIterationScope(scopeManager, parent);
+                    // Construct TDZ scope.
+                    if (parent.right === node) {
+                        materializeTDZScope(scopeManager, node, parent);
+                    }
+                    if (parent.body === node) {
+                        materializeIterationScope(scopeManager, parent);
+                    }
                 }
 
                 switch (this.type()) {
@@ -1123,12 +1147,13 @@
                 case Syntax.ForOfStatement:
                 case Syntax.ForInStatement:
                     if (node.left.type === Syntax.VariableDeclaration) {
-                        // LetOrConst Declarations are handled in materializeIterationScope.
-                        if (node.left.kind === 'var') {
-                            traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {
-                                currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
-                            });
+                        if (node.left.kind !== 'var') {
+                            // LetOrConst Declarations are specially handled.
+                            break;
                         }
+                        traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {
+                            currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+                        });
                     } else {
                         traverseIdentifierInPattern(node.left, function (pattern) {
                             var maybeImplicitGlobal = null;
@@ -1292,7 +1317,7 @@
                     variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
                     for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                         decl = node.declarations[i];
-                        doVariableDeclaration(variableTargetScope, node, i);
+                        doVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
                         if (decl.init) {
                             currentScope.__referencing(decl.init);
                         }

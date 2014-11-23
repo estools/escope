@@ -56,6 +56,14 @@ describe 'ES6 class', ->
         expect(scope.variables[0].name).to.be.equal 'Derived'
         expect(scope.references).to.have.length 0
 
+        scope = scopeManager.scopes[2]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.block.type).to.be.equal 'FunctionExpression'
+        expect(scope.isStrict).to.be.true
+        expect(scope.variables).to.have.length 1
+        expect(scope.variables[0].name).to.be.equal 'arguments'
+        expect(scope.references).to.have.length 0
+
     it 'expression name creates class scope#1', ->
         ast = harmony.parse """
         (class Derived extends Base {

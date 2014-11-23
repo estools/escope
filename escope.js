@@ -336,7 +336,30 @@
     Variable.Variable = 'Variable';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
-    function isStrictScope(scope, block) {
+    function isMethodDefinition(block, parent) {
+        // Check
+        // + Class MethodDefinition
+        // + Object MethodDefiniton
+        // cases.
+        if (block.type !== Syntax.FunctionExpression) {
+            return false;
+        }
+
+        if (!parent) {
+            return false;
+        }
+
+        if (parent.type === Syntax.MethodDefinition && block === parent.value) {
+            return true;
+        }
+        if (parent.type === Syntax.Property && parent.method && block === parent.value) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function isStrictScope(scope, block, parent) {
         var body, i, iz, stmt, expr;
 
         // When upper scope is exists and strict, inner scope is also strict.
@@ -347,6 +370,12 @@
         // ArrowFunctionExpression's scope is always strict scope.
         if (block.type === Syntax.ArrowFunctionExpression) {
             return true;
+        }
+
+        if (parent) {
+            if (isMethodDefinition(block, parent)) {
+                return true;
+            }
         }
 
         if (scope.type === 'class') {
@@ -397,7 +426,7 @@
     /**
      * @class Scope
      */
-    function Scope(scopeManager, block, opt) {
+    function Scope(scopeManager, block, parent, opt) {
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
@@ -495,8 +524,8 @@
                 this.__defineArguments();
             }
 
-            if (block.type === Syntax.FunctionExpression && block.id) {
-                new Scope(scopeManager, block, { naming: true });
+            if (block.type === Syntax.FunctionExpression && block.id && !isMethodDefinition(block, parent)) {
+                new Scope(scopeManager, block, parent, { naming: true });
             }
         }
 
@@ -509,7 +538,7 @@
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
          */
-        this.isStrict = isStrictScope(this, block);
+        this.isStrict = isStrictScope(this, block, parent);
 
          /**
          * List of nested {@link Scope}s.
@@ -968,7 +997,7 @@
             enter: function enter(node, parent) {
                 var i, iz, decl, variableTargetScope, classOuterScope;
                 if (scopeManager.__isScopeRequired(node, parent)) {
-                    new Scope(scopeManager, node, {});
+                    new Scope(scopeManager, node, parent, {});
                 }
 
                 switch (node.type) {

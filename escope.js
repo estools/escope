@@ -1239,6 +1239,16 @@
                     currentScope.__referencing(node.test);
                     break;
 
+                case Syntax.TaggedTemplateExpression:
+                    currentScope.__referencing(node.tag);
+                    break;
+
+                case Syntax.TemplateLiteral:
+                    for (i = 0, iz = node.expressions.length; i < iz; ++i) {
+                        currentScope.__referencing(node.expressions[i]);
+                    }
+                    break;
+
                 case Syntax.ThisExpression:
                     currentScope.variableScope.__detectThis();
                     break;

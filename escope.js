@@ -426,17 +426,18 @@
     /**
      * @class Scope
      */
-    function Scope(scopeManager, block, parent, opt) {
+    function Scope(scopeManager, block, parent, namingScopeForFunctionExpression) {
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
          */
         this.type =
-            (block.type === Syntax.CatchClause) ? 'catch' :
-            (block.type === Syntax.WithStatement) ? 'with' :
-            (block.type === Syntax.Program) ? 'global' :
             (block.type === Syntax.BlockStatement) ? 'block' :
-            (block.type === Syntax.ClassBody) ? 'class' : 'function';
+            (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
+            (block.type === Syntax.CatchClause) ? 'catch' :
+            (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement) ? 'for' :
+            (block.type === Syntax.WithStatement) ? 'with' :
+            (block.type === Syntax.ClassBody) ? 'class' : 'global';
          /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
@@ -512,7 +513,7 @@
 
         this.__left = [];
 
-        if (opt.naming) {
+        if (namingScopeForFunctionExpression) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
                 name: block.id,
@@ -525,7 +526,7 @@
             }
 
             if (block.type === Syntax.FunctionExpression && block.id && !isMethodDefinition(block, parent)) {
-                new Scope(scopeManager, block, parent, { naming: true });
+                scopeManager.__createScopeForNaming(block, parent);
             }
         }
 
@@ -817,15 +818,11 @@
             return node[Scope.mangledName] || null;
         }
 
-        // It may return false result. (for example, if node is the FunctionBody, it may return true under ES6 mode.)
-        // But it will be filtered the subsequent exploring.
-        if (this.__isScopeRequired(node, null)) {
-            for (i = 0, iz = this.scopes.length; i < iz; ++i) {
-                scope = this.scopes[i];
-                if (!scope.functionExpressionScope) {
-                    if (scope.block === node) {
-                        return scope;
-                    }
+        for (i = 0, iz = this.scopes.length; i < iz; ++i) {
+            scope = this.scopes[i];
+            if (!scope.functionExpressionScope) {
+                if (scope.block === node) {
+                    return scope;
                 }
             }
         }
@@ -866,39 +863,16 @@
         this.attached = false;
     };
 
-    ScopeManager.prototype.__isES6 = function () {
-        return this.__options.ecmaVersion >= 6;
+    ScopeManager.prototype.__nestScope = function (node, parent) {
+        return new Scope(this, node, parent, false);
     };
 
-    ScopeManager.prototype.__isScopeRequired = function (node, parent) {
-        function isFunctionScopeRequired(node) {
-            return node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration || node.type === Syntax.ArrowFunctionExpression;
-        }
+    ScopeManager.prototype.__createScopeForNaming = function (node, parent) {
+        return new Scope(this, node, parent, true);
+    };
 
-        function isVariableScopeRequired(node) {
-            return node.type === Syntax.Program || isFunctionScopeRequired(node);
-        }
-
-        function isScopeRequired(node) {
-            return isVariableScopeRequired(node) || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
-        }
-
-        if (this.__isES6()) {
-            if (node.type === Syntax.BlockStatement) {
-                // In the current AST spec, these are represented as BlockStatement, but it's FunctionBody.
-                if (parent && isFunctionScopeRequired(parent)) {
-                    return false;
-                }
-                return true;
-            }
-            if (node.type === Syntax.ArrowFunctionExpression) {
-                return true;
-            }
-            if (node.type === Syntax.ClassBody) {
-                return true;
-            }
-        }
-        return isScopeRequired(node);
+    ScopeManager.prototype.__isES6 = function () {
+        return this.__options.ecmaVersion >= 6;
     };
 
     function traverseIdentifierInPattern(rootPattern, callback) {
@@ -971,6 +945,19 @@
         });
     }
 
+    function materializeIterationScope(scopeManager, node) {
+        // Generate iteration scope for upper ForIn/ForOf Statements.
+        // parent node for __nestScope is only necessary to
+        // distinguish MethodDefinition.
+        var letOrConstDecl;
+        scopeManager.__nestScope(node, null);
+        letOrConstDecl = node.left;
+        doVariableDeclaration(currentScope, letOrConstDecl, 0);
+        traverseIdentifierInPattern(letOrConstDecl.declarations[0].id, function (pattern) {
+            currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+        });
+    }
+
     /**
      * Main interface function. Takes an Esprima syntax tree and returns the
      * analyzed scopes.
@@ -996,8 +983,14 @@
         estraverse.traverse(tree, {
             enter: function enter(node, parent) {
                 var i, iz, decl, variableTargetScope;
-                if (scopeManager.__isScopeRequired(node, parent)) {
-                    new Scope(scopeManager, node, parent, {});
+
+                // Special path for ForIn/ForOf Statement block scopes.
+                if (parent &&
+                    (parent.type === Syntax.ForInStatement || parent.type === Syntax.ForOfStatement) &&
+                    parent.body === node &&
+                    parent.left.type === Syntax.VariableDeclaration &&
+                    parent.left.kind !== 'var') {
+                    materializeIterationScope(scopeManager, parent);
                 }
 
                 switch (this.type()) {
@@ -1026,6 +1019,14 @@
                     break;
 
                 case Syntax.BlockStatement:
+                    if (scopeManager.__isES6()) {
+                        if (!parent ||
+                                parent.type !== Syntax.FunctionExpression &&
+                                parent.type !== Syntax.FunctionDeclaration &&
+                                parent.type !== Syntax.ArrowFunctionExpression) {
+                            scopeManager.__nestScope(node, parent);
+                        }
+                    }
                     break;
 
                 case Syntax.BinaryExpression:
@@ -1051,6 +1052,7 @@
                     break;
 
                 case Syntax.CatchClause:
+                    scopeManager.__nestScope(node, parent);
                     traverseIdentifierInPattern(node.param, function (pattern) {
                         currentScope.__define(pattern, {
                             type: Variable.CatchClause,
@@ -1072,6 +1074,7 @@
 
                 case Syntax.ClassBody:
                     // ClassBody scope.
+                    scopeManager.__nestScope(node, parent);
                     if (parent && parent.id) {
                         currentScope.__define(parent.id, {
                             type: Variable.ClassName,
@@ -1120,9 +1123,12 @@
                 case Syntax.ForOfStatement:
                 case Syntax.ForInStatement:
                     if (node.left.type === Syntax.VariableDeclaration) {
-                        traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {
-                            currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
-                        });
+                        // LetOrConst Declarations are handled in materializeIterationScope.
+                        if (node.left.kind === 'var') {
+                            traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {
+                                currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+                            });
+                        }
                     } else {
                         traverseIdentifierInPattern(node.left, function (pattern) {
                             var maybeImplicitGlobal = null;
@@ -1144,7 +1150,7 @@
                     // Since
                     //  in ES5, FunctionDeclaration should be in FunctionBody.
                     //  in ES6, FunctionDeclaration should be block scoped.
-                    currentScope.upper.__define(node.id, {
+                    currentScope.__define(node.id, {
                         type: Variable.FunctionName,
                         name: node.id,
                         node: node
@@ -1154,6 +1160,8 @@
                 case Syntax.FunctionExpression:
                 case Syntax.ArrowFunctionExpression:
                     // id is defined in upper scope
+                    scopeManager.__nestScope(node, parent);
+
                     for (i = 0, iz = node.params.length; i < iz; ++i) {
                         traverseIdentifierInPattern(node.params[i], function (pattern) {
                             currentScope.__define(pattern, {
@@ -1202,6 +1210,7 @@
                     break;
 
                 case Syntax.Program:
+                    scopeManager.__nestScope(node, parent);
                     break;
 
                 case Syntax.Property:
@@ -1271,6 +1280,15 @@
                     break;
 
                 case Syntax.VariableDeclaration:
+                    if (node.kind !== 'var' && parent) {
+                        if (parent.type === Syntax.ForInStatement || parent.type === Syntax.ForOfStatement) {
+                            // e.g.
+                            //    for (let i in abc);
+                            // In this case, they are specially handled in ForIn/ForOf statements.
+                            break;
+                        }
+                    }
+
                     variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
                     for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                         decl = node.declarations[i];
@@ -1289,8 +1307,9 @@
                     break;
 
                 case Syntax.WithStatement:
-                    // WithStatement object is referenced at upper scope
-                    currentScope.upper.__referencing(node.object);
+                    currentScope.__referencing(node.object);
+                    // Then nest scope for WithStatement.
+                    scopeManager.__nestScope(node, parent);
                     break;
                 }
             },

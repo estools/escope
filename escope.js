@@ -1042,8 +1042,10 @@
                         currentScope.__referencing(node['arguments'][i]);
                     }
 
-                    // check this is direct call to eval
+                    // Check this is direct call to eval
                     if (!options.ignoreEval && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
+                        // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
+                        // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
                         currentScope.variableScope.__detectEval();
                     }
                     break;

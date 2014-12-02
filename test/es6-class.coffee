@@ -50,7 +50,7 @@ describe 'ES6 class', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'class'
-        expect(scope.block.type).to.be.equal 'ClassBody'
+        expect(scope.block.type).to.be.equal 'ClassDeclaration'
         expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'Derived'
@@ -85,7 +85,7 @@ describe 'ES6 class', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'class'
-        expect(scope.block.type).to.be.equal 'ClassBody'
+        expect(scope.block.type).to.be.equal 'ClassExpression'
         expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'Derived'
@@ -116,7 +116,7 @@ describe 'ES6 class', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'class'
-        expect(scope.block.type).to.be.equal 'ClassBody'
+        expect(scope.block.type).to.be.equal 'ClassExpression'
 
         scope = scopeManager.scopes[2]
         expect(scope.type).to.be.equal 'function'
@@ -156,7 +156,7 @@ describe 'ES6 class', ->
 
         scope = scopeManager.scopes[2]
         expect(scope.type).to.be.equal 'class'
-        expect(scope.block.type).to.be.equal 'ClassBody'
+        expect(scope.block.type).to.be.equal 'ClassExpression'
         expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 0
         expect(scope.references).to.have.length 2

@@ -52,13 +52,20 @@
 
     var Syntax,
         Map,
+        util,
+        extend,
         estraverse,
+        esrecurse,
         currentScope,
         globalScope,
         scopes,
         options;
 
+    util = require('util');
+    extend = require('util-extend');
     estraverse = require('estraverse');
+    esrecurse = require('esrecurse');
+
     Syntax = estraverse.Syntax;
 
     if (typeof global.Map !== 'undefined') {
@@ -310,30 +317,7 @@
     Variable.TDZ = 'TDZ';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
-    function isMethodDefinition(block, parent) {
-        // Check
-        // + Class MethodDefinition
-        // + Object MethodDefiniton
-        // cases.
-        if (block.type !== Syntax.FunctionExpression) {
-            return false;
-        }
-
-        if (!parent) {
-            return false;
-        }
-
-        if (parent.type === Syntax.MethodDefinition && block === parent.value) {
-            return true;
-        }
-        if (parent.type === Syntax.Property && parent.method && block === parent.value) {
-            return true;
-        }
-
-        return false;
-    }
-
-    function isStrictScope(scope, block, parent) {
+    function isStrictScope(scope, block, isMethodDefinition) {
         var body, i, iz, stmt, expr;
 
         // When upper scope is exists and strict, inner scope is also strict.
@@ -346,10 +330,8 @@
             return true;
         }
 
-        if (parent) {
-            if (isMethodDefinition(block, parent)) {
-                return true;
-            }
+        if (isMethodDefinition) {
+            return true;
         }
 
         if (scope.type === 'class') {
@@ -405,7 +387,7 @@
     /**
      * @class Scope
      */
-    function Scope(scopeManager, block, parent, scopeType) {
+    function Scope(scopeManager, block, isMethodDefinition, scopeType) {
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
@@ -417,7 +399,7 @@
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement || block.type === Syntax.ForStatement) ? 'for' :
             (block.type === Syntax.WithStatement) ? 'with' :
-            (block.type === Syntax.ClassBody) ? 'class' : 'global';
+            (block.type === Syntax.ClassExpression || block.type === Syntax.ClassDeclaration) ? 'class' : 'global';
          /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
@@ -506,7 +488,7 @@
             }
 
             if (block.type === Syntax.FunctionExpression && block.id) {
-                scopeManager.__nestFunctionExpressionNameScope(block, parent);
+                scopeManager.__nestFunctionExpressionNameScope(block, isMethodDefinition);
             }
         }
 
@@ -519,7 +501,7 @@
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
          */
-        this.isStrict = isStrictScope(this, block, parent);
+        this.isStrict = isStrictScope(this, block, isMethodDefinition);
 
          /**
          * List of nested {@link Scope}s.
@@ -843,16 +825,16 @@
         this.attached = false;
     };
 
-    ScopeManager.prototype.__nestScope = function (node, parent) {
-        return new Scope(this, node, parent, SCOPE_NORMAL);
+    ScopeManager.prototype.__nestScope = function (node, isMethodDefinition) {
+        return new Scope(this, node, isMethodDefinition, SCOPE_NORMAL);
     };
 
-    ScopeManager.prototype.__nestTDZScope = function (node, iterationNode) {
-        return new Scope(this, node, iterationNode, SCOPE_TDZ);
+    ScopeManager.prototype.__nestTDZScope = function (node) {
+        return new Scope(this, node, false, SCOPE_TDZ);
     };
 
-    ScopeManager.prototype.__nestFunctionExpressionNameScope = function (node, parent) {
-        return new Scope(this, node, parent, SCOPE_FUNCTION_EXPRESSION_NAME);
+    ScopeManager.prototype.__nestFunctionExpressionNameScope = function (node, isMethodDefinition) {
+        return new Scope(this, node, isMethodDefinition, SCOPE_FUNCTION_EXPRESSION_NAME);
     };
 
     ScopeManager.prototype.__isES6 = function () {
@@ -905,50 +887,366 @@
         });
     }
 
-    function doVariableDeclaration(variableTargetScope, type, node, index) {
-        var decl, init;
+    function isPattern(node) {
+        var nodeType = node.type;
+        return nodeType === Syntax.Identifier || nodeType === Syntax.ObjectPattern || nodeType === Syntax.ArrayPattern || nodeType === Syntax.SpreadElement;
+    }
 
-        decl = node.declarations[index];
-        init = decl.init;
-        // FIXME: Don't consider initializer with complex patterns.
-        // Such as,
-        // var [a, b, c = 20] = array;
-        traverseIdentifierInPattern(decl.id, function (pattern, toplevel) {
-            variableTargetScope.__define(pattern, {
-                type: type,
-                name: pattern,
-                node: decl,
-                index: index,
-                kind: node.kind,
-                parent: node
-            });
+    function Referencer(scopeManager) {
+        esrecurse.Visitor.call(this, this);
+        this.scopeManager = scopeManager;
+        this.parent = null;
+        this.isInnerMethodDefinition = false;
+    }
 
-            if (init) {
-                currentScope.__referencing(pattern, Reference.WRITE, init, null, !toplevel);
+    util.inherits(Referencer, esrecurse.Visitor);
+
+    extend(Referencer.prototype, {
+        close: function (node) {
+            while (currentScope && node === currentScope.block) {
+                currentScope.__close();
             }
-        });
-    }
+        },
 
-    function materializeTDZScope(scopeManager, node, iterationNode) {
-        // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-runtime-semantics-forin-div-ofexpressionevaluation-abstract-operation
-        // TDZ scope hides the declaration's names.
-        scopeManager.__nestTDZScope(node, iterationNode);
-        doVariableDeclaration(currentScope, Variable.TDZ, iterationNode.left, 0);
-        currentScope.__referencing(node);
-    }
+        pushInnerMethodDefinition: function (isInnerMethodDefinition) {
+            var previous = this.isInnerMethodDefinition;
+            this.isInnerMethodDefinition = isInnerMethodDefinition;
+            return previous;
+        },
 
-    function materializeIterationScope(scopeManager, node) {
-        // Generate iteration scope for upper ForIn/ForOf Statements.
-        // parent node for __nestScope is only necessary to
-        // distinguish MethodDefinition.
-        var letOrConstDecl;
-        scopeManager.__nestScope(node, null);
-        letOrConstDecl = node.left;
-        doVariableDeclaration(currentScope, Variable.Variable, letOrConstDecl, 0);
-        traverseIdentifierInPattern(letOrConstDecl.declarations[0].id, function (pattern) {
-            currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
-        });
-    }
+        popInnerMethodDefinition: function (isInnerMethodDefinition) {
+            this.isInnerMethodDefinition = isInnerMethodDefinition;
+        },
+
+        materializeTDZScope: function (node, iterationNode) {
+            // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-runtime-semantics-forin-div-ofexpressionevaluation-abstract-operation
+            // TDZ scope hides the declaration's names.
+            this.scopeManager.__nestTDZScope(node, iterationNode);
+            this.visitVariableDeclaration(currentScope, Variable.TDZ, iterationNode.left, 0);
+        },
+
+        materializeIterationScope: function (node) {
+            // Generate iteration scope for upper ForIn/ForOf Statements.
+            // parent node for __nestScope is only necessary to
+            // distinguish MethodDefinition.
+            var letOrConstDecl;
+            this.scopeManager.__nestScope(node, false);
+            letOrConstDecl = node.left;
+            this.visitVariableDeclaration(currentScope, Variable.Variable, letOrConstDecl, 0);
+            this.visitPattern(letOrConstDecl.declarations[0].id, function (pattern) {
+                currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+            });
+        },
+
+        visitPattern: function (node, callback) {
+            traverseIdentifierInPattern(node, callback);
+        },
+
+        visitFunction: function (node) {
+            var i, iz;
+            // FunctionDeclaration name is defined in upper scope
+            // NOTE: Not referring variableScope. It is intended.
+            // Since
+            //  in ES5, FunctionDeclaration should be in FunctionBody.
+            //  in ES6, FunctionDeclaration should be block scoped.
+            if (node.type === Syntax.FunctionDeclaration) {
+                // id is defined in upper scope
+                currentScope.__define(node.id, {
+                    type: Variable.FunctionName,
+                    name: node.id,
+                    node: node
+                });
+            }
+
+            // Consider this function is in the MethodDefinition.
+            this.scopeManager.__nestScope(node, this.isInnerMethodDefinition);
+
+            for (i = 0, iz = node.params.length; i < iz; ++i) {
+                this.visitPattern(node.params[i], function (pattern) {
+                    currentScope.__define(pattern, {
+                        type: Variable.Parameter,
+                        name: pattern,
+                        node: node,
+                        index: i
+                    });
+                });
+            }
+
+            // Skip BlockStatement to prevent creating BlockStatement scope.
+            if (node.body.type === Syntax.BlockStatement) {
+                this.visitChildren(node.body);
+            } else {
+                this.visit(node.body);
+            }
+
+            this.close(node);
+        },
+
+        visitClass: function (node) {
+            if (node.type === Syntax.ClassDeclaration) {
+                currentScope.__define(node.id, {
+                    type: Variable.ClassName,
+                    name: node.id,
+                    node: node
+                });
+            }
+
+            // FIXME: Maybe consider TDZ.
+            this.visit(node.superClass);
+
+            this.scopeManager.__nestScope(node);
+
+            if (node.id) {
+                currentScope.__define(node.id, {
+                    type: Variable.ClassName,
+                    name: node.id,
+                    node: node
+                });
+            }
+            this.visit(node.body);
+
+            this.close(node);
+        },
+
+        visitProperty: function (node) {
+            var previous, isMethodDefinition;
+            if (node.computed) {
+                this.visit(node.key);
+            }
+
+            isMethodDefinition = node.type === Syntax.MethodDefinition || node.method;
+            if (isMethodDefinition) {
+                previous = this.pushInnerMethodDefinition(true);
+            }
+            this.visit(node.value);
+            if (isMethodDefinition) {
+                this.popInnerMethodDefinition(previous);
+            }
+        },
+
+        visitForIn: function (node) {
+            if (node.left.type === Syntax.VariableDeclaration && node.left.kind !== 'var') {
+                this.materializeTDZScope(node.right, node);
+                this.visit(node.right);
+                this.close(node.right);
+
+                this.materializeIterationScope(node);
+                this.visit(node.body);
+                this.close(node);
+            } else {
+                if (node.left.type === Syntax.VariableDeclaration) {
+                    this.visit(node.left);
+                    this.visitPattern(node.left.declarations[0].id, function (pattern) {
+                        currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+                    });
+                } else {
+                    if (!isPattern(node.left)) {
+                        this.visit(node.left);
+                    }
+                    this.visitPattern(node.left, function (pattern) {
+                        var maybeImplicitGlobal = null;
+                        if (!currentScope.isStrict) {
+                            maybeImplicitGlobal = {
+                                pattern: pattern,
+                                node: node
+                            };
+                        }
+                        currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
+                    });
+                }
+                this.visit(node.right);
+                this.visit(node.body);
+            }
+        },
+
+        visitVariableDeclaration: function (variableTargetScope, type, node, index) {
+            var decl, init;
+
+            decl = node.declarations[index];
+            init = decl.init;
+            // FIXME: Don't consider initializer with complex patterns.
+            // Such as,
+            // var [a, b, c = 20] = array;
+            this.visitPattern(decl.id, function (pattern, toplevel) {
+                variableTargetScope.__define(pattern, {
+                    type: type,
+                    name: pattern,
+                    node: decl,
+                    index: index,
+                    kind: node.kind,
+                    parent: node
+                });
+
+                if (init) {
+                    currentScope.__referencing(pattern, Reference.WRITE, init, null, !toplevel);
+                }
+            });
+        },
+
+        AssignmentExpression: function (node) {
+            if (isPattern(node.left)) {
+                if (node.operator === '=') {
+                    this.visitPattern(node.left, function (pattern, toplevel) {
+                        var maybeImplicitGlobal = null;
+                        if (!currentScope.isStrict) {
+                            maybeImplicitGlobal = {
+                                pattern: pattern,
+                                node: node
+                            };
+                        }
+                        currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !toplevel);
+                    });
+                } else {
+                    currentScope.__referencing(node.left, Reference.RW, node.right);
+                }
+            } else {
+                this.visit(node.left);
+            }
+            this.visit(node.right);
+        },
+
+        CatchClause: function (node) {
+            this.scopeManager.__nestScope(node);
+
+            this.visitPattern(node.param, function (pattern) {
+                currentScope.__define(pattern, {
+                    type: Variable.CatchClause,
+                    name: node.param,
+                    node: node
+                });
+            });
+            this.visit(node.body);
+
+            this.close(node);
+        },
+
+        Program: function (node) {
+            this.scopeManager.__nestScope(node);
+            this.visitChildren(node);
+            this.close(node);
+        },
+
+        Identifier: function (node) {
+            currentScope.__referencing(node);
+        },
+
+        UpdateExpression: function (node) {
+            if (isPattern(node)) {
+                currentScope.__referencing(node.argument, Reference.RW, null);
+            } else {
+                this.visitChildren(node);
+            }
+        },
+
+        MemberExpression: function (node) {
+            this.visit(node.object);
+            if (node.computed) {
+                this.visit(node.property);
+            }
+        },
+
+        Property: function (node) {
+            this.visitProperty(node);
+        },
+
+        MethodDefinition: function (node) {
+            this.visitProperty(node);
+        },
+
+        BreakStatement: function () {},
+
+        ContinueStatement: function () {},
+
+        LabelledStatement: function () {},
+
+        ForStatement: function (node) {
+            // Create ForStatement declaration.
+            // NOTE: In ES6, ForStatement dynamically generates
+            // per iteration environment. However, escope is
+            // a static analyzer, we only generate one scope for ForStatement.
+            if (node.init && node.init.type === Syntax.VariableDeclaration && node.init.kind !== 'var') {
+                this.scopeManager.__nestScope(node);
+            }
+
+            this.visitChildren(node);
+
+            this.close(node);
+        },
+
+        ClassExpression: function (node) {
+            this.visitClass(node);
+        },
+
+        ClassDeclaration: function (node) {
+            this.visitClass(node);
+        },
+
+        CallExpression: function (node) {
+            // Check this is direct call to eval
+            if (!options.ignoreEval && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
+                // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
+                // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
+                currentScope.variableScope.__detectEval();
+            }
+            this.visitChildren(node);
+        },
+
+        BlockStatement: function (node) {
+            if (this.scopeManager.__isES6()) {
+                this.scopeManager.__nestScope(node);
+            }
+
+            this.visitChildren(node);
+
+            this.close(node);
+        },
+
+        ThisExpression: function () {
+            currentScope.variableScope.__detectThis();
+        },
+
+        WithStatement: function (node) {
+            this.visit(node.object);
+            // Then nest scope for WithStatement.
+            this.scopeManager.__nestScope(node);
+
+            this.visit(node.body);
+
+            this.close(node);
+        },
+
+        VariableDeclaration: function (node) {
+            var variableTargetScope, i, iz, decl;
+            variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
+            for (i = 0, iz = node.declarations.length; i < iz; ++i) {
+                decl = node.declarations[i];
+                this.visitVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
+                if (decl.init) {
+                    this.visit(decl.init);
+                }
+            }
+        },
+
+        FunctionDeclaration: function (node) {
+            this.visitFunction(node);
+        },
+
+        FunctionExpression: function (node) {
+            this.visitFunction(node);
+        },
+
+        ForOfStatement: function (node) {
+            this.visitForIn(node);
+        },
+
+        ForInStatement: function (node) {
+            this.visitForIn(node);
+        },
+
+        ArrowFunctionExpression: function (node) {
+            this.visitFunction(node);
+        }
+    });
 
     /**
      * Main interface function. Takes an Esprima syntax tree and returns the
@@ -962,7 +1260,7 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager;
+        var resultScopes, scopeManager, referencer;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
@@ -970,361 +1268,8 @@
         globalScope = null;
 
         scopeManager = new ScopeManager(resultScopes, options);
-
-        // attach scope and collect / resolve names
-        estraverse.traverse(tree, {
-            enter: function enter(node, parent) {
-                var i, iz, decl, variableTargetScope;
-
-                // Special path for ForIn/ForOf Statement block scopes.
-                if (parent &&
-                    (parent.type === Syntax.ForInStatement || parent.type === Syntax.ForOfStatement) &&
-                    parent.left.type === Syntax.VariableDeclaration &&
-                    parent.left.kind !== 'var') {
-                    // Construct TDZ scope.
-                    if (parent.right === node) {
-                        materializeTDZScope(scopeManager, node, parent);
-                    }
-                    if (parent.body === node) {
-                        materializeIterationScope(scopeManager, parent);
-                    }
-                }
-
-                switch (this.type()) {
-                case Syntax.AssignmentExpression:
-                    if (node.operator === '=') {
-                        traverseIdentifierInPattern(node.left, function (pattern, toplevel) {
-                            var maybeImplicitGlobal = null;
-                            if (!currentScope.isStrict) {
-                                maybeImplicitGlobal = {
-                                    pattern: pattern,
-                                    node: node
-                                };
-                            }
-                            currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !toplevel);
-                        });
-                    } else {
-                        currentScope.__referencing(node.left, Reference.RW, node.right);
-                    }
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.ArrayExpression:
-                    for (i = 0, iz = node.elements.length; i < iz; ++i) {
-                        currentScope.__referencing(node.elements[i]);
-                    }
-                    break;
-
-                case Syntax.BlockStatement:
-                    if (scopeManager.__isES6()) {
-                        if (!parent ||
-                                parent.type !== Syntax.FunctionExpression &&
-                                parent.type !== Syntax.FunctionDeclaration &&
-                                parent.type !== Syntax.ArrowFunctionExpression) {
-                            scopeManager.__nestScope(node, parent);
-                        }
-                    }
-                    break;
-
-                case Syntax.BinaryExpression:
-                    currentScope.__referencing(node.left);
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.BreakStatement:
-                    break;
-
-                case Syntax.CallExpression:
-                    currentScope.__referencing(node.callee);
-                    for (i = 0, iz = node['arguments'].length; i < iz; ++i) {
-                        currentScope.__referencing(node['arguments'][i]);
-                    }
-
-                    // Check this is direct call to eval
-                    if (!options.ignoreEval && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
-                        // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
-                        // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
-                        currentScope.variableScope.__detectEval();
-                    }
-                    break;
-
-                case Syntax.CatchClause:
-                    scopeManager.__nestScope(node, parent);
-                    traverseIdentifierInPattern(node.param, function (pattern) {
-                        currentScope.__define(pattern, {
-                            type: Variable.CatchClause,
-                            name: node.param,
-                            node: node
-                        });
-                    });
-                    break;
-
-                case Syntax.ClassDeclaration:
-                    // Outer block scope.
-                    currentScope.__define(node.id, {
-                        type: Variable.ClassName,
-                        name: node.id,
-                        node: node
-                    });
-                    currentScope.__referencing(node.superClass);
-                    break;
-
-                case Syntax.ClassBody:
-                    // ClassBody scope.
-                    scopeManager.__nestScope(node, parent);
-                    if (parent && parent.id) {
-                        currentScope.__define(parent.id, {
-                            type: Variable.ClassName,
-                            name: node.id,
-                            node: node
-                        });
-                    }
-                    break;
-
-                case Syntax.ClassExpression:
-                    currentScope.__referencing(node.superClass);
-                    break;
-
-                case Syntax.ConditionalExpression:
-                    currentScope.__referencing(node.test);
-                    currentScope.__referencing(node.consequent);
-                    currentScope.__referencing(node.alternate);
-                    break;
-
-                case Syntax.ContinueStatement:
-                    break;
-
-                case Syntax.DirectiveStatement:
-                    break;
-
-                case Syntax.DoWhileStatement:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.DebuggerStatement:
-                    break;
-
-                case Syntax.EmptyStatement:
-                    break;
-
-                case Syntax.ExpressionStatement:
-                    currentScope.__referencing(node.expression);
-                    break;
-
-                case Syntax.ForStatement:
-                    if (node.init && node.init.type === Syntax.VariableDeclaration && node.init.kind !== 'var') {
-                        // Create ForStatement declaration.
-                        // NOTE: In ES6, ForStatement dynamically generates
-                        // per iteration environment. However, escope is
-                        // a static analyzer, we only generate one scope for ForStatement.
-                        scopeManager.__nestScope(node, parent);
-                    }
-                    currentScope.__referencing(node.init);
-                    currentScope.__referencing(node.test);
-                    currentScope.__referencing(node.update);
-                    break;
-
-                case Syntax.ForOfStatement:
-                case Syntax.ForInStatement:
-                    if (node.left.type === Syntax.VariableDeclaration) {
-                        if (node.left.kind !== 'var') {
-                            // LetOrConst Declarations are specially handled.
-                            break;
-                        }
-                        traverseIdentifierInPattern(node.left.declarations[0].id, function (pattern) {
-                            currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
-                        });
-                    } else {
-                        traverseIdentifierInPattern(node.left, function (pattern) {
-                            var maybeImplicitGlobal = null;
-                            if (!currentScope.isStrict) {
-                                maybeImplicitGlobal = {
-                                    pattern: pattern,
-                                    node: node
-                                };
-                            }
-                            currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
-                        });
-                    }
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.FunctionDeclaration:
-                    // FunctionDeclaration name is defined in upper scope
-                    // NOTE: Not referring variableScope. It is intended.
-                    // Since
-                    //  in ES5, FunctionDeclaration should be in FunctionBody.
-                    //  in ES6, FunctionDeclaration should be block scoped.
-                    currentScope.__define(node.id, {
-                        type: Variable.FunctionName,
-                        name: node.id,
-                        node: node
-                    });
-                    // falls through
-
-                case Syntax.FunctionExpression:
-                case Syntax.ArrowFunctionExpression:
-                    // id is defined in upper scope
-                    scopeManager.__nestScope(node, parent);
-
-                    for (i = 0, iz = node.params.length; i < iz; ++i) {
-                        traverseIdentifierInPattern(node.params[i], function (pattern) {
-                            currentScope.__define(pattern, {
-                                type: Variable.Parameter,
-                                name: pattern,
-                                node: node,
-                                index: i
-                            });
-                        });
-                    }
-                    break;
-
-                case Syntax.Identifier:
-                    break;
-
-                case Syntax.IfStatement:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.Literal:
-                    break;
-
-                case Syntax.LabeledStatement:
-                    break;
-
-                case Syntax.LogicalExpression:
-                    currentScope.__referencing(node.left);
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.MemberExpression:
-                    currentScope.__referencing(node.object);
-                    if (node.computed) {
-                        currentScope.__referencing(node.property);
-                    }
-                    break;
-
-                case Syntax.NewExpression:
-                    currentScope.__referencing(node.callee);
-                    for (i = 0, iz = node['arguments'].length; i < iz; ++i) {
-                        currentScope.__referencing(node['arguments'][i]);
-                    }
-                    break;
-
-                case Syntax.ObjectExpression:
-                    break;
-
-                case Syntax.Program:
-                    scopeManager.__nestScope(node, parent);
-                    break;
-
-                case Syntax.Property:
-                    // Don't referencing variables when the parent type is ObjectPattern.
-                    if (parent.type !== Syntax.ObjectExpression) {
-                        break;
-                    }
-                    if (node.computed) {
-                        currentScope.__referencing(node.key);
-                    }
-                    if (node.kind === 'init') {
-                        currentScope.__referencing(node.value);
-                    }
-                    break;
-
-                case Syntax.MethodDefinition:
-                    if (node.computed) {
-                        currentScope.__referencing(node.key);
-                    }
-                    break;
-
-                case Syntax.ReturnStatement:
-                    currentScope.__referencing(node.argument);
-                    break;
-
-                case Syntax.SequenceExpression:
-                    for (i = 0, iz = node.expressions.length; i < iz; ++i) {
-                        currentScope.__referencing(node.expressions[i]);
-                    }
-                    break;
-
-                case Syntax.SwitchStatement:
-                    currentScope.__referencing(node.discriminant);
-                    break;
-
-                case Syntax.SwitchCase:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.TaggedTemplateExpression:
-                    currentScope.__referencing(node.tag);
-                    break;
-
-                case Syntax.TemplateLiteral:
-                    for (i = 0, iz = node.expressions.length; i < iz; ++i) {
-                        currentScope.__referencing(node.expressions[i]);
-                    }
-                    break;
-
-                case Syntax.ThisExpression:
-                    currentScope.variableScope.__detectThis();
-                    break;
-
-                case Syntax.ThrowStatement:
-                    currentScope.__referencing(node.argument);
-                    break;
-
-                case Syntax.TryStatement:
-                    break;
-
-                case Syntax.UnaryExpression:
-                    currentScope.__referencing(node.argument);
-                    break;
-
-                case Syntax.UpdateExpression:
-                    currentScope.__referencing(node.argument, Reference.RW, null);
-                    break;
-
-                case Syntax.VariableDeclaration:
-                    if (node.kind !== 'var' && parent) {
-                        if (parent.type === Syntax.ForInStatement || parent.type === Syntax.ForOfStatement) {
-                            // e.g.
-                            //    for (let i in abc);
-                            // In this case, they are specially handled in ForIn/ForOf statements.
-                            break;
-                        }
-                    }
-
-                    variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
-                    for (i = 0, iz = node.declarations.length; i < iz; ++i) {
-                        decl = node.declarations[i];
-                        doVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
-                        if (decl.init) {
-                            currentScope.__referencing(decl.init);
-                        }
-                    }
-                    break;
-
-                case Syntax.VariableDeclarator:
-                    break;
-
-                case Syntax.WhileStatement:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.WithStatement:
-                    currentScope.__referencing(node.object);
-                    // Then nest scope for WithStatement.
-                    scopeManager.__nestScope(node, parent);
-                    break;
-                }
-            },
-
-            leave: function leave(node) {
-                while (currentScope && node === currentScope.block) {
-                    currentScope.__close();
-                }
-            }
-        });
+        referencer = new Referencer(scopeManager);
+        referencer.visit(tree);
 
         assert(currentScope === null);
         globalScope = null;

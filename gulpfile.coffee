@@ -41,6 +41,7 @@ ESLINT_OPTION =
         'no-multi-spaces': false
         'no-native-reassign': 0
         'no-loop-func': 0
+        'no-lone-blocks': 0
     env:
         'node': true
 

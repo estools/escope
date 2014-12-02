@@ -505,7 +505,7 @@
                 this.__defineArguments();
             }
 
-            if (block.type === Syntax.FunctionExpression && block.id && !isMethodDefinition(block, parent)) {
+            if (block.type === Syntax.FunctionExpression && block.id) {
                 scopeManager.__nestFunctionExpressionNameScope(block, parent);
             }
         }

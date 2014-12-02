@@ -47,45 +47,18 @@
  */
 
 /*jslint bitwise:true */
-/*global exports:true, define:true, require:true*/
-(function (factory, global) {
-    'use strict';
-
-    function namespace(str, obj) {
-        var i, iz, names, name;
-        names = str.split('.');
-        for (i = 0, iz = names.length; i < iz; ++i) {
-            name = names[i];
-            if (obj.hasOwnProperty(name)) {
-                obj = obj[name];
-            } else {
-                obj = (obj[name] = {});
-            }
-        }
-        return obj;
-    }
-
-    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
-    // and plain browser loading,
-    if (typeof define === 'function' && define.amd) {
-        define('escope', ['exports', 'estraverse'], function (exports, estraverse) {
-            factory(exports, global, estraverse);
-        });
-    } else if (typeof exports !== 'undefined') {
-        factory(exports, global, require('estraverse'));
-    } else {
-        factory(namespace('escope', global), global, global.estraverse);
-    }
-}(function (exports, global, estraverse) {
+(function () {
     'use strict';
 
     var Syntax,
         Map,
+        estraverse,
         currentScope,
         globalScope,
         scopes,
         options;
 
+    estraverse = require('estraverse');
     Syntax = estraverse.Syntax;
 
     if (typeof global.Map !== 'undefined') {
@@ -1373,5 +1346,5 @@
     exports.ScopeManager = ScopeManager;
     /** @name module:escope.analyze */
     exports.analyze = analyze;
-}, this));
+}());
 /* vim: set sw=4 ts=4 et tw=80 : */

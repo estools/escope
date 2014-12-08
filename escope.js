@@ -57,7 +57,6 @@
         estraverse,
         esrecurse,
         currentScope,
-        globalScope,
         scopes;
 
     util = require('util');
@@ -515,8 +514,8 @@
         // RAII
         currentScope = this;
         if (this.type === 'global') {
-            globalScope = this;
-            globalScope.implicit = {
+            scopeManager.globalScope = this;
+            scopeManager.globalScope.implicit = {
                 set: new Map(),
                 variables: [],
                 /**
@@ -769,6 +768,7 @@
     function ScopeManager(scopes, options) {
         this.scopes = scopes;
         this.attached = false;
+        this.globalScope = null;
         this.__options = options;
     }
 
@@ -1277,14 +1277,12 @@
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
         currentScope = null;
-        globalScope = null;
 
         scopeManager = new ScopeManager(resultScopes, options);
         referencer = new Referencer(scopeManager);
         referencer.visit(tree);
 
         assert(currentScope === null);
-        globalScope = null;
         scopes = null;
 
         return scopeManager;

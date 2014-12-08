@@ -106,6 +106,7 @@
         return {
             optimistic: false,
             directive: false,
+            sourceType: 'script',  // one of ['script', 'module']
             ecmaVersion: 5
         };
     }
@@ -310,6 +311,7 @@
     Variable.FunctionName = 'FunctionName';
     Variable.ClassName = 'ClassName';
     Variable.Variable = 'Variable';
+    Variable.ImportBinding = 'ImportBinding';
     Variable.TDZ = 'TDZ';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
@@ -330,9 +332,11 @@
             return true;
         }
 
-        if (scope.type === 'class') {
+        if (scope.type === 'class' || scope.type === 'module') {
             return true;
-        } else if (scope.type === 'function') {
+        }
+
+        if (scope.type === 'function') {
             body = block.body;
         } else if (scope.type === 'global') {
             body = block;
@@ -377,8 +381,9 @@
 
     /* Special Scope types. */
     var SCOPE_NORMAL = 0,
-        SCOPE_FUNCTION_EXPRESSION_NAME = 1,
-        SCOPE_TDZ = 2;
+        SCOPE_MODULE = 1,
+        SCOPE_FUNCTION_EXPRESSION_NAME = 2,
+        SCOPE_TDZ = 3;
 
     /**
      * @class Scope
@@ -390,6 +395,7 @@
          */
         this.type =
             (scopeType === SCOPE_TDZ) ? 'TDZ' :
+            (scopeType === SCOPE_MODULE) ? 'module' :
             (block.type === Syntax.BlockStatement) ? 'block' :
             (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
             (block.type === Syntax.CatchClause) ? 'catch' :
@@ -453,7 +459,7 @@
          * @member {Scope} Scope#variableScope
          */
         this.variableScope =
-            (this.type === 'global' || this.type === 'function') ? this : scopeManager.__currentScope.variableScope;
+            (this.type === 'global' || this.type === 'function' || this.type === 'module') ? this : scopeManager.__currentScope.variableScope;
          /**
          * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
@@ -783,6 +789,10 @@
         return this.__options.ignoreEval;
     };
 
+    ScopeManager.prototype.isModule = function () {
+        return this.__options.sourceType === 'module';
+    };
+
     // Returns appropliate scope for this node
     ScopeManager.prototype.__get = function __get(node) {
         var i, iz, scope;
@@ -837,6 +847,10 @@
 
     ScopeManager.prototype.__nestScope = function (node, isMethodDefinition) {
         return new Scope(this, node, isMethodDefinition, SCOPE_NORMAL);
+    };
+
+    ScopeManager.prototype.__nestModuleScope = function (node) {
+        return new Scope(this, node, false, SCOPE_MODULE);
     };
 
     ScopeManager.prototype.__nestTDZScope = function (node) {
@@ -901,6 +915,50 @@
         var nodeType = node.type;
         return nodeType === Syntax.Identifier || nodeType === Syntax.ObjectPattern || nodeType === Syntax.ArrayPattern || nodeType === Syntax.SpreadElement;
     }
+
+    // Importing ImportDeclaration.
+    // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-moduledeclarationinstantiation
+    // FIXME: Now, we don't create module environment, because the context is
+    // implementation dependent.
+
+    function Importer(declaration, referencer) {
+        esrecurse.Visitor.call(this, this);
+        this.declaration = declaration;
+        this.referencer = referencer;
+    }
+    util.inherits(Importer, esrecurse.Visitor);
+
+    Importer.prototype.visitImport = function (id, specifier) {
+        var that = this;
+        that.referencer.visitPattern(id, function (pattern) {
+            that.referencer.currentScope().__define(pattern, {
+                type: Variable.ImportBinding,
+                name: pattern,
+                node: specifier,
+                parent: that.declaration
+            });
+        });
+    };
+
+    Importer.prototype.ImportNamespaceSpecifier = function (node) {
+        if (node.id) {
+            this.visitImport(node.id, node);
+        }
+    };
+
+    Importer.prototype.ImportDefaultSpecifier = function (node) {
+        this.visitImport(node.id, node);
+    };
+
+    Importer.prototype.ImportSpecifier = function (node) {
+        if (node.name) {
+            this.visitImport(node.name, node);
+        } else {
+            this.visitImport(node.id, node);
+        }
+    };
+
+    // Referencing variables and creating bindings.
 
     function Referencer(scopeManager) {
         esrecurse.Visitor.call(this, this);
@@ -1139,6 +1197,11 @@
 
         Program: function (node) {
             this.scopeManager.__nestScope(node);
+
+            if (this.scopeManager.__isES6() && this.scopeManager.isModule()) {
+                this.scopeManager.__nestModuleScope(node);
+            }
+
             this.visitChildren(node);
             this.close(node);
         },
@@ -1262,6 +1325,15 @@
 
         ArrowFunctionExpression: function (node) {
             this.visitFunction(node);
+        },
+
+        ImportDeclaration: function (node) {
+            var importer;
+
+            assert(this.scopeManager.__isES6() && this.scopeManager.isModule());
+
+            importer = new Importer(node, this);
+            importer.visit(node);
         }
     });
 
@@ -1274,6 +1346,7 @@
      * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
      * @param {boolean} [providedOptions.directive=false]- the directive flag
      * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
+     * @param {string} [providedOptions.sourceType='script']- the source type of the script. one of 'script' and 'module'
      * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
      * @return {ScopeManager}
      */

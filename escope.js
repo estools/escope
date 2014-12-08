@@ -51,50 +51,22 @@
     'use strict';
 
     var Syntax,
-        Map,
         util,
         extend,
         estraverse,
-        esrecurse;
+        esrecurse,
+        Map,
+        WeakMap;
 
     util = require('util');
     extend = require('util-extend');
     estraverse = require('estraverse');
     esrecurse = require('esrecurse');
 
+    Map = require('es6-map');
+    WeakMap = require('es6-weak-map');
+
     Syntax = estraverse.Syntax;
-
-    if (typeof global.Map !== 'undefined') {
-        // ES6 Map
-        Map = global.Map;
-    } else {
-        Map = function Map() {
-            this.__data = {};
-        };
-
-        Map.prototype.get = function MapGet(key) {
-            key = '$' + key;
-            if (this.__data.hasOwnProperty(key)) {
-                return this.__data[key];
-            }
-            return undefined;
-        };
-
-        Map.prototype.has = function MapHas(key) {
-            key = '$' + key;
-            return this.__data.hasOwnProperty(key);
-        };
-
-        Map.prototype.set = function MapSet(key, val) {
-            key = '$' + key;
-            this.__data[key] = val;
-        };
-
-        Map.prototype['delete'] = function MapDelete(key) {
-            key = '$' + key;
-            return delete this.__data[key];
-        };
-    }
 
     function assert(cond, text) {
         if (!cond) {
@@ -379,6 +351,19 @@
         return false;
     }
 
+    function registerScope(scopeManager, scope) {
+        var scopes;
+
+        scopeManager.scopes.push(scope);
+
+        scopes = scopeManager.__nodeToScope.get(scope.block);
+        if (scopes) {
+            scopes.push(scope);
+        } else {
+            scopeManager.__nodeToScope.set(scope.block, [ scope ]);
+        }
+    }
+
     /* Special Scope types. */
     var SCOPE_NORMAL = 0,
         SCOPE_MODULE = 1,
@@ -530,7 +515,8 @@
                 left: []
             };
         }
-        scopeManager.scopes.push(this);
+
+        registerScope(scopeManager, this);
     }
 
     Scope.prototype.__close = function __close(scopeManager) {
@@ -740,20 +726,6 @@
         return this.thisFound;
     };
 
-    Scope.mangledName = '__$escope$__';
-
-    Scope.prototype.attach = function attach() {
-        if (!this.functionExpressionScope) {
-            this.block[Scope.mangledName] = this;
-        }
-    };
-
-    Scope.prototype.detach = function detach() {
-        if (!this.functionExpressionScope) {
-            delete this.block[Scope.mangledName];
-        }
-    };
-
     Scope.prototype.isUsedName = function (name) {
         if (this.set.has(name)) {
             return true;
@@ -771,8 +743,8 @@
      */
     function ScopeManager(options) {
         this.scopes = [];
-        this.attached = false;
         this.globalScope = null;
+        this.__nodeToScope = new WeakMap();
         this.__currentScope = null;
         this.__options = options;
     }
@@ -793,57 +765,74 @@
         return this.__options.sourceType === 'module';
     };
 
-    // Returns appropliate scope for this node
+    // Returns appropliate scope for this node.
     ScopeManager.prototype.__get = function __get(node) {
-        var i, iz, scope;
-        if (this.attached) {
-            return node[Scope.mangledName] || null;
+        return this.__nodeToScope.get(node);
+    };
+
+    ScopeManager.prototype.acquire = function acquire(node, inner) {
+        var scopes, scope, i, iz;
+
+        function predicate(scope) {
+            if (scope.type === 'function' && scope.functionExpressionScope) {
+                return false;
+            }
+            if (scope.type === 'TDZ') {
+                return false;
+            }
+            return true;
         }
 
-        for (i = 0, iz = this.scopes.length; i < iz; ++i) {
-            scope = this.scopes[i];
-            if (!scope.functionExpressionScope) {
-                if (scope.block === node) {
+        scopes = this.__get(node);
+        if (!scopes || scopes.length === 0) {
+            return null;
+        }
+
+        // Heuristic selection from all scopes.
+        // If you would like to get all scopes, please use ScopeManager#acquireAll.
+        if (scopes.length === 1) {
+            return scopes[0];
+        }
+
+        if (inner) {
+            for (i = scopes.length - 1; i >= 0; --i) {
+                scope = scopes[i];
+                if (predicate(scope)) {
+                    return scope;
+                }
+            }
+        } else {
+            for (i = 0, iz = scopes.length; i < iz; ++i) {
+                scope = scopes[i];
+                if (predicate(scope)) {
                     return scope;
                 }
             }
         }
+
         return null;
     };
 
-    ScopeManager.prototype.acquire = function acquire(node) {
+    ScopeManager.prototype.acquireAll = function acquire(node) {
         return this.__get(node);
     };
 
-    ScopeManager.prototype.release = function release(node) {
-        var scope = this.__get(node);
-        if (scope) {
-            scope = scope.upper;
-            while (scope) {
-                if (!scope.functionExpressionScope) {
-                    return scope;
-                }
-                scope = scope.upper;
+    ScopeManager.prototype.release = function release(node, inner) {
+        var scopes, scope;
+        scopes = this.__get(node);
+        if (scopes && scopes.length) {
+            scope = scopes[0].upper;
+            if (!scope) {
+                return null;
             }
+            return this.acquire(scope.block, inner);
         }
         return null;
     };
 
-    ScopeManager.prototype.attach = function attach() {
-        var i, iz;
-        for (i = 0, iz = this.scopes.length; i < iz; ++i) {
-            this.scopes[i].attach();
-        }
-        this.attached = true;
-    };
+    ScopeManager.prototype.attach = function attach() { };
 
-    ScopeManager.prototype.detach = function detach() {
-        var i, iz;
-        for (i = 0, iz = this.scopes.length; i < iz; ++i) {
-            this.scopes[i].detach();
-        }
-        this.attached = false;
-    };
+    ScopeManager.prototype.detach = function detach() { };
 
     ScopeManager.prototype.__nestScope = function (node, isMethodDefinition) {
         return new Scope(this, node, isMethodDefinition, SCOPE_NORMAL);

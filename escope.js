@@ -58,8 +58,7 @@
         esrecurse,
         currentScope,
         globalScope,
-        scopes,
-        options;
+        scopes;
 
     util = require('util');
     extend = require('util-extend');
@@ -317,7 +316,7 @@
     Variable.TDZ = 'TDZ';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
-    function isStrictScope(scope, block, isMethodDefinition) {
+    function isStrictScope(scope, block, isMethodDefinition, useDirective) {
         var body, i, iz, stmt, expr;
 
         // When upper scope is exists and strict, inner scope is also strict.
@@ -345,7 +344,7 @@
         }
 
         // Search 'use strict' directive.
-        if (options.directive) {
+        if (useDirective) {
             for (i = 0, iz = body.body.length; i < iz; ++i) {
                 stmt = body.body[i];
                 if (stmt.type !== 'DirectiveStatement') {
@@ -501,7 +500,7 @@
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
          */
-        this.isStrict = isStrictScope(this, block, isMethodDefinition);
+        this.isStrict = isStrictScope(this, block, isMethodDefinition, scopeManager.__useDirective());
 
          /**
          * List of nested {@link Scope}s.
@@ -531,11 +530,11 @@
         scopes.push(this);
     }
 
-    Scope.prototype.__close = function __close() {
+    Scope.prototype.__close = function __close(scopeManager) {
         var i, iz, ref, current, implicit, info;
 
         // Because if this is global environment, upper is null
-        if (!this.dynamic || options.optimistic) {
+        if (!this.dynamic || scopeManager.__isOptimistic()) {
             // static resolve
             for (i = 0, iz = this.__left.length; i < iz; ++i) {
                 ref = this.__left[i];
@@ -773,6 +772,18 @@
         this.__options = options;
     }
 
+    ScopeManager.prototype.__useDirective = function () {
+        return this.__options.directive;
+    };
+
+    ScopeManager.prototype.__isOptimistic = function () {
+        return this.__options.optimistic;
+    };
+
+    ScopeManager.prototype.__ignoreEval = function () {
+        return this.__options.ignoreEval;
+    };
+
     // Returns appropliate scope for this node
     ScopeManager.prototype.__get = function __get(node) {
         var i, iz, scope;
@@ -904,7 +915,7 @@
     extend(Referencer.prototype, {
         close: function (node) {
             while (currentScope && node === currentScope.block) {
-                currentScope.__close();
+                currentScope.__close(this.scopeManager);
             }
         },
 
@@ -1183,7 +1194,7 @@
 
         CallExpression: function (node) {
             // Check this is direct call to eval
-            if (!options.ignoreEval && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
+            if (!this.scopeManager.__ignoreEval() && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
                 // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
                 // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
                 currentScope.variableScope.__detectEval();
@@ -1257,10 +1268,11 @@
      * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
      * @param {boolean} [providedOptions.directive=false]- the directive flag
      * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
+     * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager, referencer;
+        var resultScopes, scopeManager, referencer, options;
 
         options = updateDeeply(defaultOptions(), providedOptions);
         resultScopes = scopes = [];
@@ -1274,7 +1286,6 @@
         assert(currentScope === null);
         globalScope = null;
         scopes = null;
-        options = null;
 
         return scopeManager;
     }

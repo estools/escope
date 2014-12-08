@@ -55,9 +55,7 @@
         util,
         extend,
         estraverse,
-        esrecurse,
-        currentScope,
-        scopes;
+        esrecurse;
 
     util = require('util');
     extend = require('util-extend');
@@ -455,7 +453,7 @@
          * @member {Scope} Scope#variableScope
          */
         this.variableScope =
-            (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
+            (this.type === 'global' || this.type === 'function') ? this : scopeManager.__currentScope.variableScope;
          /**
          * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
@@ -494,7 +492,7 @@
          * Reference to the parent {@link Scope|scope}.
          * @member {Scope} Scope#upper
          */
-        this.upper = currentScope;
+        this.upper = scopeManager.__currentScope;
          /**
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
@@ -506,13 +504,13 @@
          * @member {Scope[]} Scope#childScopes
          */
         this.childScopes = [];
-        if (currentScope) {
-            currentScope.childScopes.push(this);
+        if (scopeManager.__currentScope) {
+            scopeManager.__currentScope.childScopes.push(this);
         }
 
 
         // RAII
-        currentScope = this;
+        scopeManager.__currentScope = this;
         if (this.type === 'global') {
             scopeManager.globalScope = this;
             scopeManager.globalScope.implicit = {
@@ -526,7 +524,7 @@
                 left: []
             };
         }
-        scopes.push(this);
+        scopeManager.scopes.push(this);
     }
 
     Scope.prototype.__close = function __close(scopeManager) {
@@ -585,7 +583,7 @@
         }
 
         this.__left = null;
-        currentScope = this.upper;
+        scopeManager.__currentScope = this.upper;
     };
 
     Scope.prototype.__resolve = function __resolve(ref) {
@@ -765,10 +763,11 @@
     /**
      * @class ScopeManager
      */
-    function ScopeManager(scopes, options) {
-        this.scopes = scopes;
+    function ScopeManager(options) {
+        this.scopes = [];
         this.attached = false;
         this.globalScope = null;
+        this.__currentScope = null;
         this.__options = options;
     }
 
@@ -913,9 +912,13 @@
     util.inherits(Referencer, esrecurse.Visitor);
 
     extend(Referencer.prototype, {
+        currentScope: function () {
+            return this.scopeManager.__currentScope;
+        },
+
         close: function (node) {
-            while (currentScope && node === currentScope.block) {
-                currentScope.__close(this.scopeManager);
+            while (this.currentScope() && node === this.currentScope().block) {
+                this.currentScope().__close(this.scopeManager);
             }
         },
 
@@ -933,19 +936,19 @@
             // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-runtime-semantics-forin-div-ofexpressionevaluation-abstract-operation
             // TDZ scope hides the declaration's names.
             this.scopeManager.__nestTDZScope(node, iterationNode);
-            this.visitVariableDeclaration(currentScope, Variable.TDZ, iterationNode.left, 0);
+            this.visitVariableDeclaration(this.currentScope(), Variable.TDZ, iterationNode.left, 0);
         },
 
         materializeIterationScope: function (node) {
             // Generate iteration scope for upper ForIn/ForOf Statements.
             // parent node for __nestScope is only necessary to
             // distinguish MethodDefinition.
-            var letOrConstDecl;
+            var letOrConstDecl, that = this;
             this.scopeManager.__nestScope(node, false);
             letOrConstDecl = node.left;
-            this.visitVariableDeclaration(currentScope, Variable.Variable, letOrConstDecl, 0);
+            this.visitVariableDeclaration(this.currentScope(), Variable.Variable, letOrConstDecl, 0);
             this.visitPattern(letOrConstDecl.declarations[0].id, function (pattern) {
-                currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+                that.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true);
             });
         },
 
@@ -954,7 +957,7 @@
         },
 
         visitFunction: function (node) {
-            var i, iz;
+            var i, iz, that = this;
             // FunctionDeclaration name is defined in upper scope
             // NOTE: Not referring variableScope. It is intended.
             // Since
@@ -962,7 +965,7 @@
             //  in ES6, FunctionDeclaration should be block scoped.
             if (node.type === Syntax.FunctionDeclaration) {
                 // id is defined in upper scope
-                currentScope.__define(node.id, {
+                this.currentScope().__define(node.id, {
                     type: Variable.FunctionName,
                     name: node.id,
                     node: node
@@ -974,7 +977,7 @@
 
             for (i = 0, iz = node.params.length; i < iz; ++i) {
                 this.visitPattern(node.params[i], function (pattern) {
-                    currentScope.__define(pattern, {
+                    that.currentScope().__define(pattern, {
                         type: Variable.Parameter,
                         name: pattern,
                         node: node,
@@ -995,7 +998,7 @@
 
         visitClass: function (node) {
             if (node.type === Syntax.ClassDeclaration) {
-                currentScope.__define(node.id, {
+                this.currentScope().__define(node.id, {
                     type: Variable.ClassName,
                     name: node.id,
                     node: node
@@ -1008,7 +1011,7 @@
             this.scopeManager.__nestScope(node);
 
             if (node.id) {
-                currentScope.__define(node.id, {
+                this.currentScope().__define(node.id, {
                     type: Variable.ClassName,
                     name: node.id,
                     node: node
@@ -1036,6 +1039,7 @@
         },
 
         visitForIn: function (node) {
+            var that = this;
             if (node.left.type === Syntax.VariableDeclaration && node.left.kind !== 'var') {
                 this.materializeTDZScope(node.right, node);
                 this.visit(node.right);
@@ -1048,7 +1052,7 @@
                 if (node.left.type === Syntax.VariableDeclaration) {
                     this.visit(node.left);
                     this.visitPattern(node.left.declarations[0].id, function (pattern) {
-                        currentScope.__referencing(pattern, Reference.WRITE, node.right, null, true);
+                        that.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true);
                     });
                 } else {
                     if (!isPattern(node.left)) {
@@ -1056,13 +1060,13 @@
                     }
                     this.visitPattern(node.left, function (pattern) {
                         var maybeImplicitGlobal = null;
-                        if (!currentScope.isStrict) {
+                        if (!that.currentScope().isStrict) {
                             maybeImplicitGlobal = {
                                 pattern: pattern,
                                 node: node
                             };
                         }
-                        currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
+                        that.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
                     });
                 }
                 this.visit(node.right);
@@ -1071,7 +1075,7 @@
         },
 
         visitVariableDeclaration: function (variableTargetScope, type, node, index) {
-            var decl, init;
+            var decl, init, that = this;
 
             decl = node.declarations[index];
             init = decl.init;
@@ -1089,26 +1093,27 @@
                 });
 
                 if (init) {
-                    currentScope.__referencing(pattern, Reference.WRITE, init, null, !toplevel);
+                    that.currentScope().__referencing(pattern, Reference.WRITE, init, null, !toplevel);
                 }
             });
         },
 
         AssignmentExpression: function (node) {
+            var that = this;
             if (isPattern(node.left)) {
                 if (node.operator === '=') {
                     this.visitPattern(node.left, function (pattern, toplevel) {
                         var maybeImplicitGlobal = null;
-                        if (!currentScope.isStrict) {
+                        if (!that.currentScope().isStrict) {
                             maybeImplicitGlobal = {
                                 pattern: pattern,
                                 node: node
                             };
                         }
-                        currentScope.__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !toplevel);
+                        that.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !toplevel);
                     });
                 } else {
-                    currentScope.__referencing(node.left, Reference.RW, node.right);
+                    that.currentScope().__referencing(node.left, Reference.RW, node.right);
                 }
             } else {
                 this.visit(node.left);
@@ -1117,10 +1122,11 @@
         },
 
         CatchClause: function (node) {
+            var that = this;
             this.scopeManager.__nestScope(node);
 
             this.visitPattern(node.param, function (pattern) {
-                currentScope.__define(pattern, {
+                that.currentScope().__define(pattern, {
                     type: Variable.CatchClause,
                     name: node.param,
                     node: node
@@ -1138,12 +1144,12 @@
         },
 
         Identifier: function (node) {
-            currentScope.__referencing(node);
+            this.currentScope().__referencing(node);
         },
 
         UpdateExpression: function (node) {
             if (isPattern(node)) {
-                currentScope.__referencing(node.argument, Reference.RW, null);
+                this.currentScope().__referencing(node.argument, Reference.RW, null);
             } else {
                 this.visitChildren(node);
             }
@@ -1197,7 +1203,7 @@
             if (!this.scopeManager.__ignoreEval() && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
                 // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
                 // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
-                currentScope.variableScope.__detectEval();
+                this.currentScope().variableScope.__detectEval();
             }
             this.visitChildren(node);
         },
@@ -1213,7 +1219,7 @@
         },
 
         ThisExpression: function () {
-            currentScope.variableScope.__detectThis();
+            this.currentScope().variableScope.__detectThis();
         },
 
         WithStatement: function (node) {
@@ -1228,7 +1234,7 @@
 
         VariableDeclaration: function (node) {
             var variableTargetScope, i, iz, decl;
-            variableTargetScope = (node.kind === 'var') ? currentScope.variableScope : currentScope;
+            variableTargetScope = (node.kind === 'var') ? this.currentScope().variableScope : this.currentScope();
             for (i = 0, iz = node.declarations.length; i < iz; ++i) {
                 decl = node.declarations[i];
                 this.visitVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
@@ -1272,18 +1278,16 @@
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes, scopeManager, referencer, options;
+        var scopeManager, referencer, options;
 
         options = updateDeeply(defaultOptions(), providedOptions);
-        resultScopes = scopes = [];
-        currentScope = null;
 
-        scopeManager = new ScopeManager(resultScopes, options);
+        scopeManager = new ScopeManager(options);
+
         referencer = new Referencer(scopeManager);
         referencer.visit(tree);
 
-        assert(currentScope === null);
-        scopes = null;
+        assert(scopeManager.__currentScope === null);
 
         return scopeManager;
     }

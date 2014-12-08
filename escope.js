@@ -1334,6 +1334,23 @@
 
             importer = new Importer(node, this);
             importer.visit(node);
+        },
+
+        ExportDeclaration: function (node) {
+            var i, iz;
+            if (node.source) {
+                return;
+            }
+            if (node.declaration) {
+                this.visit(node.declaration);
+                return;
+            }
+
+            this.visitChildren(node);
+        },
+
+        ExportSpecifier: function (node) {
+            this.visit(node.id);
         }
     });
 

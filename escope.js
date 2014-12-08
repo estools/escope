@@ -1337,7 +1337,6 @@
         },
 
         ExportDeclaration: function (node) {
-            var i, iz;
             if (node.source) {
                 return;
             }

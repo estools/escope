@@ -26,6 +26,7 @@
     "util-extend": "^1.0.1"
   },
   "devDependencies": {
+    "browserify": "^7.0.0",
     "chai": "~1.10.0",
     "coffee-script": "~1.8.0",
     "esprima": "~1.2.2",
@@ -33,7 +34,8 @@
     "gulp-eslint": "^0.2.0",
     "gulp-mocha": "~2.0.0",
     "jsdoc": "~3.3.0-alpha10",
-    "minimist": "^1.1.0"
+    "minimist": "^1.1.0",
+    "vinyl-source-stream": "^1.0.0"
   },
   "licenses": [
     {

@@ -24,6 +24,9 @@ gulp = require 'gulp'
 mocha = require 'gulp-mocha'
 eslint = require 'gulp-eslint'
 minimist = require 'minimist'
+source = require 'vinyl-source-stream'
+browserify = require 'browserify'
+
 require 'coffee-script/register'
 
 SOURCE = [
@@ -57,6 +60,13 @@ gulp.task 'lint', ->
     .pipe(eslint(ESLINT_OPTION))
     .pipe(eslint.formatEach('stylish', process.stderr))
     .pipe(eslint.failOnError())
+
+gulp.task 'build', ->
+    browserify
+        entries: [ './escope.js' ]
+    .bundle()
+    .pipe source 'bundle.js'
+    .pipe gulp.dest 'build'
 
 gulp.task 'travis', [ 'lint', 'test' ]
 gulp.task 'default', [ 'travis' ]

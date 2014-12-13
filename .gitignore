@@ -4,6 +4,7 @@
 
 # Node modules
 node_modules/
+/build/
 npm-debug.log
 
 # Cover

@@ -308,6 +308,10 @@
             return true;
         }
 
+        if (scope.type === 'block' || scope.type === 'switch') {
+            return false;
+        }
+
         if (scope.type === 'function') {
             body = block.body;
         } else if (scope.type === 'global') {
@@ -382,6 +386,7 @@
             (scopeType === SCOPE_TDZ) ? 'TDZ' :
             (scopeType === SCOPE_MODULE) ? 'module' :
             (block.type === Syntax.BlockStatement) ? 'block' :
+            (block.type === Syntax.SwitchStatement) ? 'switch' :
             (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement || block.type === Syntax.ForStatement) ? 'for' :
@@ -1294,6 +1299,23 @@
                     this.visit(decl.init);
                 }
             }
+        },
+
+        // sec 13.11.8
+        SwitchStatement: function (node) {
+            var i, iz;
+
+            this.visit(node.discriminant);
+
+            if (this.scopeManager.__isES6()) {
+                this.scopeManager.__nestScope(node);
+            }
+
+            for (i = 0, iz = node.cases.length; i < iz; ++i) {
+                this.visit(node.cases[i]);
+            }
+
+            this.close(node);
         },
 
         FunctionDeclaration: function (node) {

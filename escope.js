@@ -475,7 +475,9 @@
             });
             this.functionExpressionScope = true;
         } else {
-            if (this.type === 'function') {
+            // section 9.2.13, FunctionDeclarationInstantiation.
+            // NOTE Arrow functions never have an arguments objects.
+            if (this.type === 'function' && this.block.type !== Syntax.ArrowFunctionExpression) {
                 this.__defineArguments();
             }
 

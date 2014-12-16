@@ -48,10 +48,10 @@ describe 'ES6 arrow function expression', ->
         expect(scope.type).to.be.equal 'function'
         expect(scope.block.type).to.be.equal 'ArrowFunctionExpression'
         expect(scope.isStrict).to.be.true
-        expect(scope.variables).to.have.length 3
-        expect(scope.variables[0].name).to.be.equal 'arguments'
-        expect(scope.variables[1].name).to.be.equal 'i'
-        expect(scope.variables[2].name).to.be.equal 'j'
+        expect(scope.variables).to.have.length 2
+        # There's no "arguments"
+        expect(scope.variables[0].name).to.be.equal 'i'
+        expect(scope.variables[1].name).to.be.equal 'j'
 
     it 'generate bindings for parameters', ->
         ast = harmony.parse """
@@ -72,11 +72,11 @@ describe 'ES6 arrow function expression', ->
         expect(scope.type).to.be.equal 'function'
         expect(scope.block.type).to.be.equal 'ArrowFunctionExpression'
         expect(scope.isStrict).to.be.true
-        expect(scope.variables).to.have.length 5
-        expect(scope.variables[0].name).to.be.equal 'arguments'
-        expect(scope.variables[1].name).to.be.equal 'a'
-        expect(scope.variables[2].name).to.be.equal 'b'
-        expect(scope.variables[3].name).to.be.equal 'c'
-        expect(scope.variables[4].name).to.be.equal 'd'
+        expect(scope.variables).to.have.length 4
+        # There's no "arguments"
+        expect(scope.variables[0].name).to.be.equal 'a'
+        expect(scope.variables[1].name).to.be.equal 'b'
+        expect(scope.variables[2].name).to.be.equal 'c'
+        expect(scope.variables[3].name).to.be.equal 'd'
 
 # vim: set sw=4 ts=4 et tw=80 :

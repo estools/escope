@@ -1395,7 +1395,7 @@
     }
 
     /** @name module:escope.version */
-    exports.version = '2.0.0-dev';
+    exports.version = require('./package.json').version;
     /** @name module:escope.Reference */
     exports.Reference = Reference;
     /** @name module:escope.Variable */

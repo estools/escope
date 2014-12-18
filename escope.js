@@ -25,10 +25,10 @@
 */
 
 /**
- * Escope (<a href="http://github.com/Constellation/escope">escope</a>) is an <a
+ * Escope (<a href="http://github.com/estools/escope">escope</a>) is an <a
  * href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMAScript</a>
  * scope analyzer extracted from the <a
- * href="http://github.com/Constellation/esmangle">esmangle project</a/>.
+ * href="http://github.com/estools/esmangle">esmangle project</a/>.
  * <p>
  * <em>escope</em> finds lexical scopes in a source program, i.e. areas of that
  * program where different occurrences of the same identifier refer to the same

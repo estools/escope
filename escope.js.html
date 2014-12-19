@@ -26,8 +26,9 @@
     <section>
         <article>
             <pre class="prettyprint source"><code>/*
-  Copyright (C) 2012-2013 Yusuke Suzuki &lt;utatane.tea@gmail.com>
+  Copyright (C) 2012-2014 Yusuke Suzuki &lt;utatane.tea@gmail.com>
   Copyright (C) 2013 Alex Seville &lt;hi@alexanderseville.com>
+  Copyright (C) 2014 Thiago de Arruda &lt;tpadilha84@gmail.com>
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -51,10 +52,10 @@
 */
 
 /**
- * Escope (&lt;a href="http://github.com/Constellation/escope">escope&lt;/a>) is an &lt;a
+ * Escope (&lt;a href="http://github.com/estools/escope">escope&lt;/a>) is an &lt;a
  * href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMAScript&lt;/a>
  * scope analyzer extracted from the &lt;a
- * href="http://github.com/Constellation/esmangle">esmangle project&lt;/a/>.
+ * href="http://github.com/estools/esmangle">esmangle project&lt;/a/>.
  * &lt;p>
  * &lt;em>escope&lt;/em> finds lexical scopes in a source program, i.e. areas of that
  * program where different occurrences of the same identifier refer to the same
@@ -73,78 +74,26 @@
  */
 
 /*jslint bitwise:true */
-/*global exports:true, define:true, require:true*/
-(function (factory, global) {
-    'use strict';
-
-    function namespace(str, obj) {
-        var i, iz, names, name;
-        names = str.split('.');
-        for (i = 0, iz = names.length; i &lt; iz; ++i) {
-            name = names[i];
-            if (obj.hasOwnProperty(name)) {
-                obj = obj[name];
-            } else {
-                obj = (obj[name] = {});
-            }
-        }
-        return obj;
-    }
-
-    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
-    // and plain browser loading,
-    if (typeof define === 'function' &amp;&amp; define.amd) {
-        define('escope', ['exports', 'estraverse'], function (exports, estraverse) {
-            factory(exports, global, estraverse);
-        });
-    } else if (typeof exports !== 'undefined') {
-        factory(exports, global, require('estraverse'));
-    } else {
-        factory(namespace('escope', global), global, global.estraverse);
-    }
-}(function (exports, global, estraverse) {
+(function () {
     'use strict';
 
     var Syntax,
+        util,
+        extend,
+        estraverse,
+        esrecurse,
         Map,
-        currentScope,
-        globalScope,
-        scopes,
-        options;
+        WeakMap;
+
+    util = require('util');
+    extend = require('util-extend');
+    estraverse = require('estraverse');
+    esrecurse = require('esrecurse');
+
+    Map = require('es6-map');
+    WeakMap = require('es6-weak-map');
 
     Syntax = estraverse.Syntax;
-
-    if (typeof global.Map !== 'undefined') {
-        // ES6 Map
-        Map = global.Map;
-    } else {
-        Map = function Map() {
-            this.__data = {};
-        };
-
-        Map.prototype.get = function MapGet(key) {
-            key = '$' + key;
-            if (this.__data.hasOwnProperty(key)) {
-                return this.__data[key];
-            }
-            return undefined;
-        };
-
-        Map.prototype.has = function MapHas(key) {
-            key = '$' + key;
-            return this.__data.hasOwnProperty(key);
-        };
-
-        Map.prototype.set = function MapSet(key, val) {
-            key = '$' + key;
-            this.__data[key] = val;
-        };
-
-        Map.prototype['delete'] = function MapDelete(key) {
-            key = '$' + key;
-            return delete this.__data[key];
-        };
-    }
 
     function assert(cond, text) {
         if (!cond) {
@@ -155,7 +104,9 @@
     function defaultOptions() {
         return {
             optimistic: false,
-            directive: false
+            directive: false,
+            sourceType: 'script',  // one of ['script', 'module']
+            ecmaVersion: 5
         };
     }
 
@@ -187,15 +138,15 @@
      * A Reference represents a single occurrence of an identifier in code.
      * @class Reference
      */
-    function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal) {
-        /** 
+    function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal, partial) {
+        /**
          * Identifier syntax node.
-         * @member {esprima#Identifier} Reference#identifier 
+         * @member {esprima#Identifier} Reference#identifier
          */
         this.identifier = ident;
-        /** 
+        /**
          * Reference to the enclosing Scope.
-         * @member {Scope} Reference#from 
+         * @member {Scope} Reference#from
          */
         this.from = scope;
         /**
@@ -204,48 +155,48 @@
          * @member {boolean} Reference#tainted
          */
         this.tainted = false;
-        /** 
+        /**
          * The variable this reference is resolved with.
-         * @member {Variable} Reference#resolved 
+         * @member {Variable} Reference#resolved
          */
         this.resolved = null;
-        /** 
+        /**
          * The read-write mode of the reference. (Value is one of {@link
          * Reference.READ}, {@link Reference.RW}, {@link Reference.WRITE}).
-         * @member {number} Reference#flag 
+         * @member {number} Reference#flag
          * @private
          */
         this.flag = flag;
         if (this.isWrite()) {
-            /** 
+            /**
              * If reference is writeable, this is the tree being written to it.
-             * @member {esprima#Node} Reference#writeExpr 
+             * @member {esprima#Node} Reference#writeExpr
              */
             this.writeExpr = writeExpr;
+            /**
+             * Whether the Reference might refer to a partial value of writeExpr.
+             * @member {boolean} Reference#partial
+             */
+            this.partial = partial;
         }
-        /** 
-         * Whether the Reference might refer to a global variable.
-         * @member {boolean} Reference#__maybeImplicitGlobal 
-         * @private
-         */
         this.__maybeImplicitGlobal = maybeImplicitGlobal;
     }
 
-    /** 
-     * @constant Reference.READ 
+    /**
+     * @constant Reference.READ
      * @private
      */
     Reference.READ = 0x1;
-    /** 
-     * @constant Reference.WRITE 
+    /**
+     * @constant Reference.WRITE
      * @private
      */
     Reference.WRITE = 0x2;
-    /** 
-     * @constant Reference.RW 
+    /**
+     * @constant Reference.RW
      * @private
      */
-    Reference.RW = 0x3;
+    Reference.RW = Reference.READ | Reference.WRITE;
 
     /**
      * Whether the reference is static.
@@ -262,7 +213,7 @@
      * @return {boolean}
      */
     Reference.prototype.isWrite = function isWrite() {
-        return this.flag &amp; Reference.WRITE;
+        return !!(this.flag &amp; Reference.WRITE);
     };
 
     /**
@@ -271,7 +222,7 @@
      * @return {boolean}
      */
     Reference.prototype.isRead = function isRead() {
-        return this.flag &amp; Reference.READ;
+        return !!(this.flag &amp; Reference.READ);
     };
 
     /**
@@ -307,9 +258,9 @@
      * @class Variable
      */
     function Variable(name, scope) {
-        /**  
+        /**
          * The variable name, as given in the source code.
-         * @member {String} Variable#name 
+         * @member {String} Variable#name
          */
         this.name = name;
         /**
@@ -347,9 +298,9 @@
          * @member {boolean} Variable#stack
          */
         this.stack = true;
-        /** 
+        /**
          * Reference to the enclosing Scope.
-         * @member {Scope} Variable#scope 
+         * @member {Scope} Variable#scope
          */
         this.scope = scope;
     }
@@ -357,15 +308,35 @@
     Variable.CatchClause = 'CatchClause';
     Variable.Parameter = 'Parameter';
     Variable.FunctionName = 'FunctionName';
+    Variable.ClassName = 'ClassName';
     Variable.Variable = 'Variable';
+    Variable.ImportBinding = 'ImportBinding';
+    Variable.TDZ = 'TDZ';
     Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
 
-    function isStrictScope(scope, block) {
+    function isStrictScope(scope, block, isMethodDefinition, useDirective) {
         var body, i, iz, stmt, expr;
 
         // When upper scope is exists and strict, inner scope is also strict.
         if (scope.upper &amp;&amp; scope.upper.isStrict) {
             return true;
+        }
+
+        // ArrowFunctionExpression's scope is always strict scope.
+        if (block.type === Syntax.ArrowFunctionExpression) {
+            return true;
+        }
+
+        if (isMethodDefinition) {
+            return true;
+        }
+
+        if (scope.type === 'class' || scope.type === 'module') {
+            return true;
+        }
+
+        if (scope.type === 'block' || scope.type === 'switch') {
+            return false;
         }
 
         if (scope.type === 'function') {
@@ -376,7 +347,8 @@
             return false;
         }
 
-        if (options.directive) {
+        // Search 'use strict' directive.
+        if (useDirective) {
             for (i = 0, iz = body.body.length; i &lt; iz; ++i) {
                 stmt = body.body[i];
                 if (stmt.type !== 'DirectiveStatement') {
@@ -410,20 +382,43 @@
         return false;
     }
 
+    function registerScope(scopeManager, scope) {
+        var scopes;
+
+        scopeManager.scopes.push(scope);
+
+        scopes = scopeManager.__nodeToScope.get(scope.block);
+        if (scopes) {
+            scopes.push(scope);
+        } else {
+            scopeManager.__nodeToScope.set(scope.block, [ scope ]);
+        }
+    }
+
+    /* Special Scope types. */
+    var SCOPE_NORMAL = 0,
+        SCOPE_MODULE = 1,
+        SCOPE_FUNCTION_EXPRESSION_NAME = 2,
+        SCOPE_TDZ = 3;
+
     /**
      * @class Scope
      */
-    function Scope(block, opt) {
-        var variable, body;
-
+    function Scope(scopeManager, block, isMethodDefinition, scopeType) {
         /**
-         * One of 'catch', 'with', 'function' or 'global'.
+         * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
          */
         this.type =
+            (scopeType === SCOPE_TDZ) ? 'TDZ' :
+            (scopeType === SCOPE_MODULE) ? 'module' :
+            (block.type === Syntax.BlockStatement) ? 'block' :
+            (block.type === Syntax.SwitchStatement) ? 'switch' :
+            (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
             (block.type === Syntax.CatchClause) ? 'catch' :
+            (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement || block.type === Syntax.ForStatement) ? 'for' :
             (block.type === Syntax.WithStatement) ? 'with' :
-            (block.type === Syntax.Program) ? 'global' : 'function';
+            (block.type === Syntax.ClassExpression || block.type === Syntax.ClassDeclaration) ? 'class' : 'global';
          /**
          * The scoped {@link Variable}s of this scope, as &lt;code>{ Variable.name
          * : Variable }&lt;/code>.
@@ -473,14 +468,7 @@
          * @member {Reference[]} Scope#references
          */
         this.references = [];
-         /**
-         * List of {@link Reference}s that are left to be resolved (i.e. which
-         * need to be linked to the variable they refer to). Used internally to
-         * resolve bindings during scope analysis. On a finalized scope
-         * analysis, all sopes have &lt;em>left&lt;/em> value &lt;strong>null&lt;/strong>.
-         * @member {Reference[]} Scope#left
-         */
-        this.left = [];
+
          /**
          * For 'global' and 'function' scopes, this is a self-reference. For
          * other scope types this is the &lt;em>variableScope&lt;/em> value of the
@@ -488,7 +476,7 @@
          * @member {Scope} Scope#variableScope
          */
         this.variableScope =
-            (this.type === 'global' || this.type === 'function') ? this : currentScope.variableScope;
+            (this.type === 'global' || this.type === 'function' || this.type === 'module') ? this : scopeManager.__currentScope.variableScope;
          /**
          * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
@@ -503,8 +491,10 @@
          * @member {boolean} Scope#thisFound
          */
         this.thisFound = false;
-        body = this.type === 'function' ? block.body : block;
-        if (opt.naming) {
+
+        this.__left = [];
+
+        if (scopeType === SCOPE_FUNCTION_EXPRESSION_NAME) {
             this.__define(block.id, {
                 type: Variable.FunctionName,
                 name: block.id,
@@ -512,15 +502,14 @@
             });
             this.functionExpressionScope = true;
         } else {
-            if (this.type === 'function') {
-                variable = new Variable('arguments', this);
-                this.taints.set('arguments', true);
-                this.set.set('arguments', variable);
-                this.variables.push(variable);
+            // section 9.2.13, FunctionDeclarationInstantiation.
+            // NOTE Arrow functions never have an arguments objects.
+            if (this.type === 'function' &amp;&amp; this.block.type !== Syntax.ArrowFunctionExpression) {
+                this.__defineArguments();
             }
 
             if (block.type === Syntax.FunctionExpression &amp;&amp; block.id) {
-                new Scope(block, { naming: true });
+                scopeManager.__nestFunctionExpressionNameScope(block, isMethodDefinition);
             }
         }
 
@@ -528,43 +517,50 @@
          * Reference to the parent {@link Scope|scope}.
          * @member {Scope} Scope#upper
          */
-        this.upper = currentScope;
+        this.upper = scopeManager.__currentScope;
          /**
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
          */
-        this.isStrict = isStrictScope(this, block);
+        this.isStrict = isStrictScope(this, block, isMethodDefinition, scopeManager.__useDirective());
 
          /**
          * List of nested {@link Scope}s.
          * @member {Scope[]} Scope#childScopes
          */
         this.childScopes = [];
-        if (currentScope) {
-            currentScope.childScopes.push(this);
+        if (scopeManager.__currentScope) {
+            scopeManager.__currentScope.childScopes.push(this);
         }
 
 
         // RAII
-        currentScope = this;
+        scopeManager.__currentScope = this;
         if (this.type === 'global') {
-            globalScope = this;
-            globalScope.implicit = {
+            scopeManager.globalScope = this;
+            scopeManager.globalScope.implicit = {
                 set: new Map(),
-                variables: []
+                variables: [],
+                /**
+                * List of {@link Reference}s that are left to be resolved (i.e. which
+                * need to be linked to the variable they refer to).
+                * @member {Reference[]} Scope#implicit#left
+                */
+                left: []
             };
         }
-        scopes.push(this);
+
+        registerScope(scopeManager, this);
     }
 
-    Scope.prototype.__close = function __close() {
-        var i, iz, ref, current, node, implicit;
+    Scope.prototype.__close = function __close(scopeManager) {
+        var i, iz, ref, current, implicit, info;
 
         // Because if this is global environment, upper is null
-        if (!this.dynamic || options.optimistic) {
+        if (!this.dynamic || scopeManager.__isOptimistic()) {
             // static resolve
-            for (i = 0, iz = this.left.length; i &lt; iz; ++i) {
-                ref = this.left[i];
+            for (i = 0, iz = this.__left.length; i &lt; iz; ++i) {
+                ref = this.__left[i];
                 if (!this.__resolve(ref)) {
                     this.__delegateToUpperScope(ref);
                 }
@@ -572,15 +568,15 @@
         } else {
             // this is "global" / "with" / "function with eval" environment
             if (this.type === 'with') {
-                for (i = 0, iz = this.left.length; i &lt; iz; ++i) {
-                    ref = this.left[i];
+                for (i = 0, iz = this.__left.length; i &lt; iz; ++i) {
+                    ref = this.__left[i];
                     ref.tainted = true;
                     this.__delegateToUpperScope(ref);
                 }
             } else {
-                for (i = 0, iz = this.left.length; i &lt; iz; ++i) {
+                for (i = 0, iz = this.__left.length; i &lt; iz; ++i) {
                     // notify all names are through to global
-                    ref = this.left[i];
+                    ref = this.__left[i];
                     current = this;
                     do {
                         current.through.push(ref);
@@ -592,8 +588,8 @@
 
         if (this.type === 'global') {
             implicit = [];
-            for (i = 0, iz = this.left.length; i &lt; iz; ++i) {
-                ref = this.left[i];
+            for (i = 0, iz = this.__left.length; i &lt; iz; ++i) {
+                ref = this.__left[i];
                 if (ref.__maybeImplicitGlobal &amp;&amp; !this.set.has(ref.identifier.name)) {
                     implicit.push(ref.__maybeImplicitGlobal);
                 }
@@ -601,17 +597,19 @@
 
             // create an implicit global variable from assignment expression
             for (i = 0, iz = implicit.length; i &lt; iz; ++i) {
-                node = implicit[i];
-                this.__defineImplicit(node.left, {
+                info = implicit[i];
+                this.__defineImplicit(info.pattern, {
                     type: Variable.ImplicitGlobalVariable,
-                    name: node.left,
-                    node: node
+                    name: info.pattern,
+                    node: info.node
                 });
             }
+
+            this.implicit.left = this.__left;
         }
 
-        this.left = null;
-        currentScope = this.upper;
+        this.__left = null;
+        scopeManager.__currentScope = this.upper;
     };
 
     Scope.prototype.__resolve = function __resolve(ref) {
@@ -633,54 +631,53 @@
 
     Scope.prototype.__delegateToUpperScope = function __delegateToUpperScope(ref) {
         if (this.upper) {
-            this.upper.left.push(ref);
+            this.upper.__left.push(ref);
         }
         this.through.push(ref);
     };
 
-    Scope.prototype.__defineImplicit = function __defineImplicit(node, info) {
-        var name, variable;
-        if (node &amp;&amp; node.type === Syntax.Identifier) {
-            name = node.name;
-            if (!this.implicit.set.has(name)) {
-                variable = new Variable(name, this);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-                this.implicit.set.set(name, variable);
-                this.implicit.variables.push(variable);
-            } else {
-                variable = this.implicit.set.get(name);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-            }
+    Scope.prototype.__defineGeneric = function (name, set, variables, node, info) {
+        var variable;
+
+        variable = set.get(name);
+        if (!variable) {
+            variable = new Variable(name, this);
+            set.set(name, variable);
+            variables.push(variable);
+        }
+
+        if (info) {
+            variable.defs.push(info);
+        }
+        if (node) {
+            variable.identifiers.push(node);
         }
     };
 
-    Scope.prototype.__define = function __define(node, info) {
-        var name, variable;
+    Scope.prototype.__defineArguments = function () {
+        this.__defineGeneric('arguments', this.set, this.variables);
+        this.taints.set('arguments', true);
+    };
+
+    Scope.prototype.__defineImplicit = function (node, info) {
         if (node &amp;&amp; node.type === Syntax.Identifier) {
-            name = node.name;
-            if (!this.set.has(name)) {
-                variable = new Variable(name, this);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-                this.set.set(name, variable);
-                this.variables.push(variable);
-            } else {
-                variable = this.set.get(name);
-                variable.identifiers.push(node);
-                variable.defs.push(info);
-            }
+            this.__defineGeneric(node.name, this.implicit.set, this.implicit.variables, node, info);
         }
     };
 
-    Scope.prototype.__referencing = function __referencing(node, assign, writeExpr, maybeImplicitGlobal) {
+    Scope.prototype.__define = function (node, info) {
+        if (node &amp;&amp; node.type === Syntax.Identifier) {
+            this.__defineGeneric(node.name, this.set, this.variables, node, info);
+        }
+    };
+
+    Scope.prototype.__referencing = function __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial) {
         var ref;
         // because Array element may be null
         if (node &amp;&amp; node.type === Syntax.Identifier) {
-            ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal);
+            ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial);
             this.references.push(ref);
-            this.left.push(ref);
+            this.__left.push(ref);
         }
     };
 
@@ -699,7 +696,7 @@
     };
 
     Scope.prototype.__isClosed = function isClosed() {
-        return this.left === null;
+        return this.__left === null;
     };
 
     // API Scope#resolve(name)
@@ -763,20 +760,6 @@
         return this.thisFound;
     };
 
-    Scope.mangledName = '__$escope$__';
-
-    Scope.prototype.attach = function attach() {
-        if (!this.functionExpressionScope) {
-            this.block[Scope.mangledName] = this;
-        }
-    };
-
-    Scope.prototype.detach = function detach() {
-        if (!this.functionExpressionScope) {
-            delete this.block[Scope.mangledName];
-        }
-    };
-
     Scope.prototype.isUsedName = function (name) {
         if (this.set.has(name)) {
             return true;
@@ -792,71 +775,623 @@
     /**
      * @class ScopeManager
      */
-    function ScopeManager(scopes) {
-        this.scopes = scopes;
-        this.attached = false;
+    function ScopeManager(options) {
+        this.scopes = [];
+        this.globalScope = null;
+        this.__nodeToScope = new WeakMap();
+        this.__currentScope = null;
+        this.__options = options;
     }
 
-    // Returns appropliate scope for this node
+    ScopeManager.prototype.__useDirective = function () {
+        return this.__options.directive;
+    };
+
+    ScopeManager.prototype.__isOptimistic = function () {
+        return this.__options.optimistic;
+    };
+
+    ScopeManager.prototype.__ignoreEval = function () {
+        return this.__options.ignoreEval;
+    };
+
+    ScopeManager.prototype.isModule = function () {
+        return this.__options.sourceType === 'module';
+    };
+
+    // Returns appropliate scope for this node.
     ScopeManager.prototype.__get = function __get(node) {
-        var i, iz, scope;
-        if (this.attached) {
-            return node[Scope.mangledName] || null;
+        return this.__nodeToScope.get(node);
+    };
+
+    ScopeManager.prototype.acquire = function acquire(node, inner) {
+        var scopes, scope, i, iz;
+
+        function predicate(scope) {
+            if (scope.type === 'function' &amp;&amp; scope.functionExpressionScope) {
+                return false;
+            }
+            if (scope.type === 'TDZ') {
+                return false;
+            }
+            return true;
         }
-        if (Scope.isScopeRequired(node)) {
-            for (i = 0, iz = this.scopes.length; i &lt; iz; ++i) {
-                scope = this.scopes[i];
-                if (!scope.functionExpressionScope) {
-                    if (scope.block === node) {
-                        return scope;
-                    }
+
+        scopes = this.__get(node);
+        if (!scopes || scopes.length === 0) {
+            return null;
+        }
+
+        // Heuristic selection from all scopes.
+        // If you would like to get all scopes, please use ScopeManager#acquireAll.
+        if (scopes.length === 1) {
+            return scopes[0];
+        }
+
+        if (inner) {
+            for (i = scopes.length - 1; i >= 0; --i) {
+                scope = scopes[i];
+                if (predicate(scope)) {
+                    return scope;
+                }
+            }
+        } else {
+            for (i = 0, iz = scopes.length; i &lt; iz; ++i) {
+                scope = scopes[i];
+                if (predicate(scope)) {
+                    return scope;
                 }
             }
         }
+
         return null;
     };
 
-    ScopeManager.prototype.acquire = function acquire(node) {
+    ScopeManager.prototype.acquireAll = function acquire(node) {
         return this.__get(node);
     };
 
-    ScopeManager.prototype.release = function release(node) {
-        var scope = this.__get(node);
-        if (scope) {
-            scope = scope.upper;
-            while (scope) {
-                if (!scope.functionExpressionScope) {
-                    return scope;
-                }
-                scope = scope.upper;
+    ScopeManager.prototype.release = function release(node, inner) {
+        var scopes, scope;
+        scopes = this.__get(node);
+        if (scopes &amp;&amp; scopes.length) {
+            scope = scopes[0].upper;
+            if (!scope) {
+                return null;
             }
+            return this.acquire(scope.block, inner);
         }
         return null;
     };
 
-    ScopeManager.prototype.attach = function attach() {
-        var i, iz;
-        for (i = 0, iz = this.scopes.length; i &lt; iz; ++i) {
-            this.scopes[i].attach();
+    ScopeManager.prototype.attach = function attach() { };
+
+    ScopeManager.prototype.detach = function detach() { };
+
+    ScopeManager.prototype.__nestScope = function (node, isMethodDefinition) {
+        return new Scope(this, node, isMethodDefinition, SCOPE_NORMAL);
+    };
+
+    ScopeManager.prototype.__nestModuleScope = function (node) {
+        return new Scope(this, node, false, SCOPE_MODULE);
+    };
+
+    ScopeManager.prototype.__nestTDZScope = function (node) {
+        return new Scope(this, node, false, SCOPE_TDZ);
+    };
+
+    ScopeManager.prototype.__nestFunctionExpressionNameScope = function (node, isMethodDefinition) {
+        return new Scope(this, node, isMethodDefinition, SCOPE_FUNCTION_EXPRESSION_NAME);
+    };
+
+    ScopeManager.prototype.__isES6 = function () {
+        return this.__options.ecmaVersion >= 6;
+    };
+
+    function traverseIdentifierInPattern(rootPattern, callback) {
+        estraverse.traverse(rootPattern, {
+            enter: function (pattern, parent) {
+                var i, iz, element, property;
+
+                switch (pattern.type) {
+                    case Syntax.Identifier:
+                        // Toplevel identifier.
+                        if (parent === null) {
+                            callback(pattern, true);
+                        }
+                        break;
+
+                    case Syntax.SpreadElement:
+                        if (pattern.argument.type === Syntax.Identifier) {
+                            callback(pattern.argument, false);
+                        }
+                        break;
+
+                    case Syntax.ObjectPattern:
+                        for (i = 0, iz = pattern.properties.length; i &lt; iz; ++i) {
+                            property = pattern.properties[i];
+                            if (property.shorthand) {
+                                callback(property.key, false);
+                                continue;
+                            }
+                            if (property.value.type === Syntax.Identifier) {
+                                callback(property.value, false);
+                                continue;
+                            }
+                        }
+                        break;
+
+                    case Syntax.ArrayPattern:
+                        for (i = 0, iz = pattern.elements.length; i &lt; iz; ++i) {
+                            element = pattern.elements[i];
+                            if (element &amp;&amp; element.type === Syntax.Identifier) {
+                                callback(element, false);
+                            }
+                        }
+                        break;
+                }
+            }
+        });
+    }
+
+    function isPattern(node) {
+        var nodeType = node.type;
+        return nodeType === Syntax.Identifier || nodeType === Syntax.ObjectPattern || nodeType === Syntax.ArrayPattern || nodeType === Syntax.SpreadElement;
+    }
+
+    // Importing ImportDeclaration.
+    // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-moduledeclarationinstantiation
+    // FIXME: Now, we don't create module environment, because the context is
+    // implementation dependent.
+
+    function Importer(declaration, referencer) {
+        esrecurse.Visitor.call(this, this);
+        this.declaration = declaration;
+        this.referencer = referencer;
+    }
+    util.inherits(Importer, esrecurse.Visitor);
+
+    Importer.prototype.visitImport = function (id, specifier) {
+        var that = this;
+        that.referencer.visitPattern(id, function (pattern) {
+            that.referencer.currentScope().__define(pattern, {
+                type: Variable.ImportBinding,
+                name: pattern,
+                node: specifier,
+                parent: that.declaration
+            });
+        });
+    };
+
+    Importer.prototype.ImportNamespaceSpecifier = function (node) {
+        if (node.id) {
+            this.visitImport(node.id, node);
         }
-        this.attached = true;
     };
 
-    ScopeManager.prototype.detach = function detach() {
-        var i, iz;
-        for (i = 0, iz = this.scopes.length; i &lt; iz; ++i) {
-            this.scopes[i].detach();
+    Importer.prototype.ImportDefaultSpecifier = function (node) {
+        this.visitImport(node.id, node);
+    };
+
+    Importer.prototype.ImportSpecifier = function (node) {
+        if (node.name) {
+            this.visitImport(node.name, node);
+        } else {
+            this.visitImport(node.id, node);
         }
-        this.attached = false;
     };
 
-    Scope.isScopeRequired = function isScopeRequired(node) {
-        return Scope.isVariableScopeRequired(node) || node.type === Syntax.WithStatement || node.type === Syntax.CatchClause;
-    };
+    // Referencing variables and creating bindings.
 
-    Scope.isVariableScopeRequired = function isVariableScopeRequired(node) {
-        return node.type === Syntax.Program || node.type === Syntax.FunctionExpression || node.type === Syntax.FunctionDeclaration;
-    };
+    function Referencer(scopeManager) {
+        esrecurse.Visitor.call(this, this);
+        this.scopeManager = scopeManager;
+        this.parent = null;
+        this.isInnerMethodDefinition = false;
+    }
+
+    util.inherits(Referencer, esrecurse.Visitor);
+
+    extend(Referencer.prototype, {
+        currentScope: function () {
+            return this.scopeManager.__currentScope;
+        },
+
+        close: function (node) {
+            while (this.currentScope() &amp;&amp; node === this.currentScope().block) {
+                this.currentScope().__close(this.scopeManager);
+            }
+        },
+
+        pushInnerMethodDefinition: function (isInnerMethodDefinition) {
+            var previous = this.isInnerMethodDefinition;
+            this.isInnerMethodDefinition = isInnerMethodDefinition;
+            return previous;
+        },
+
+        popInnerMethodDefinition: function (isInnerMethodDefinition) {
+            this.isInnerMethodDefinition = isInnerMethodDefinition;
+        },
+
+        materializeTDZScope: function (node, iterationNode) {
+            // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-runtime-semantics-forin-div-ofexpressionevaluation-abstract-operation
+            // TDZ scope hides the declaration's names.
+            this.scopeManager.__nestTDZScope(node, iterationNode);
+            this.visitVariableDeclaration(this.currentScope(), Variable.TDZ, iterationNode.left, 0);
+        },
+
+        materializeIterationScope: function (node) {
+            // Generate iteration scope for upper ForIn/ForOf Statements.
+            // parent node for __nestScope is only necessary to
+            // distinguish MethodDefinition.
+            var letOrConstDecl, that = this;
+            this.scopeManager.__nestScope(node, false);
+            letOrConstDecl = node.left;
+            this.visitVariableDeclaration(this.currentScope(), Variable.Variable, letOrConstDecl, 0);
+            this.visitPattern(letOrConstDecl.declarations[0].id, function (pattern) {
+                that.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true);
+            });
+        },
+
+        visitPattern: function (node, callback) {
+            traverseIdentifierInPattern(node, callback);
+        },
+
+        visitFunction: function (node) {
+            var i, iz, that = this;
+            // FunctionDeclaration name is defined in upper scope
+            // NOTE: Not referring variableScope. It is intended.
+            // Since
+            //  in ES5, FunctionDeclaration should be in FunctionBody.
+            //  in ES6, FunctionDeclaration should be block scoped.
+            if (node.type === Syntax.FunctionDeclaration) {
+                // id is defined in upper scope
+                this.currentScope().__define(node.id, {
+                    type: Variable.FunctionName,
+                    name: node.id,
+                    node: node
+                });
+            }
+
+            // Consider this function is in the MethodDefinition.
+            this.scopeManager.__nestScope(node, this.isInnerMethodDefinition);
+
+            for (i = 0, iz = node.params.length; i &lt; iz; ++i) {
+                this.visitPattern(node.params[i], function (pattern) {
+                    that.currentScope().__define(pattern, {
+                        type: Variable.Parameter,
+                        name: pattern,
+                        node: node,
+                        index: i
+                    });
+                });
+            }
+
+            // Skip BlockStatement to prevent creating BlockStatement scope.
+            if (node.body.type === Syntax.BlockStatement) {
+                this.visitChildren(node.body);
+            } else {
+                this.visit(node.body);
+            }
+
+            this.close(node);
+        },
+
+        visitClass: function (node) {
+            if (node.type === Syntax.ClassDeclaration) {
+                this.currentScope().__define(node.id, {
+                    type: Variable.ClassName,
+                    name: node.id,
+                    node: node
+                });
+            }
+
+            // FIXME: Maybe consider TDZ.
+            this.visit(node.superClass);
+
+            this.scopeManager.__nestScope(node);
+
+            if (node.id) {
+                this.currentScope().__define(node.id, {
+                    type: Variable.ClassName,
+                    name: node.id,
+                    node: node
+                });
+            }
+            this.visit(node.body);
+
+            this.close(node);
+        },
+
+        visitProperty: function (node) {
+            var previous, isMethodDefinition;
+            if (node.computed) {
+                this.visit(node.key);
+            }
+
+            isMethodDefinition = node.type === Syntax.MethodDefinition || node.method;
+            if (isMethodDefinition) {
+                previous = this.pushInnerMethodDefinition(true);
+            }
+            this.visit(node.value);
+            if (isMethodDefinition) {
+                this.popInnerMethodDefinition(previous);
+            }
+        },
+
+        visitForIn: function (node) {
+            var that = this;
+            if (node.left.type === Syntax.VariableDeclaration &amp;&amp; node.left.kind !== 'var') {
+                this.materializeTDZScope(node.right, node);
+                this.visit(node.right);
+                this.close(node.right);
+
+                this.materializeIterationScope(node);
+                this.visit(node.body);
+                this.close(node);
+            } else {
+                if (node.left.type === Syntax.VariableDeclaration) {
+                    this.visit(node.left);
+                    this.visitPattern(node.left.declarations[0].id, function (pattern) {
+                        that.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true);
+                    });
+                } else {
+                    if (!isPattern(node.left)) {
+                        this.visit(node.left);
+                    }
+                    this.visitPattern(node.left, function (pattern) {
+                        var maybeImplicitGlobal = null;
+                        if (!that.currentScope().isStrict) {
+                            maybeImplicitGlobal = {
+                                pattern: pattern,
+                                node: node
+                            };
+                        }
+                        that.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
+                    });
+                }
+                this.visit(node.right);
+                this.visit(node.body);
+            }
+        },
+
+        visitVariableDeclaration: function (variableTargetScope, type, node, index) {
+            var decl, init, that = this;
+
+            decl = node.declarations[index];
+            init = decl.init;
+            // FIXME: Don't consider initializer with complex patterns.
+            // Such as,
+            // var [a, b, c = 20] = array;
+            this.visitPattern(decl.id, function (pattern, toplevel) {
+                variableTargetScope.__define(pattern, {
+                    type: type,
+                    name: pattern,
+                    node: decl,
+                    index: index,
+                    kind: node.kind,
+                    parent: node
+                });
+
+                if (init) {
+                    that.currentScope().__referencing(pattern, Reference.WRITE, init, null, !toplevel);
+                }
+            });
+        },
+
+        AssignmentExpression: function (node) {
+            var that = this;
+            if (isPattern(node.left)) {
+                if (node.operator === '=') {
+                    this.visitPattern(node.left, function (pattern, toplevel) {
+                        var maybeImplicitGlobal = null;
+                        if (!that.currentScope().isStrict) {
+                            maybeImplicitGlobal = {
+                                pattern: pattern,
+                                node: node
+                            };
+                        }
+                        that.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !toplevel);
+                    });
+                } else {
+                    that.currentScope().__referencing(node.left, Reference.RW, node.right);
+                }
+            } else {
+                this.visit(node.left);
+            }
+            this.visit(node.right);
+        },
+
+        CatchClause: function (node) {
+            var that = this;
+            this.scopeManager.__nestScope(node);
+
+            this.visitPattern(node.param, function (pattern) {
+                that.currentScope().__define(pattern, {
+                    type: Variable.CatchClause,
+                    name: node.param,
+                    node: node
+                });
+            });
+            this.visit(node.body);
+
+            this.close(node);
+        },
+
+        Program: function (node) {
+            this.scopeManager.__nestScope(node);
+
+            if (this.scopeManager.__isES6() &amp;&amp; this.scopeManager.isModule()) {
+                this.scopeManager.__nestModuleScope(node);
+            }
+
+            this.visitChildren(node);
+            this.close(node);
+        },
+
+        Identifier: function (node) {
+            this.currentScope().__referencing(node);
+        },
+
+        UpdateExpression: function (node) {
+            if (isPattern(node)) {
+                this.currentScope().__referencing(node.argument, Reference.RW, null);
+            } else {
+                this.visitChildren(node);
+            }
+        },
+
+        MemberExpression: function (node) {
+            this.visit(node.object);
+            if (node.computed) {
+                this.visit(node.property);
+            }
+        },
+
+        Property: function (node) {
+            this.visitProperty(node);
+        },
+
+        MethodDefinition: function (node) {
+            this.visitProperty(node);
+        },
+
+        BreakStatement: function () {},
+
+        ContinueStatement: function () {},
+
+        LabelledStatement: function () {},
+
+        ForStatement: function (node) {
+            // Create ForStatement declaration.
+            // NOTE: In ES6, ForStatement dynamically generates
+            // per iteration environment. However, escope is
+            // a static analyzer, we only generate one scope for ForStatement.
+            if (node.init &amp;&amp; node.init.type === Syntax.VariableDeclaration &amp;&amp; node.init.kind !== 'var') {
+                this.scopeManager.__nestScope(node);
+            }
+
+            this.visitChildren(node);
+
+            this.close(node);
+        },
+
+        ClassExpression: function (node) {
+            this.visitClass(node);
+        },
+
+        ClassDeclaration: function (node) {
+            this.visitClass(node);
+        },
+
+        CallExpression: function (node) {
+            // Check this is direct call to eval
+            if (!this.scopeManager.__ignoreEval() &amp;&amp; node.callee.type === Syntax.Identifier &amp;&amp; node.callee.name === 'eval') {
+                // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
+                // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
+                this.currentScope().variableScope.__detectEval();
+            }
+            this.visitChildren(node);
+        },
+
+        BlockStatement: function (node) {
+            if (this.scopeManager.__isES6()) {
+                this.scopeManager.__nestScope(node);
+            }
+
+            this.visitChildren(node);
+
+            this.close(node);
+        },
+
+        ThisExpression: function () {
+            this.currentScope().variableScope.__detectThis();
+        },
+
+        WithStatement: function (node) {
+            this.visit(node.object);
+            // Then nest scope for WithStatement.
+            this.scopeManager.__nestScope(node);
+
+            this.visit(node.body);
+
+            this.close(node);
+        },
+
+        VariableDeclaration: function (node) {
+            var variableTargetScope, i, iz, decl;
+            variableTargetScope = (node.kind === 'var') ? this.currentScope().variableScope : this.currentScope();
+            for (i = 0, iz = node.declarations.length; i &lt; iz; ++i) {
+                decl = node.declarations[i];
+                this.visitVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
+                if (decl.init) {
+                    this.visit(decl.init);
+                }
+            }
+        },
+
+        // sec 13.11.8
+        SwitchStatement: function (node) {
+            var i, iz;
+
+            this.visit(node.discriminant);
+
+            if (this.scopeManager.__isES6()) {
+                this.scopeManager.__nestScope(node);
+            }
+
+            for (i = 0, iz = node.cases.length; i &lt; iz; ++i) {
+                this.visit(node.cases[i]);
+            }
+
+            this.close(node);
+        },
+
+        FunctionDeclaration: function (node) {
+            this.visitFunction(node);
+        },
+
+        FunctionExpression: function (node) {
+            this.visitFunction(node);
+        },
+
+        ForOfStatement: function (node) {
+            this.visitForIn(node);
+        },
+
+        ForInStatement: function (node) {
+            this.visitForIn(node);
+        },
+
+        ArrowFunctionExpression: function (node) {
+            this.visitFunction(node);
+        },
+
+        ImportDeclaration: function (node) {
+            var importer;
+
+            assert(this.scopeManager.__isES6() &amp;&amp; this.scopeManager.isModule());
+
+            importer = new Importer(node, this);
+            importer.visit(node);
+        },
+
+        ExportDeclaration: function (node) {
+            if (node.source) {
+                return;
+            }
+            if (node.declaration) {
+                this.visit(node.declaration);
+                return;
+            }
+
+            this.visitChildren(node);
+        },
+
+        ExportSpecifier: function (node) {
+            this.visit(node.id);
+        }
+    });
 
     /**
      * Main interface function. Takes an Esprima syntax tree and returns the
@@ -867,269 +1402,27 @@
      * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
      * @param {boolean} [providedOptions.directive=false]- the directive flag
      * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
+     * @param {string} [providedOptions.sourceType='script']- the source type of the script. one of 'script' and 'module'
+     * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
      * @return {ScopeManager}
      */
     function analyze(tree, providedOptions) {
-        var resultScopes;
+        var scopeManager, referencer, options;
 
         options = updateDeeply(defaultOptions(), providedOptions);
-        resultScopes = scopes = [];
-        currentScope = null;
-        globalScope = null;
 
-        // attach scope and collect / resolve names
-        estraverse.traverse(tree, {
-            enter: function enter(node) {
-                var i, iz, decl;
-                if (Scope.isScopeRequired(node)) {
-                    new Scope(node, {});
-                }
+        scopeManager = new ScopeManager(options);
 
-                switch (node.type) {
-                case Syntax.AssignmentExpression:
-                    if (node.operator === '=') {
-                        currentScope.__referencing(node.left, Reference.WRITE, node.right, (!currentScope.isStrict &amp;&amp; node.left.name != null) &amp;&amp; node);
-                    } else {
-                        currentScope.__referencing(node.left, Reference.RW, node.right);
-                    }
-                    currentScope.__referencing(node.right);
-                    break;
+        referencer = new Referencer(scopeManager);
+        referencer.visit(tree);
 
-                case Syntax.ArrayExpression:
-                    for (i = 0, iz = node.elements.length; i &lt; iz; ++i) {
-                        currentScope.__referencing(node.elements[i]);
-                    }
-                    break;
+        assert(scopeManager.__currentScope === null);
 
-                case Syntax.BlockStatement:
-                    break;
-
-                case Syntax.BinaryExpression:
-                    currentScope.__referencing(node.left);
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.BreakStatement:
-                    break;
-
-                case Syntax.CallExpression:
-                    currentScope.__referencing(node.callee);
-                    for (i = 0, iz = node['arguments'].length; i &lt; iz; ++i) {
-                        currentScope.__referencing(node['arguments'][i]);
-                    }
-
-                    // check this is direct call to eval
-                    if (!options.ignoreEval &amp;&amp; node.callee.type === Syntax.Identifier &amp;&amp; node.callee.name === 'eval') {
-                        currentScope.variableScope.__detectEval();
-                    }
-                    break;
-
-                case Syntax.CatchClause:
-                    currentScope.__define(node.param, {
-                        type: Variable.CatchClause,
-                        name: node.param,
-                        node: node
-                    });
-                    break;
-
-                case Syntax.ConditionalExpression:
-                    currentScope.__referencing(node.test);
-                    currentScope.__referencing(node.consequent);
-                    currentScope.__referencing(node.alternate);
-                    break;
-
-                case Syntax.ContinueStatement:
-                    break;
-
-                case Syntax.DirectiveStatement:
-                    break;
-
-                case Syntax.DoWhileStatement:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.DebuggerStatement:
-                    break;
-
-                case Syntax.EmptyStatement:
-                    break;
-
-                case Syntax.ExpressionStatement:
-                    currentScope.__referencing(node.expression);
-                    break;
-
-                case Syntax.ForStatement:
-                    currentScope.__referencing(node.init);
-                    currentScope.__referencing(node.test);
-                    currentScope.__referencing(node.update);
-                    break;
-
-                case Syntax.ForInStatement:
-                    if (node.left.type === Syntax.VariableDeclaration) {
-                        currentScope.__referencing(node.left.declarations[0].id, Reference.WRITE, null, false);
-                    } else {
-                        currentScope.__referencing(node.left, Reference.WRITE, null, (!currentScope.isStrict &amp;&amp; node.left.name != null) &amp;&amp; node);
-                    }
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.FunctionDeclaration:
-                    // FunctionDeclaration name is defined in upper scope
-                    currentScope.upper.__define(node.id, {
-                        type: Variable.FunctionName,
-                        name: node.id,
-                        node: node
-                    });
-                    for (i = 0, iz = node.params.length; i &lt; iz; ++i) {
-                        currentScope.__define(node.params[i], {
-                            type: Variable.Parameter,
-                            name: node.params[i],
-                            node: node,
-                            index: i
-                        });
-                    }
-                    break;
-
-                case Syntax.FunctionExpression:
-                    // id is defined in upper scope
-                    for (i = 0, iz = node.params.length; i &lt; iz; ++i) {
-                        currentScope.__define(node.params[i], {
-                            type: Variable.Parameter,
-                            name: node.params[i],
-                            node: node,
-                            index: i
-                        });
-                    }
-                    break;
-
-                case Syntax.Identifier:
-                    break;
-
-                case Syntax.IfStatement:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.Literal:
-                    break;
-
-                case Syntax.LabeledStatement:
-                    break;
-
-                case Syntax.LogicalExpression:
-                    currentScope.__referencing(node.left);
-                    currentScope.__referencing(node.right);
-                    break;
-
-                case Syntax.MemberExpression:
-                    currentScope.__referencing(node.object);
-                    if (node.computed) {
-                        currentScope.__referencing(node.property);
-                    }
-                    break;
-
-                case Syntax.NewExpression:
-                    currentScope.__referencing(node.callee);
-                    for (i = 0, iz = node['arguments'].length; i &lt; iz; ++i) {
-                        currentScope.__referencing(node['arguments'][i]);
-                    }
-                    break;
-
-                case Syntax.ObjectExpression:
-                    break;
-
-                case Syntax.Program:
-                    break;
-
-                case Syntax.Property:
-                    currentScope.__referencing(node.value);
-                    break;
-
-                case Syntax.ReturnStatement:
-                    currentScope.__referencing(node.argument);
-                    break;
-
-                case Syntax.SequenceExpression:
-                    for (i = 0, iz = node.expressions.length; i &lt; iz; ++i) {
-                        currentScope.__referencing(node.expressions[i]);
-                    }
-                    break;
-
-                case Syntax.SwitchStatement:
-                    currentScope.__referencing(node.discriminant);
-                    break;
-
-                case Syntax.SwitchCase:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.ThisExpression:
-                    currentScope.variableScope.__detectThis();
-                    break;
-
-                case Syntax.ThrowStatement:
-                    currentScope.__referencing(node.argument);
-                    break;
-
-                case Syntax.TryStatement:
-                    break;
-
-                case Syntax.UnaryExpression:
-                    currentScope.__referencing(node.argument);
-                    break;
-
-                case Syntax.UpdateExpression:
-                    currentScope.__referencing(node.argument, Reference.RW, null);
-                    break;
-
-                case Syntax.VariableDeclaration:
-                    for (i = 0, iz = node.declarations.length; i &lt; iz; ++i) {
-                        decl = node.declarations[i];
-                        currentScope.variableScope.__define(decl.id, {
-                            type: Variable.Variable,
-                            name: decl.id,
-                            node: decl,
-                            index: i,
-                            parent: node
-                        });
-                        if (decl.init) {
-                            // initializer is found
-                            currentScope.__referencing(decl.id, Reference.WRITE, decl.init, false);
-                            currentScope.__referencing(decl.init);
-                        }
-                    }
-                    break;
-
-                case Syntax.VariableDeclarator:
-                    break;
-
-                case Syntax.WhileStatement:
-                    currentScope.__referencing(node.test);
-                    break;
-
-                case Syntax.WithStatement:
-                    // WithStatement object is referenced at upper scope
-                    currentScope.upper.__referencing(node.object);
-                    break;
-                }
-            },
-
-            leave: function leave(node) {
-                while (currentScope &amp;&amp; node === currentScope.block) {
-                    currentScope.__close();
-                }
-            }
-        });
-
-        assert(currentScope === null);
-        globalScope = null;
-        scopes = null;
-        options = null;
-
-        return new ScopeManager(resultScopes);
+        return scopeManager;
     }
 
     /** @name module:escope.version */
-    exports.version = '1.0.1';
+    exports.version = require('./package.json').version;
     /** @name module:escope.Reference */
     exports.Reference = Reference;
     /** @name module:escope.Variable */
@@ -1140,7 +1433,7 @@
     exports.ScopeManager = ScopeManager;
     /** @name module:escope.analyze */
     exports.analyze = analyze;
-}, this));
+}());
 /* vim: set sw=4 ts=4 et tw=80 : */
 </code></pre>
         </article>
@@ -1158,7 +1451,7 @@
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha2</a> on Thu Nov 28 2013 04:08:08 GMT+0900 (JST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha2</a> on Fri Dec 19 2014 22:50:27 GMT+0900 (JST)
 </footer>
 
 <script> prettyPrint(); </script>

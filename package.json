@@ -2,7 +2,7 @@
   "name": "escope",
   "description": "ECMAScript scope analyzer",
   "homepage": "http://github.com/estools/escope.html",
-  "main": "escope.js",
+  "main": "lib/index.js",
   "version": "2.0.2-dev",
   "engines": {
     "node": ">=0.4.0"
@@ -47,6 +47,6 @@
     "test": "gulp travis",
     "unit-test": "gulp test",
     "lint": "gulp lint",
-    "jsdoc": "jsdoc escope.js README.md"
+    "jsdoc": "jsdoc lib/*.js README.md"
   }
 }

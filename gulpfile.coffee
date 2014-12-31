@@ -30,7 +30,7 @@ browserify = require 'browserify'
 require 'coffee-script/register'
 
 SOURCE = [
-    '*.js'
+    'lib/*.js'
 ]
 
 ESLINT_OPTION =
@@ -63,7 +63,7 @@ gulp.task 'lint', ->
 
 gulp.task 'build', ->
     browserify
-        entries: [ './escope.js' ]
+        entries: [ './lib/index.js' ]
     .bundle()
     .pipe source 'bundle.js'
     .pipe gulp.dest 'build'

@@ -22,8 +22,8 @@
     "es6-map": "^0.1.1",
     "es6-weak-map": "^0.1.2",
     "esrecurse": "^1.2.0",
-    "estraverse": ">=1.9.0",
-    "util-extend": "^1.0.1"
+    "estraverse": ">=1.9.1",
+    "object-assign": "^2.0.0"
   },
   "devDependencies": {
     "browserify": "^7.0.0",

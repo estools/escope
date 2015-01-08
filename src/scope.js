@@ -21,115 +21,107 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-(function () {
-    'use strict';
 
-    var Syntax,
-        Map,
-        Reference,
-        Variable,
-        Definition,
-        assert;
+import { Syntax } from 'estraverse';
+import Map from 'es6-map';
 
-    Syntax = require('estraverse').Syntax;
-    Map = require('es6-map');
+import Reference from './reference';
+import Variable from './variable';
+import Definition from './definition';
+import assert from 'assert';
 
-    Reference = require('./reference');
-    Variable = require('./variable');
-    Definition = require('./definition');
-    assert = require('assert');
+function isStrictScope(scope, block, isMethodDefinition, useDirective) {
+    var body, i, iz, stmt, expr;
 
-    function isStrictScope(scope, block, isMethodDefinition, useDirective) {
-        var body, i, iz, stmt, expr;
+    // When upper scope is exists and strict, inner scope is also strict.
+    if (scope.upper && scope.upper.isStrict) {
+        return true;
+    }
 
-        // When upper scope is exists and strict, inner scope is also strict.
-        if (scope.upper && scope.upper.isStrict) {
-            return true;
-        }
+    // ArrowFunctionExpression's scope is always strict scope.
+    if (block.type === Syntax.ArrowFunctionExpression) {
+        return true;
+    }
 
-        // ArrowFunctionExpression's scope is always strict scope.
-        if (block.type === Syntax.ArrowFunctionExpression) {
-            return true;
-        }
+    if (isMethodDefinition) {
+        return true;
+    }
 
-        if (isMethodDefinition) {
-            return true;
-        }
+    if (scope.type === 'class' || scope.type === 'module') {
+        return true;
+    }
 
-        if (scope.type === 'class' || scope.type === 'module') {
-            return true;
-        }
-
-        if (scope.type === 'block' || scope.type === 'switch') {
-            return false;
-        }
-
-        if (scope.type === 'function') {
-            body = block.body;
-        } else if (scope.type === 'global') {
-            body = block;
-        } else {
-            return false;
-        }
-
-        // Search 'use strict' directive.
-        if (useDirective) {
-            for (i = 0, iz = body.body.length; i < iz; ++i) {
-                stmt = body.body[i];
-                if (stmt.type !== 'DirectiveStatement') {
-                    break;
-                }
-                if (stmt.raw === '"use strict"' || stmt.raw === '\'use strict\'') {
-                    return true;
-                }
-            }
-        } else {
-            for (i = 0, iz = body.body.length; i < iz; ++i) {
-                stmt = body.body[i];
-                if (stmt.type !== Syntax.ExpressionStatement) {
-                    break;
-                }
-                expr = stmt.expression;
-                if (expr.type !== Syntax.Literal || typeof expr.value !== 'string') {
-                    break;
-                }
-                if (expr.raw != null) {
-                    if (expr.raw === '"use strict"' || expr.raw === '\'use strict\'') {
-                        return true;
-                    }
-                } else {
-                    if (expr.value === 'use strict') {
-                        return true;
-                    }
-                }
-            }
-        }
+    if (scope.type === 'block' || scope.type === 'switch') {
         return false;
     }
 
-    function registerScope(scopeManager, scope) {
-        var scopes;
-
-        scopeManager.scopes.push(scope);
-
-        scopes = scopeManager.__nodeToScope.get(scope.block);
-        if (scopes) {
-            scopes.push(scope);
-        } else {
-            scopeManager.__nodeToScope.set(scope.block, [ scope ]);
-        }
+    if (scope.type === 'function') {
+        body = block.body;
+    } else if (scope.type === 'global') {
+        body = block;
+    } else {
+        return false;
     }
 
-    /* Special Scope types. */
-    var SCOPE_NORMAL = 0,
-        SCOPE_MODULE = 1,
-        SCOPE_FUNCTION_EXPRESSION_NAME = 2,
-        SCOPE_TDZ = 3;
+    // Search 'use strict' directive.
+    if (useDirective) {
+        for (i = 0, iz = body.body.length; i < iz; ++i) {
+            stmt = body.body[i];
+            if (stmt.type !== 'DirectiveStatement') {
+                break;
+            }
+            if (stmt.raw === '"use strict"' || stmt.raw === '\'use strict\'') {
+                return true;
+            }
+        }
+    } else {
+        for (i = 0, iz = body.body.length; i < iz; ++i) {
+            stmt = body.body[i];
+            if (stmt.type !== Syntax.ExpressionStatement) {
+                break;
+            }
+            expr = stmt.expression;
+            if (expr.type !== Syntax.Literal || typeof expr.value !== 'string') {
+                break;
+            }
+            if (expr.raw != null) {
+                if (expr.raw === '"use strict"' || expr.raw === '\'use strict\'') {
+                    return true;
+                }
+            } else {
+                if (expr.value === 'use strict') {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
-    /**
-     * @class Scope
-     */
-    function Scope(scopeManager, block, isMethodDefinition, scopeType) {
+function registerScope(scopeManager, scope) {
+    var scopes;
+
+    scopeManager.scopes.push(scope);
+
+    scopes = scopeManager.__nodeToScope.get(scope.block);
+    if (scopes) {
+        scopes.push(scope);
+    } else {
+        scopeManager.__nodeToScope.set(scope.block, [ scope ]);
+    }
+}
+
+/* Special Scope types. */
+const SCOPE_NORMAL = 0;
+const SCOPE_MODULE = 1;
+const SCOPE_FUNCTION_EXPRESSION_NAME = 2;
+const SCOPE_TDZ = 3;
+
+/**
+ * @class Scope
+ */
+export default class Scope {
+    constructor(scopeManager, block, isMethodDefinition, scopeType) {
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
@@ -282,7 +274,7 @@
         registerScope(scopeManager, this);
     }
 
-    Scope.prototype.__close = function __close(scopeManager) {
+    __close(scopeManager) {
         var i, iz, ref, current, implicit, info;
 
         // Because if this is global environment, upper is null
@@ -344,9 +336,9 @@
 
         this.__left = null;
         scopeManager.__currentScope = this.upper;
-    };
+    }
 
-    Scope.prototype.__resolve = function __resolve(ref) {
+    __resolve(ref) {
         var variable, name;
         name = ref.identifier.name;
         if (this.set.has(name)) {
@@ -361,16 +353,16 @@
             return true;
         }
         return false;
-    };
+    }
 
-    Scope.prototype.__delegateToUpperScope = function __delegateToUpperScope(ref) {
+    __delegateToUpperScope(ref) {
         if (this.upper) {
             this.upper.__left.push(ref);
         }
         this.through.push(ref);
-    };
+    }
 
-    Scope.prototype.__defineGeneric = function (name, set, variables, node, def) {
+    __defineGeneric(name, set, variables, node, def) {
         var variable;
 
         variable = set.get(name);
@@ -386,9 +378,9 @@
         if (node) {
             variable.identifiers.push(node);
         }
-    };
+    }
 
-    Scope.prototype.__defineArguments = function () {
+    __defineArguments() {
         this.__defineGeneric(
                 'arguments',
                 this.set,
@@ -396,9 +388,9 @@
                 null,
                 null);
         this.taints.set('arguments', true);
-    };
+    }
 
-    Scope.prototype.__defineImplicit = function (node, def) {
+    __defineImplicit(node, def) {
         if (node && node.type === Syntax.Identifier) {
             this.__defineGeneric(
                     node.name,
@@ -407,9 +399,9 @@
                     node,
                     def);
         }
-    };
+    }
 
-    Scope.prototype.__define = function (node, def) {
+    __define(node, def) {
         if (node && node.type === Syntax.Identifier) {
             this.__defineGeneric(
                     node.name,
@@ -418,9 +410,9 @@
                     node,
                     def);
         }
-    };
+    }
 
-    Scope.prototype.__referencing = function __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial) {
+    __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial) {
         var ref;
         // because Array element may be null
         if (node && node.type === Syntax.Identifier) {
@@ -428,9 +420,9 @@
             this.references.push(ref);
             this.__left.push(ref);
         }
-    };
+    }
 
-    Scope.prototype.__detectEval = function __detectEval() {
+    __detectEval() {
         var current;
         current = this;
         this.directCallToEvalScope = true;
@@ -438,19 +430,23 @@
             current.dynamic = true;
             current = current.upper;
         } while (current);
-    };
+    }
 
-    Scope.prototype.__detectThis = function __detectThis() {
+    __detectThis() {
         this.thisFound = true;
-    };
+    }
 
-    Scope.prototype.__isClosed = function isClosed() {
+    isClosed() {
         return this.__left === null;
-    };
+    }
 
-    // API Scope#resolve(name)
-    // returns resolved reference
-    Scope.prototype.resolve = function resolve(ident) {
+    /**
+     * returns resolved {Reference}
+     * @method Scope#resolve
+     * @param {Esprima.Identifier} ident - identifier to be resolved.
+     * @return {Reference}
+     */
+    resolve(ident) {
         var ref, i, iz;
         assert(this.__isClosed(), 'Scope should be closed.');
         assert(ident.type === Syntax.Identifier, 'Target should be identifier.');
@@ -461,17 +457,23 @@
             }
         }
         return null;
-    };
+    }
 
-    // API Scope#isStatic
-    // returns this scope is static
-    Scope.prototype.isStatic = function isStatic() {
+    /**
+     * returns this scope is static
+     * @method Scope#isStatic
+     * @return {boolean}
+     */
+    isStatic() {
         return !this.dynamic;
-    };
+    }
 
-    // API Scope#isArgumentsMaterialized
-    // return this scope has materialized arguments
-    Scope.prototype.isArgumentsMaterialized = function isArgumentsMaterialized() {
+    /**
+     * returns this scope has materialized arguments
+     * @method Scope#isArgumentsMaterialized
+     * @return {boolean}
+     */
+    isArgumentsMaterialized() {
         // TODO(Constellation)
         // We can more aggressive on this condition like this.
         //
@@ -494,11 +496,14 @@
         variable = this.set.get('arguments');
         assert(variable, 'Always have arguments variable.');
         return variable.tainted || variable.references.length  !== 0;
-    };
+    }
 
-    // API Scope#isThisMaterialized
-    // return this scope has materialized `this` reference
-    Scope.prototype.isThisMaterialized = function isThisMaterialized() {
+    /**
+     * returns this scope has materialized `this` reference
+     * @method Scope#isThisMaterialized
+     * @return {boolean}
+     */
+    isThisMaterialized() {
         // This is not function scope
         if (this.type !== 'function') {
             return true;
@@ -507,9 +512,9 @@
             return true;
         }
         return this.thisFound;
-    };
+    }
 
-    Scope.prototype.isUsedName = function (name) {
+    isUsedName(name) {
         if (this.set.has(name)) {
             return true;
         }
@@ -519,13 +524,12 @@
             }
         }
         return false;
-    };
+    }
+}
 
-    Scope.SCOPE_NORMAL = SCOPE_NORMAL;
-    Scope.SCOPE_MODULE = SCOPE_MODULE;
-    Scope.SCOPE_FUNCTION_EXPRESSION_NAME = SCOPE_FUNCTION_EXPRESSION_NAME;
-    Scope.SCOPE_TDZ = SCOPE_TDZ;
+Scope.SCOPE_NORMAL = SCOPE_NORMAL;
+Scope.SCOPE_MODULE = SCOPE_MODULE;
+Scope.SCOPE_FUNCTION_EXPRESSION_NAME = SCOPE_FUNCTION_EXPRESSION_NAME;
+Scope.SCOPE_TDZ = SCOPE_TDZ;
 
-    module.exports = Scope;
-}());
 /* vim: set sw=4 ts=4 et tw=80 : */

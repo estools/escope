@@ -21,18 +21,15 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-(function () {
-    'use strict';
 
-    var WeakMap, Scope;
+import WeakMap from 'es6-weak-map';
+import Scope from './scope';
 
-    WeakMap = require('es6-weak-map');
-    Scope = require('./scope');
-
-    /**
-     * @class ScopeManager
-     */
-    function ScopeManager(options) {
+/**
+ * @class ScopeManager
+ */
+export default class ScopeManager {
+    constructor(options) {
         this.scopes = [];
         this.globalScope = null;
         this.__nodeToScope = new WeakMap();
@@ -40,28 +37,35 @@
         this.__options = options;
     }
 
-    ScopeManager.prototype.__useDirective = function () {
+    __useDirective() {
         return this.__options.directive;
-    };
+    }
 
-    ScopeManager.prototype.__isOptimistic = function () {
+    __isOptimistic() {
         return this.__options.optimistic;
-    };
+    }
 
-    ScopeManager.prototype.__ignoreEval = function () {
+    __ignoreEval() {
         return this.__options.ignoreEval;
-    };
+    }
 
-    ScopeManager.prototype.isModule = function () {
+    isModule() {
         return this.__options.sourceType === 'module';
-    };
+    }
 
     // Returns appropliate scope for this node.
-    ScopeManager.prototype.__get = function __get(node) {
+    __get(node) {
         return this.__nodeToScope.get(node);
-    };
+    }
 
-    ScopeManager.prototype.acquire = function acquire(node, inner) {
+    /**
+     * acquire scope from node.
+     * @method ScopeManager#acquire
+     * @param {Esprima.Node} node - node for the acquired scope.
+     * @param {boolean=} inner - look up the most inner scope, default value is false.
+     * @return {Scope?}
+     */
+    acquire(node, inner) {
         var scopes, scope, i, iz;
 
         function predicate(scope) {
@@ -102,13 +106,26 @@
         }
 
         return null;
-    };
+    }
 
-    ScopeManager.prototype.acquireAll = function acquire(node) {
+    /**
+     * acquire all scopes from node.
+     * @method ScopeManager#acquireAll
+     * @param {Esprima.Node} node - node for the acquired scope.
+     * @return {Scope[]?}
+     */
+    acquireAll(node) {
         return this.__get(node);
-    };
+    }
 
-    ScopeManager.prototype.release = function release(node, inner) {
+    /**
+     * release the node.
+     * @method ScopeManager#release
+     * @param {Esprima.Node} node - releasing node.
+     * @param {boolean=} inner - look up the most inner scope, default value is false.
+     * @return {Scope?} upper scope for the node.
+     */
+    release(node, inner) {
         var scopes, scope;
         scopes = this.__get(node);
         if (scopes && scopes.length) {
@@ -119,32 +136,31 @@
             return this.acquire(scope.block, inner);
         }
         return null;
-    };
+    }
 
-    ScopeManager.prototype.attach = function attach() { };
+    attach() { }
 
-    ScopeManager.prototype.detach = function detach() { };
+    detach() { }
 
-    ScopeManager.prototype.__nestScope = function (node, isMethodDefinition) {
+    __nestScope(node, isMethodDefinition) {
         return new Scope(this, node, isMethodDefinition, Scope.SCOPE_NORMAL);
-    };
+    }
 
-    ScopeManager.prototype.__nestModuleScope = function (node) {
+    __nestModuleScope(node) {
         return new Scope(this, node, false, Scope.SCOPE_MODULE);
-    };
+    }
 
-    ScopeManager.prototype.__nestTDZScope = function (node) {
+    __nestTDZScope(node) {
         return new Scope(this, node, false, Scope.SCOPE_TDZ);
-    };
+    }
 
-    ScopeManager.prototype.__nestFunctionExpressionNameScope = function (node, isMethodDefinition) {
+    __nestFunctionExpressionNameScope(node, isMethodDefinition) {
         return new Scope(this, node, isMethodDefinition, Scope.SCOPE_FUNCTION_EXPRESSION_NAME);
-    };
+    }
 
-    ScopeManager.prototype.__isES6 = function () {
+    __isES6() {
         return this.__options.ecmaVersion >= 6;
-    };
+    }
+}
 
-    module.exports = ScopeManager;
-}());
 /* vim: set sw=4 ts=4 et tw=80 : */

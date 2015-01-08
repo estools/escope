@@ -43,93 +43,93 @@
  * that produces such syntax trees.
  * <p>
  * The main interface is the {@link analyze} function.
- * @module
+ * @module escope
  */
 
 /*jslint bitwise:true */
-(function () {
-    'use strict';
 
-    var ScopeManager,
-        Referencer,
-        assert;
+import assert from 'assert';
 
-    ScopeManager = require('./scope-manager');
-    Referencer = require('./referencer');
-    assert = require('assert');
+import ScopeManager from './scope-manager';
+import Referencer from './referencer';
+import Reference from './reference';
+import Variable from './variable';
+import Scope from './scope';
+import { version } from '../package.json';
 
-    function defaultOptions() {
-        return {
-            optimistic: false,
-            directive: false,
-            sourceType: 'script',  // one of ['script', 'module']
-            ecmaVersion: 5
-        };
+function defaultOptions() {
+    return {
+        optimistic: false,
+        directive: false,
+        sourceType: 'script',  // one of ['script', 'module']
+        ecmaVersion: 5
+    };
+}
+
+function updateDeeply(target, override) {
+    var key, val;
+
+    function isHashObject(target) {
+        return typeof target === 'object' && target instanceof Object && !(target instanceof RegExp);
     }
 
-    function updateDeeply(target, override) {
-        var key, val;
-
-        function isHashObject(target) {
-            return typeof target === 'object' && target instanceof Object && !(target instanceof RegExp);
-        }
-
-        for (key in override) {
-            if (override.hasOwnProperty(key)) {
-                val = override[key];
-                if (isHashObject(val)) {
-                    if (isHashObject(target[key])) {
-                        updateDeeply(target[key], val);
-                    } else {
-                        target[key] = updateDeeply({}, val);
-                    }
+    for (key in override) {
+        if (override.hasOwnProperty(key)) {
+            val = override[key];
+            if (isHashObject(val)) {
+                if (isHashObject(target[key])) {
+                    updateDeeply(target[key], val);
                 } else {
-                    target[key] = val;
+                    target[key] = updateDeeply({}, val);
                 }
+            } else {
+                target[key] = val;
             }
         }
-        return target;
     }
+    return target;
+}
 
-    /**
-     * Main interface function. Takes an Esprima syntax tree and returns the
-     * analyzed scopes.
-     * @function analyze
-     * @param {esprima.Tree} tree
-     * @param {Object} providedOptions - Options that tailor the scope analysis
-     * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
-     * @param {boolean} [providedOptions.directive=false]- the directive flag
-     * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
-     * @param {string} [providedOptions.sourceType='script']- the source type of the script. one of 'script' and 'module'
-     * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
-     * @return {ScopeManager}
-     */
-    function analyze(tree, providedOptions) {
-        var scopeManager, referencer, options;
+/**
+ * Main interface function. Takes an Esprima syntax tree and returns the
+ * analyzed scopes.
+ * @function analyze
+ * @param {esprima.Tree} tree
+ * @param {Object} providedOptions - Options that tailor the scope analysis
+ * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
+ * @param {boolean} [providedOptions.directive=false]- the directive flag
+ * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
+ * @param {string} [providedOptions.sourceType='script']- the source type of the script. one of 'script' and 'module'
+ * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
+ * @return {ScopeManager}
+ */
+export function analyze(tree, providedOptions) {
+    var scopeManager, referencer, options;
 
-        options = updateDeeply(defaultOptions(), providedOptions);
+    options = updateDeeply(defaultOptions(), providedOptions);
 
-        scopeManager = new ScopeManager(options);
+    scopeManager = new ScopeManager(options);
 
-        referencer = new Referencer(scopeManager);
-        referencer.visit(tree);
+    referencer = new Referencer(scopeManager);
+    referencer.visit(tree);
 
-        assert(scopeManager.__currentScope === null, 'currentScope should be null.');
+    assert(scopeManager.__currentScope === null, 'currentScope should be null.');
 
-        return scopeManager;
-    }
+    return scopeManager;
+}
 
+export {
     /** @name module:escope.version */
-    exports.version = require('../package.json').version;
+    version,
     /** @name module:escope.Reference */
-    exports.Reference = require('./reference');
+    Reference,
     /** @name module:escope.Variable */
-    exports.Variable = require('./variable');
+    Variable,
     /** @name module:escope.Scope */
-    exports.Scope = require('./scope');
+    Scope,
     /** @name module:escope.ScopeManager */
-    exports.ScopeManager = ScopeManager;
-    /** @name module:escope.analyze */
-    exports.analyze = analyze;
-}());
+    ScopeManager
+};
+
+
 /* vim: set sw=4 ts=4 et tw=80 : */

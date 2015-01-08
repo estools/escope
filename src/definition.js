@@ -21,13 +21,12 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-(function () {
-    'use strict';
 
-    /**
-     * @class Definition
-     */
-    function Definition(type, name, node, parent, index, kind) {
+/**
+ * @class Definition
+ */
+export default class Definition {
+    constructor(type, name, node, parent, index, kind) {
         /**
          * @member {String} Definition#type - type of the occurrence (e.g. "Parameter", "Variable", ...).
          */
@@ -53,7 +52,6 @@
          */
         this.kind = kind;
     }
+}
 
-    module.exports = Definition;
-}());
 /* vim: set sw=4 ts=4 et tw=80 : */

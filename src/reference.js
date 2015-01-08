@@ -21,14 +21,17 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-(function () {
-    'use strict';
 
-    /**
-     * A Reference represents a single occurrence of an identifier in code.
-     * @class Reference
-     */
-    function Reference(ident, scope, flag, writeExpr, maybeImplicitGlobal, partial) {
+const READ = 0x1;
+const WRITE = 0x2;
+const RW = READ | WRITE;
+
+/**
+ * A Reference represents a single occurrence of an identifier in code.
+ * @class Reference
+ */
+export default class Reference {
+    constructor(ident, scope, flag,  writeExpr, maybeImplicitGlobal, partial) {
         /**
          * Identifier syntax node.
          * @member {esprima#Identifier} Reference#identifier
@@ -73,75 +76,74 @@
     }
 
     /**
-     * @constant Reference.READ
-     * @private
-     */
-    Reference.READ = 0x1;
-    /**
-     * @constant Reference.WRITE
-     * @private
-     */
-    Reference.WRITE = 0x2;
-    /**
-     * @constant Reference.RW
-     * @private
-     */
-    Reference.RW = Reference.READ | Reference.WRITE;
-
-    /**
      * Whether the reference is static.
      * @method Reference#isStatic
      * @return {boolean}
      */
-    Reference.prototype.isStatic = function isStatic() {
+    isStatic() {
         return !this.tainted && this.resolved && this.resolved.scope.isStatic();
-    };
+    }
 
     /**
      * Whether the reference is writeable.
      * @method Reference#isWrite
      * @return {boolean}
      */
-    Reference.prototype.isWrite = function isWrite() {
+    isWrite() {
         return !!(this.flag & Reference.WRITE);
-    };
+    }
 
     /**
      * Whether the reference is readable.
      * @method Reference#isRead
      * @return {boolean}
      */
-    Reference.prototype.isRead = function isRead() {
+    isRead() {
         return !!(this.flag & Reference.READ);
-    };
+    }
 
     /**
      * Whether the reference is read-only.
      * @method Reference#isReadOnly
      * @return {boolean}
      */
-    Reference.prototype.isReadOnly = function isReadOnly() {
+    isReadOnly() {
         return this.flag === Reference.READ;
-    };
+    }
 
     /**
      * Whether the reference is write-only.
      * @method Reference#isWriteOnly
      * @return {boolean}
      */
-    Reference.prototype.isWriteOnly = function isWriteOnly() {
+    isWriteOnly() {
         return this.flag === Reference.WRITE;
-    };
+    }
 
     /**
      * Whether the reference is read-write.
      * @method Reference#isReadWrite
      * @return {boolean}
      */
-    Reference.prototype.isReadWrite = function isReadWrite() {
+    isReadWrite() {
         return this.flag === Reference.RW;
-    };
+    }
+}
 
-    module.exports = Reference;
-}());
+/**
+ * @constant Reference.READ
+ * @private
+ */
+Reference.READ = READ;
+/**
+ * @constant Reference.WRITE
+ * @private
+ */
+Reference.WRITE = WRITE;
+/**
+ * @constant Reference.RW
+ * @private
+ */
+Reference.RW = RW;
+
 /* vim: set sw=4 ts=4 et tw=80 : */

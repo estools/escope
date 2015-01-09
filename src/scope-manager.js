@@ -26,7 +26,11 @@ import WeakMap from 'es6-weak-map';
 import Scope from './scope';
 import assert from 'assert';
 
-const GlobalScope = Scope.GlobalScope;
+const {
+    GlobalScope,
+    ModuleScope,
+    FunctionExpressionNameScope
+} = Scope;
 
 /**
  * @class ScopeManager
@@ -159,7 +163,7 @@ export default class ScopeManager {
     }
 
     __nestModuleScope(node) {
-        this.__currentScope = new Scope(this, this.__currentScope, node, false, Scope.SCOPE_MODULE);
+        this.__currentScope = new ModuleScope(this, this.__currentScope, node);
         return this.__currentScope;
     }
 
@@ -168,8 +172,8 @@ export default class ScopeManager {
         return this.__currentScope;
     }
 
-    __nestFunctionExpressionNameScope(node, isMethodDefinition) {
-        this.__currentScope = new Scope(this, this.__currentScope, node, isMethodDefinition, Scope.SCOPE_FUNCTION_EXPRESSION_NAME);
+    __nestFunctionExpressionNameScope(node) {
+        this.__currentScope = new FunctionExpressionNameScope(this, this.__currentScope, node);
         return this.__currentScope;
     }
 

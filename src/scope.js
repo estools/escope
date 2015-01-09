@@ -114,7 +114,6 @@ function registerScope(scopeManager, scope) {
 /* Special Scope types. */
 const SCOPE_NORMAL = 0;
 const SCOPE_MODULE = 1;
-const SCOPE_FUNCTION_EXPRESSION_NAME = 2;
 const SCOPE_TDZ = 3;
 
 /**
@@ -211,18 +210,7 @@ export default class Scope {
 
         this.__left = [];
 
-        if (scopeType === SCOPE_FUNCTION_EXPRESSION_NAME) {
-            this.__define(block.id,
-                    new Definition(
-                        Variable.FunctionName,
-                        block.id,
-                        block,
-                        null,
-                        null,
-                        null
-                    ));
-            this.functionExpressionScope = true;
-        } else {
+        if (!(this instanceof FunctionExpressionNameScope)) {
             // section 9.2.13, FunctionDeclarationInstantiation.
             // NOTE Arrow functions never have an arguments objects.
             if (this.type === 'function' && this.block.type !== Syntax.ArrowFunctionExpression) {
@@ -493,7 +481,7 @@ export default class Scope {
 
 export class GlobalScope extends Scope {
     constructor(scopeManager, block) {
-        super(scopeManager, null, block, false, Scope.SCOPE_NORMAL);
+        super(scopeManager, null, block, false, SCOPE_NORMAL);
         this.implicit = {
             set: new Map(),
             variables: [],
@@ -536,9 +524,30 @@ export class GlobalScope extends Scope {
     }
 }
 
+export class ModuleScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, upperScope, block, false, SCOPE_MODULE);
+    }
+}
+
+export class FunctionExpressionNameScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, upperScope, block, false, SCOPE_NORMAL);
+        this.__define(block.id,
+                new Definition(
+                    Variable.FunctionName,
+                    block.id,
+                    block,
+                    null,
+                    null,
+                    null
+                ));
+        this.functionExpressionScope = true;
+    }
+}
+
 Scope.SCOPE_NORMAL = SCOPE_NORMAL;
 Scope.SCOPE_MODULE = SCOPE_MODULE;
-Scope.SCOPE_FUNCTION_EXPRESSION_NAME = SCOPE_FUNCTION_EXPRESSION_NAME;
 Scope.SCOPE_TDZ = SCOPE_TDZ;
 
 /* vim: set sw=4 ts=4 et tw=80 : */

@@ -143,19 +143,23 @@ export default class ScopeManager {
     detach() { }
 
     __nestScope(node, isMethodDefinition) {
-        return new Scope(this, node, isMethodDefinition, Scope.SCOPE_NORMAL);
+        this.__currentScope = new Scope(this, this.__currentScope, node, isMethodDefinition, Scope.SCOPE_NORMAL);
+        return this.__currentScope;
     }
 
     __nestModuleScope(node) {
-        return new Scope(this, node, false, Scope.SCOPE_MODULE);
+        this.__currentScope = new Scope(this, this.__currentScope, node, false, Scope.SCOPE_MODULE);
+        return this.__currentScope;
     }
 
     __nestTDZScope(node) {
-        return new Scope(this, node, false, Scope.SCOPE_TDZ);
+        this.__currentScope = new Scope(this, this.__currentScope, node, false, Scope.SCOPE_TDZ);
+        return this.__currentScope;
     }
 
     __nestFunctionExpressionNameScope(node, isMethodDefinition) {
-        return new Scope(this, node, isMethodDefinition, Scope.SCOPE_FUNCTION_EXPRESSION_NAME);
+        this.__currentScope = new Scope(this, this.__currentScope, node, isMethodDefinition, Scope.SCOPE_FUNCTION_EXPRESSION_NAME);
+        return this.__currentScope;
     }
 
     __isES6() {

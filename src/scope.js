@@ -121,7 +121,7 @@ const SCOPE_TDZ = 3;
  * @class Scope
  */
 export default class Scope {
-    constructor(scopeManager, block, isMethodDefinition, scopeType) {
+    constructor(scopeManager, upperScope, block, isMethodDefinition, scopeType) {
         /**
          * One of 'catch', 'with', 'function', 'global' or 'block'.
          * @member {String} Scope#type
@@ -193,7 +193,7 @@ export default class Scope {
          * @member {Scope} Scope#variableScope
          */
         this.variableScope =
-            (this.type === 'global' || this.type === 'function' || this.type === 'module') ? this : scopeManager.__currentScope.variableScope;
+            (this.type === 'global' || this.type === 'function' || this.type === 'module') ? this : upperScope.variableScope;
          /**
          * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
@@ -230,7 +230,7 @@ export default class Scope {
             }
 
             if (block.type === Syntax.FunctionExpression && block.id) {
-                scopeManager.__nestFunctionExpressionNameScope(block, isMethodDefinition);
+                upperScope = scopeManager.__nestFunctionExpressionNameScope(block, isMethodDefinition);
             }
         }
 
@@ -238,7 +238,7 @@ export default class Scope {
          * Reference to the parent {@link Scope|scope}.
          * @member {Scope} Scope#upper
          */
-        this.upper = scopeManager.__currentScope;
+        this.upper = upperScope;
          /**
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
@@ -250,13 +250,12 @@ export default class Scope {
          * @member {Scope[]} Scope#childScopes
          */
         this.childScopes = [];
-        if (scopeManager.__currentScope) {
-            scopeManager.__currentScope.childScopes.push(this);
+        if (this.upper) {
+            this.upper.childScopes.push(this);
         }
 
 
         // RAII
-        scopeManager.__currentScope = this;
         if (this.type === 'global') {
             scopeManager.globalScope = this;
             scopeManager.globalScope.implicit = {
@@ -335,7 +334,7 @@ export default class Scope {
         }
 
         this.__left = null;
-        scopeManager.__currentScope = this.upper;
+        return this.upper;
     }
 
     __resolve(ref) {
@@ -487,6 +486,14 @@ export default class Scope {
         // This is not function scope
         if (this.type !== 'function') {
             return true;
+        }
+
+        if (this.functionExpressionScope) {
+            return false;
+        }
+
+        if (this.block.type === Syntax.ArrowFunctionExpression) {
+            return false;
         }
 
         if (!this.isStatic()) {

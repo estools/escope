@@ -141,7 +141,7 @@ export default class Referencer extends esrecurse.Visitor {
 
     close(node) {
         while (this.currentScope() && node === this.currentScope().block) {
-            this.currentScope().__close(this.scopeManager);
+            this.scopeManager.__currentScope = this.currentScope().__close(this.scopeManager);
         }
     }
 

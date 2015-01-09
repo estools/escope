@@ -28,6 +28,8 @@ import assert from 'assert';
 
 const {
     GlobalScope,
+    CatchScope,
+    WithScope,
     ModuleScope,
     FunctionExpressionNameScope
 } = Scope;
@@ -159,6 +161,16 @@ export default class ScopeManager {
 
     __nestScope(node, isMethodDefinition) {
         this.__currentScope = new Scope(this, this.__currentScope, node, isMethodDefinition, Scope.SCOPE_NORMAL);
+        return this.__currentScope;
+    }
+
+    __nestCatchScope(node) {
+        this.__currentScope = new CatchScope(this, this.__currentScope, node);
+        return this.__currentScope;
+    }
+
+    __nestWithScope(node) {
+        this.__currentScope = new WithScope(this, this.__currentScope, node);
         return this.__currentScope;
     }
 

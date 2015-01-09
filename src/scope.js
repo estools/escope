@@ -546,6 +546,18 @@ export class FunctionExpressionNameScope extends Scope {
     }
 }
 
+export class CatchScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, upperScope, block, false, SCOPE_NORMAL);
+    }
+}
+
+export class WithScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, upperScope, block, false, SCOPE_NORMAL);
+    }
+}
+
 Scope.SCOPE_NORMAL = SCOPE_NORMAL;
 Scope.SCOPE_MODULE = SCOPE_MODULE;
 Scope.SCOPE_TDZ = SCOPE_TDZ;

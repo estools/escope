@@ -356,7 +356,7 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     CatchClause(node) {
-        this.scopeManager.__nestScope(node);
+        this.scopeManager.__nestCatchScope(node);
 
         this.visitPattern(node.param, (pattern) => {
             this.currentScope().__define(pattern,
@@ -467,7 +467,7 @@ export default class Referencer extends esrecurse.Visitor {
     WithStatement(node) {
         this.visit(node.object);
         // Then nest scope for WithStatement.
-        this.scopeManager.__nestScope(node);
+        this.scopeManager.__nestWithScope(node);
 
         this.visit(node.body);
 

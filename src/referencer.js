@@ -375,7 +375,7 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     Program(node) {
-        this.scopeManager.__nestScope(node);
+        this.scopeManager.__nestGlobalScope(node);
 
         if (this.scopeManager.__isES6() && this.scopeManager.isModule()) {
             this.scopeManager.__nestModuleScope(node);

@@ -254,22 +254,6 @@ export default class Scope {
             this.upper.childScopes.push(this);
         }
 
-
-        // RAII
-        if (this.type === 'global') {
-            scopeManager.globalScope = this;
-            scopeManager.globalScope.implicit = {
-                set: new Map(),
-                variables: [],
-                /**
-                * List of {@link Reference}s that are left to be resolved (i.e. which
-                * need to be linked to the variable they refer to).
-                * @member {Reference[]} Scope#implicit#left
-                */
-                left: []
-            };
-        }
-
         registerScope(scopeManager, this);
     }
 
@@ -304,33 +288,6 @@ export default class Scope {
                     } while (current);
                 }
             }
-        }
-
-        if (this.type === 'global') {
-            implicit = [];
-            for (i = 0, iz = this.__left.length; i < iz; ++i) {
-                ref = this.__left[i];
-                if (ref.__maybeImplicitGlobal && !this.set.has(ref.identifier.name)) {
-                    implicit.push(ref.__maybeImplicitGlobal);
-                }
-            }
-
-            // create an implicit global variable from assignment expression
-            for (i = 0, iz = implicit.length; i < iz; ++i) {
-                info = implicit[i];
-                this.__defineImplicit(info.pattern,
-                        new Definition(
-                            Variable.ImplicitGlobalVariable,
-                            info.pattern,
-                            info.node,
-                            null,
-                            null,
-                            null
-                        ));
-
-            }
-
-            this.implicit.left = this.__left;
         }
 
         this.__left = null;
@@ -531,6 +488,51 @@ export default class Scope {
             }
         }
         return false;
+    }
+}
+
+export class GlobalScope extends Scope {
+    constructor(scopeManager, block) {
+        super(scopeManager, null, block, false, Scope.SCOPE_NORMAL);
+        this.implicit = {
+            set: new Map(),
+            variables: [],
+            /**
+            * List of {@link Reference}s that are left to be resolved (i.e. which
+            * need to be linked to the variable they refer to).
+            * @member {Reference[]} Scope#implicit#left
+            */
+            left: []
+        };
+    }
+
+    __close(scopeManager) {
+        let implicit = [];
+        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
+            let ref = this.__left[i];
+            if (ref.__maybeImplicitGlobal && !this.set.has(ref.identifier.name)) {
+                implicit.push(ref.__maybeImplicitGlobal);
+            }
+        }
+
+        // create an implicit global variable from assignment expression
+        for (let i = 0, iz = implicit.length; i < iz; ++i) {
+            let info = implicit[i];
+            this.__defineImplicit(info.pattern,
+                    new Definition(
+                        Variable.ImplicitGlobalVariable,
+                        info.pattern,
+                        info.node,
+                        null,
+                        null,
+                        null
+                    ));
+
+        }
+
+        this.implicit.left = this.__left;
+
+        return super.__close(scopeManager);
     }
 }
 

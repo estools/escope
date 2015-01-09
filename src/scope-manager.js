@@ -24,6 +24,9 @@
 
 import WeakMap from 'es6-weak-map';
 import Scope from './scope';
+import assert from 'assert';
+
+const GlobalScope = Scope.GlobalScope;
 
 /**
  * @class ScopeManager
@@ -141,6 +144,14 @@ export default class ScopeManager {
     attach() { }
 
     detach() { }
+
+    __nestGlobalScope(node) {
+        assert(this.__currentScope === null);
+        let scope = new GlobalScope(this, node);
+        this.globalScope = scope;
+        this.__currentScope = scope;
+        return scope;
+    }
 
     __nestScope(node, isMethodDefinition) {
         this.__currentScope = new Scope(this, this.__currentScope, node, isMethodDefinition, Scope.SCOPE_NORMAL);

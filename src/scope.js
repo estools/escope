@@ -392,7 +392,7 @@ export default class Scope {
         this.thisFound = true;
     }
 
-    isClosed() {
+    __isClosed() {
         return this.__left === null;
     }
 

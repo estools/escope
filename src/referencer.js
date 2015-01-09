@@ -164,10 +164,8 @@ export default class Referencer extends esrecurse.Visitor {
 
     materializeIterationScope(node) {
         // Generate iteration scope for upper ForIn/ForOf Statements.
-        // parent node for __nestScope is only necessary to
-        // distinguish MethodDefinition.
         var letOrConstDecl;
-        this.scopeManager.__nestScope(node, false);
+        this.scopeManager.__nestForScope(node);
         letOrConstDecl = node.left;
         this.visitVariableDeclaration(this.currentScope(), Variable.Variable, letOrConstDecl, 0);
         this.visitPattern(letOrConstDecl.declarations[0].id, (pattern) => {
@@ -200,7 +198,7 @@ export default class Referencer extends esrecurse.Visitor {
         }
 
         // Consider this function is in the MethodDefinition.
-        this.scopeManager.__nestScope(node, this.isInnerMethodDefinition);
+        this.scopeManager.__nestFunctionScope(node, this.isInnerMethodDefinition);
 
         for (i = 0, iz = node.params.length; i < iz; ++i) {
             this.visitPattern(node.params[i], (pattern) => {
@@ -242,7 +240,7 @@ export default class Referencer extends esrecurse.Visitor {
         // FIXME: Maybe consider TDZ.
         this.visit(node.superClass);
 
-        this.scopeManager.__nestScope(node);
+        this.scopeManager.__nestClassScope(node);
 
         if (node.id) {
             this.currentScope().__define(node.id,
@@ -424,7 +422,7 @@ export default class Referencer extends esrecurse.Visitor {
         // per iteration environment. However, escope is
         // a static analyzer, we only generate one scope for ForStatement.
         if (node.init && node.init.type === Syntax.VariableDeclaration && node.init.kind !== 'var') {
-            this.scopeManager.__nestScope(node);
+            this.scopeManager.__nestForScope(node);
         }
 
         this.visitChildren(node);
@@ -452,7 +450,7 @@ export default class Referencer extends esrecurse.Visitor {
 
     BlockStatement(node) {
         if (this.scopeManager.__isES6()) {
-            this.scopeManager.__nestScope(node);
+            this.scopeManager.__nestBlockScope(node);
         }
 
         this.visitChildren(node);
@@ -493,7 +491,7 @@ export default class Referencer extends esrecurse.Visitor {
         this.visit(node.discriminant);
 
         if (this.scopeManager.__isES6()) {
-            this.scopeManager.__nestScope(node);
+            this.scopeManager.__nestSwitchScope(node);
         }
 
         for (i = 0, iz = node.cases.length; i < iz; ++i) {

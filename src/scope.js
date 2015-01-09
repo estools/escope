@@ -111,30 +111,16 @@ function registerScope(scopeManager, scope) {
     }
 }
 
-/* Special Scope types. */
-const SCOPE_NORMAL = 0;
-const SCOPE_MODULE = 1;
-const SCOPE_TDZ = 3;
-
 /**
  * @class Scope
  */
 export default class Scope {
-    constructor(scopeManager, upperScope, block, isMethodDefinition, scopeType) {
+    constructor(scopeManager, type, upperScope, block, isMethodDefinition, scopeType) {
         /**
-         * One of 'catch', 'with', 'function', 'global' or 'block'.
+         * One of 'TDZ', 'module', 'block', 'switch', 'function', 'catch', 'with', 'function', 'class', 'global'.
          * @member {String} Scope#type
          */
-        this.type =
-            (scopeType === SCOPE_TDZ) ? 'TDZ' :
-            (scopeType === SCOPE_MODULE) ? 'module' :
-            (block.type === Syntax.BlockStatement) ? 'block' :
-            (block.type === Syntax.SwitchStatement) ? 'switch' :
-            (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
-            (block.type === Syntax.CatchClause) ? 'catch' :
-            (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement || block.type === Syntax.ForStatement) ? 'for' :
-            (block.type === Syntax.WithStatement) ? 'with' :
-            (block.type === Syntax.ClassExpression || block.type === Syntax.ClassDeclaration) ? 'class' : 'global';
+        this.type = type;
          /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
@@ -210,13 +196,8 @@ export default class Scope {
 
         this.__left = [];
 
+        // FIXME: This should be extracted into the Referencer.
         if (!(this instanceof FunctionExpressionNameScope)) {
-            // section 9.2.13, FunctionDeclarationInstantiation.
-            // NOTE Arrow functions never have an arguments objects.
-            if (this.type === 'function' && this.block.type !== Syntax.ArrowFunctionExpression) {
-                this.__defineArguments();
-            }
-
             if (block.type === Syntax.FunctionExpression && block.id) {
                 upperScope = scopeManager.__nestFunctionExpressionNameScope(block, isMethodDefinition);
             }
@@ -324,16 +305,6 @@ export default class Scope {
         }
     }
 
-    __defineArguments() {
-        this.__defineGeneric(
-                'arguments',
-                this.set,
-                this.variables,
-                null,
-                null);
-        this.taints.set('arguments', true);
-    }
-
     __defineImplicit(node, def) {
         if (node && node.type === Syntax.Identifier) {
             this.__defineGeneric(
@@ -418,36 +389,7 @@ export default class Scope {
      * @return {boolean}
      */
     isArgumentsMaterialized() {
-        // TODO(Constellation)
-        // We can more aggressive on this condition like this.
-        //
-        // function t() {
-        //     // arguments of t is always hidden.
-        //     function arguments() {
-        //     }
-        // }
-        var variable;
-
-        // This is not function scope
-        if (this.type !== 'function') {
-            return true;
-        }
-
-        if (this.functionExpressionScope) {
-            return false;
-        }
-
-        if (this.block.type === Syntax.ArrowFunctionExpression) {
-            return false;
-        }
-
-        if (!this.isStatic()) {
-            return true;
-        }
-
-        variable = this.set.get('arguments');
-        assert(variable, 'Always have arguments variable.');
-        return variable.tainted || variable.references.length  !== 0;
+        return true;
     }
 
     /**
@@ -456,14 +398,7 @@ export default class Scope {
      * @return {boolean}
      */
     isThisMaterialized() {
-        // This is not function scope
-        if (this.type !== 'function') {
-            return true;
-        }
-        if (!this.isStatic()) {
-            return true;
-        }
-        return this.thisFound;
+        return true;
     }
 
     isUsedName(name) {
@@ -481,7 +416,7 @@ export default class Scope {
 
 export class GlobalScope extends Scope {
     constructor(scopeManager, block) {
-        super(scopeManager, null, block, false, SCOPE_NORMAL);
+        super(scopeManager, 'global', null, block, false);
         this.implicit = {
             set: new Map(),
             variables: [],
@@ -526,13 +461,13 @@ export class GlobalScope extends Scope {
 
 export class ModuleScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, upperScope, block, false, SCOPE_MODULE);
+        super(scopeManager, 'module', upperScope, block, false);
     }
 }
 
 export class FunctionExpressionNameScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, upperScope, block, false, SCOPE_NORMAL);
+        super(scopeManager, 'function', upperScope, block, false);
         this.__define(block.id,
                 new Definition(
                     Variable.FunctionName,
@@ -544,22 +479,107 @@ export class FunctionExpressionNameScope extends Scope {
                 ));
         this.functionExpressionScope = true;
     }
+
+    isArgumentsMaterialized() {
+        return false;
+    }
+
+    isThisMaterialized() {
+        return false;
+    }
 }
 
 export class CatchScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, upperScope, block, false, SCOPE_NORMAL);
+        super(scopeManager, 'catch', upperScope, block, false);
     }
 }
 
 export class WithScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, upperScope, block, false, SCOPE_NORMAL);
+        super(scopeManager, 'with', upperScope, block, false);
     }
 }
 
-Scope.SCOPE_NORMAL = SCOPE_NORMAL;
-Scope.SCOPE_MODULE = SCOPE_MODULE;
-Scope.SCOPE_TDZ = SCOPE_TDZ;
+export class TDZScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, 'TDZ', upperScope, block, false);
+    }
+}
+
+export class BlockScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, 'block', upperScope, block, false);
+    }
+}
+
+export class SwitchScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, 'switch', upperScope, block, false);
+    }
+}
+
+export class FunctionScope extends Scope {
+    constructor(scopeManager, upperScope, block, isMethodDefinition) {
+        super(scopeManager, 'function', upperScope, block, isMethodDefinition);
+
+        // section 9.2.13, FunctionDeclarationInstantiation.
+        // NOTE Arrow functions never have an arguments objects.
+        if (this.block.type !== Syntax.ArrowFunctionExpression) {
+            this.__defineArguments();
+        }
+    }
+
+    isArgumentsMaterialized() {
+        // TODO(Constellation)
+        // We can more aggressive on this condition like this.
+        //
+        // function t() {
+        //     // arguments of t is always hidden.
+        //     function arguments() {
+        //     }
+        // }
+        if (this.block.type === Syntax.ArrowFunctionExpression) {
+            return false;
+        }
+
+        if (!this.isStatic()) {
+            return true;
+        }
+
+        let variable = this.set.get('arguments');
+        assert(variable, 'Always have arguments variable.');
+        return variable.tainted || variable.references.length  !== 0;
+    }
+
+    isThisMaterialized() {
+        if (!this.isStatic()) {
+            return true;
+        }
+        return this.thisFound;
+    }
+
+    __defineArguments() {
+        this.__defineGeneric(
+                'arguments',
+                this.set,
+                this.variables,
+                null,
+                null);
+        this.taints.set('arguments', true);
+    }
+}
+
+export class ForScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, 'for', upperScope, block, false);
+    }
+}
+
+export class ClassScope extends Scope {
+    constructor(scopeManager, upperScope, block) {
+        super(scopeManager, 'class', upperScope, block, false);
+    }
+}
 
 /* vim: set sw=4 ts=4 et tw=80 : */

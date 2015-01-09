@@ -26,13 +26,19 @@ import WeakMap from 'es6-weak-map';
 import Scope from './scope';
 import assert from 'assert';
 
-const {
+import {
     GlobalScope,
     CatchScope,
     WithScope,
     ModuleScope,
-    FunctionExpressionNameScope
-} = Scope;
+    ClassScope,
+    SwitchScope,
+    FunctionScope,
+    ForScope,
+    TDZScope,
+    FunctionExpressionNameScope,
+    BlockScope,
+} from './scope';
 
 /**
  * @class ScopeManager
@@ -159,8 +165,18 @@ export default class ScopeManager {
         return scope;
     }
 
-    __nestScope(node, isMethodDefinition) {
-        this.__currentScope = new Scope(this, this.__currentScope, node, isMethodDefinition, Scope.SCOPE_NORMAL);
+    __nestBlockScope(node, isMethodDefinition) {
+        this.__currentScope = new BlockScope(this, this.__currentScope, node);
+        return this.__currentScope;
+    }
+
+    __nestFunctionScope(node, isMethodDefinition) {
+        this.__currentScope = new FunctionScope(this, this.__currentScope, node, isMethodDefinition);
+        return this.__currentScope;
+    }
+
+    __nestForScope(node) {
+        this.__currentScope = new ForScope(this, this.__currentScope, node);
         return this.__currentScope;
     }
 
@@ -174,13 +190,23 @@ export default class ScopeManager {
         return this.__currentScope;
     }
 
+    __nestClassScope(node) {
+        this.__currentScope = new ClassScope(this, this.__currentScope, node);
+        return this.__currentScope;
+    }
+
+    __nestSwitchScope(node) {
+        this.__currentScope = new SwitchScope(this, this.__currentScope, node);
+        return this.__currentScope;
+    }
+
     __nestModuleScope(node) {
         this.__currentScope = new ModuleScope(this, this.__currentScope, node);
         return this.__currentScope;
     }
 
     __nestTDZScope(node) {
-        this.__currentScope = new Scope(this, this.__currentScope, node, false, Scope.SCOPE_TDZ);
+        this.__currentScope = new TDZScope(this, this.__currentScope, node, false, Scope.SCOPE_TDZ);
         return this.__currentScope;
     }
 

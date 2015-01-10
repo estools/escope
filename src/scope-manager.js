@@ -37,7 +37,7 @@ import {
     ForScope,
     TDZScope,
     FunctionExpressionNameScope,
-    BlockScope,
+    BlockScope
 } from './scope';
 
 /**

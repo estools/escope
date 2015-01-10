@@ -219,37 +219,38 @@ export default class Scope {
         registerScope(scopeManager, this);
     }
 
-    __close(scopeManager) {
-        var i, iz, ref, current, implicit, info;
+    __shouldStaticallyClose(scopeManager) {
+        return (!this.dynamic || scopeManager.__isOptimistic());
+    }
 
-        // Because if this is global environment, upper is null
-        if (!this.dynamic || scopeManager.__isOptimistic()) {
-            // static resolve
-            for (i = 0, iz = this.__left.length; i < iz; ++i) {
-                ref = this.__left[i];
-                if (!this.__resolve(ref)) {
-                    this.__delegateToUpperScope(ref);
-                }
+    __staticClose(scopeManager) {
+        // static resolve
+        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
+            let ref = this.__left[i];
+            if (!this.__resolve(ref)) {
+                this.__delegateToUpperScope(ref);
             }
+        }
+    }
+
+    __dynamicClose(scopeManager) {
+        // This path is for "global" and "function with eval" environment.
+        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
+            // notify all names are through to global
+            let ref = this.__left[i];
+            let current = this;
+            do {
+                current.through.push(ref);
+                current = current.upper;
+            } while (current);
+        }
+    }
+
+    __close(scopeManager) {
+        if (this.__shouldStaticallyClose(scopeManager)) {
+            this.__staticClose();
         } else {
-            // this is "global" / "with" / "function with eval" environment
-            if (this.type === 'with') {
-                for (i = 0, iz = this.__left.length; i < iz; ++i) {
-                    ref = this.__left[i];
-                    ref.tainted = true;
-                    this.__delegateToUpperScope(ref);
-                }
-            } else {
-                for (i = 0, iz = this.__left.length; i < iz; ++i) {
-                    // notify all names are through to global
-                    ref = this.__left[i];
-                    current = this;
-                    do {
-                        current.through.push(ref);
-                        current = current.upper;
-                    } while (current);
-                }
-            }
+            this.__dynamicClose();
         }
 
         this.__left = null;
@@ -483,6 +484,21 @@ export class CatchScope extends Scope {
 export class WithScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'with', upperScope, block, false);
+    }
+
+    __close(scopeManager) {
+        if (this.__shouldStaticallyClose(scopeManager)) {
+            return super.__close(scopeManager);
+        }
+
+        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
+            let ref = this.__left[i];
+            ref.tainted = true;
+            this.__delegateToUpperScope(ref);
+        }
+        this.__left = null;
+
+        return this.upper;
     }
 }
 

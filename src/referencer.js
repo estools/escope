@@ -420,7 +420,7 @@ export default class Referencer extends esrecurse.Visitor {
 
     ContinueStatement() {}
 
-    LabelledStatement() {}
+    LabeledStatement() {}
 
     ForStatement(node) {
         // Create ForStatement declaration.

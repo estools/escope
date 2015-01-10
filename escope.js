@@ -1233,7 +1233,7 @@
 
         ContinueStatement: function () {},
 
-        LabelledStatement: function () {},
+        LabeledStatement: function () {},
 
         ForStatement: function (node) {
             // Create ForStatement declaration.

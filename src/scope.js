@@ -298,17 +298,6 @@ export default class Scope {
         }
     }
 
-    __defineImplicit(node, def) {
-        if (node && node.type === Syntax.Identifier) {
-            this.__defineGeneric(
-                    node.name,
-                    this.implicit.set,
-                    this.implicit.variables,
-                    node,
-                    def);
-        }
-    }
-
     __define(node, def) {
         if (node && node.type === Syntax.Identifier) {
             this.__defineGeneric(
@@ -449,6 +438,17 @@ export class GlobalScope extends Scope {
         this.implicit.left = this.__left;
 
         return super.__close(scopeManager);
+    }
+
+    __defineImplicit(node, def) {
+        if (node && node.type === Syntax.Identifier) {
+            this.__defineGeneric(
+                    node.name,
+                    this.implicit.set,
+                    this.implicit.variables,
+                    node,
+                    def);
+        }
     }
 }
 

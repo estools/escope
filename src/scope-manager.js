@@ -157,62 +157,57 @@ export default class ScopeManager {
 
     detach() { }
 
-    __nestGlobalScope(node) {
-        assert(this.__currentScope === null);
-        let scope = new GlobalScope(this, node);
-        this.globalScope = scope;
+    __nestScope(scope) {
+        if (scope instanceof GlobalScope) {
+            assert(this.__currentScope === null);
+            this.globalScope = scope;
+        }
         this.__currentScope = scope;
         return scope;
     }
 
+    __nestGlobalScope(node) {
+        return this.__nestScope(new GlobalScope(this, node));
+    }
+
     __nestBlockScope(node, isMethodDefinition) {
-        this.__currentScope = new BlockScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new BlockScope(this, this.__currentScope, node));
     }
 
     __nestFunctionScope(node, isMethodDefinition) {
-        this.__currentScope = new FunctionScope(this, this.__currentScope, node, isMethodDefinition);
-        return this.__currentScope;
+        return this.__nestScope(new FunctionScope(this, this.__currentScope, node, isMethodDefinition));
     }
 
     __nestForScope(node) {
-        this.__currentScope = new ForScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new ForScope(this, this.__currentScope, node));
     }
 
     __nestCatchScope(node) {
-        this.__currentScope = new CatchScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new CatchScope(this, this.__currentScope, node));
     }
 
     __nestWithScope(node) {
-        this.__currentScope = new WithScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new WithScope(this, this.__currentScope, node));
     }
 
     __nestClassScope(node) {
-        this.__currentScope = new ClassScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new ClassScope(this, this.__currentScope, node));
     }
 
     __nestSwitchScope(node) {
-        this.__currentScope = new SwitchScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new SwitchScope(this, this.__currentScope, node));
     }
 
     __nestModuleScope(node) {
-        this.__currentScope = new ModuleScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new ModuleScope(this, this.__currentScope, node));
     }
 
     __nestTDZScope(node) {
-        this.__currentScope = new TDZScope(this, this.__currentScope, node, false, Scope.SCOPE_TDZ);
-        return this.__currentScope;
+        return this.__nestScope(new TDZScope(this, this.__currentScope, node));
     }
 
     __nestFunctionExpressionNameScope(node) {
-        this.__currentScope = new FunctionExpressionNameScope(this, this.__currentScope, node);
-        return this.__currentScope;
+        return this.__nestScope(new FunctionExpressionNameScope(this, this.__currentScope, node));
     }
 
     __isES6() {

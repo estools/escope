@@ -197,6 +197,12 @@ export default class Referencer extends esrecurse.Visitor {
                     ));
         }
 
+        // FunctionExpression with name creates its special scope;
+        // FunctionExpressionNameScope.
+        if (node.type === Syntax.FunctionExpression && node.id) {
+            this.scopeManager.__nestFunctionExpressionNameScope(node);
+        }
+
         // Consider this function is in the MethodDefinition.
         this.scopeManager.__nestFunctionScope(node, this.isInnerMethodDefinition);
 

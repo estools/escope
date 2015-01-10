@@ -115,7 +115,7 @@ function registerScope(scopeManager, scope) {
  * @class Scope
  */
 export default class Scope {
-    constructor(scopeManager, type, upperScope, block, isMethodDefinition, scopeType) {
+    constructor(scopeManager, type, upperScope, block, isMethodDefinition) {
         /**
          * One of 'TDZ', 'module', 'block', 'switch', 'function', 'catch', 'with', 'function', 'class', 'global'.
          * @member {String} Scope#type
@@ -195,13 +195,6 @@ export default class Scope {
         this.thisFound = false;
 
         this.__left = [];
-
-        // FIXME: This should be extracted into the Referencer.
-        if (!(this instanceof FunctionExpressionNameScope)) {
-            if (block.type === Syntax.FunctionExpression && block.id) {
-                upperScope = scopeManager.__nestFunctionExpressionNameScope(block, isMethodDefinition);
-            }
-        }
 
          /**
          * Reference to the parent {@link Scope|scope}.
@@ -467,7 +460,7 @@ export class ModuleScope extends Scope {
 
 export class FunctionExpressionNameScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'function', upperScope, block, false);
+        super(scopeManager, 'function-expression-name', upperScope, block, false);
         this.__define(block.id,
                 new Definition(
                     Variable.FunctionName,
@@ -478,14 +471,6 @@ export class FunctionExpressionNameScope extends Scope {
                     null
                 ));
         this.functionExpressionScope = true;
-    }
-
-    isArgumentsMaterialized() {
-        return false;
-    }
-
-    isThisMaterialized() {
-        return false;
     }
 }
 

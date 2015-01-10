@@ -43,10 +43,10 @@ describe 'function name', ->
 
         # Function expression name scope
         scope = scopeManager.scopes[1]
-        expect(scope.type).to.be.equal 'function'
+        expect(scope.type).to.be.equal 'function-expression-name'
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'name'
-        expect(scope.isArgumentsMaterialized()).to.be.false
+        expect(scope.isArgumentsMaterialized()).to.be.true
         expect(scope.references).to.have.length 0
         expect(scope.upper is globalScope).to.be.true
 

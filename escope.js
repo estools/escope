@@ -1207,7 +1207,7 @@
         },
 
         UpdateExpression: function (node) {
-            if (isPattern(node)) {
+            if (isPattern(node.argument)) {
                 this.currentScope().__referencing(node.argument, Reference.RW, null);
             } else {
                 this.visitChildren(node);

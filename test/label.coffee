@@ -47,4 +47,24 @@ describe 'label', ->
         expect(scope.isArgumentsMaterialized()).to.be.false
         expect(scope.references).to.have.length 0
 
+    it 'should count child node references', ->
+            ast = esprima.parse """
+            var foo = 5;
+
+            label: while (true) {
+              console.log(foo);
+              break;
+            }
+            """
+
+            scopeManager = escope.analyze ast
+            expect(scopeManager.scopes).to.have.length 1
+            globalScope = scopeManager.scopes[0]
+            expect(globalScope.type).to.be.equal 'global'
+            expect(globalScope.variables).to.have.length 1
+            expect(globalScope.variables[0].name).to.be.equal 'foo'
+            expect(globalScope.through.length).to.be.equal 3
+            expect(globalScope.through[2].identifier.name).to.be.equal 'foo'
+            expect(globalScope.through[2].isRead()).to.be.true
+
 # vim: set sw=4 ts=4 et tw=80 :

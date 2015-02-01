@@ -1233,7 +1233,9 @@
 
         ContinueStatement: function () {},
 
-        LabeledStatement: function () {},
+        LabeledStatement: function (node) {
+            this.visit(node.body);
+        },
 
         ForStatement: function (node) {
             // Create ForStatement declaration.

@@ -17,18 +17,18 @@ scope analyzer extracted from [esmangle project](http://github.com/estools/esman
 
     estraverse.traverse(ast, {
         enter: function(node, parent) {
+            // do stuff
+            
             if (/Function/.test(node.type)) {
                 currentScope = scopeManager.acquire(node);  // get current function scope
             }
-            
-            // do stuff
         },
         leave: function(node, parent) {
-            // do stuff
-            
             if (/Function/.test(node.type)) {
                 currentScope = currentScope.upper;  // set to parent scope
             }
+            
+            // do stuff
         }
     });
 

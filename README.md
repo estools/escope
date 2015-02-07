@@ -4,6 +4,34 @@ scope analyzer extracted from [esmangle project](http://github.com/estools/esman
 
 [![Build Status](https://travis-ci.org/estools/escope.png?branch=master)](https://travis-ci.org/estools/escope)
 
+### Example
+
+    var escope = require('escope');
+    var esprima = require('esprima');
+    var estraverse = require('estraverse');
+    
+    var ast = esprima.parse(code);
+    var scopeManager = escope.analyze(ast);
+    
+    var currentScope = scopeManager.acquire(ast);   // global scope
+
+    estraverse.traverse(ast, {
+        enter: function(node, parent) {
+            // do stuff
+            
+            if (/Function/.test(node.type)) {
+                currentScope = scopeManager.acquire(node);  // get current function scope
+            }
+        },
+        leave: function(node, parent) {
+            if (/Function/.test(node.type)) {
+                currentScope = currentScope.upper;  // set to parent scope
+            }
+            
+            // do stuff
+        }
+    });
+
 ### Document
 
 Generated JSDoc is [here](http://estools.github.io/escope/).

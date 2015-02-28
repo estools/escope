@@ -220,6 +220,21 @@ export default class Referencer extends esrecurse.Visitor {
             });
         }
 
+        // if there's a rest argument, add that
+        if (node.rest) {
+            this.visitPattern(node.rest, (pattern) => {
+                this.currentScope().__define(pattern,
+                    new Definition(
+                        Variable.Parameter,
+                        pattern,
+                        node,
+                        null,
+                        i,
+                        null
+                    ));
+            });
+        }
+
         // Skip BlockStatement to prevent creating BlockStatement scope.
         if (node.body.type === Syntax.BlockStatement) {
             this.visitChildren(node.body);

@@ -30,7 +30,7 @@
     "coffee-script": "~1.8.0",
     "esprima": "~1.2.2",
     "gulp": "~3.8.10",
-    "gulp-6to5": "^2.0.0",
+    "gulp-babel": "^4.0.0",
     "gulp-bump": "^0.1.11",
     "gulp-coffee": "^2.2.0",
     "gulp-eslint": "^0.2.0",

@@ -26,7 +26,7 @@
 
 var gulp = require('gulp'),
     mocha = require('gulp-mocha'),
-    to5 = require('gulp-6to5'),
+    babel = require('gulp-babel'),
     git = require('gulp-git'),
     bump = require('gulp-bump'),
     filter = require('gulp-filter'),
@@ -67,7 +67,7 @@ var ESLINT_OPTION = {
 
 var build = lazypipe()
     .pipe(sourcemaps.init)
-    .pipe(to5)
+    .pipe(babel)
     .pipe(sourcemaps.write)
     .pipe(gulp.dest, 'lib');
 

@@ -22,6 +22,8 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+import Variable from './variable';
+
 /**
  * @class Definition
  */
@@ -52,6 +54,25 @@ export default class Definition {
          */
         this.kind = kind;
     }
+}
+
+/**
+ * @class ParameterDefinition
+ */
+class ParameterDefinition extends Definition {
+    constructor(name, node, index, rest) {
+        super(Variable.Parameter, name, node, null, index, null);
+        /**
+         * Whether the parameter definition is a part of a rest parameter.
+         * @member {boolean} ParameterDefinition#rest
+         */
+        this.rest = rest;
+    }
+}
+
+export {
+    ParameterDefinition,
+    Definition
 }
 
 /* vim: set sw=4 ts=4 et tw=80 : */

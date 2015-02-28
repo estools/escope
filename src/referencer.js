@@ -25,7 +25,7 @@ import estraverse from 'estraverse';
 import esrecurse from 'esrecurse';
 import Reference from './reference';
 import Variable from './variable';
-import Definition from './definition';
+import { ParameterDefinition, Definition } from './definition';
 import assert from 'assert';
 
 const Syntax = estraverse.Syntax;
@@ -209,13 +209,11 @@ export default class Referencer extends esrecurse.Visitor {
         for (i = 0, iz = node.params.length; i < iz; ++i) {
             this.visitPattern(node.params[i], (pattern) => {
                 this.currentScope().__define(pattern,
-                    new Definition(
-                        Variable.Parameter,
+                    new ParameterDefinition(
                         pattern,
                         node,
-                        null,
                         i,
-                        null
+                        false
                     ));
             });
         }
@@ -224,13 +222,11 @@ export default class Referencer extends esrecurse.Visitor {
         if (node.rest) {
             this.visitPattern(node.rest, (pattern) => {
                 this.currentScope().__define(pattern,
-                    new Definition(
-                        Variable.Parameter,
+                    new ParameterDefinition(
                         pattern,
                         node,
-                        null,
-                        i,
-                        null
+                        node.params.length,
+                        true
                     ));
             });
         }

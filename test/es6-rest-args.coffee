@@ -47,5 +47,7 @@ describe 'ES6 rest arguments', ->
         expect(scope.variables).to.have.length 2
         expect(scope.variables[0].name).to.be.equal 'arguments'
         expect(scope.variables[1].name).to.be.equal 'bar'
+        expect(scope.variables[1].defs[0].name.name).to.be.equal 'bar'
+        expect(scope.variables[1].defs[0].rest).to.be.true
 
 # vim: set sw=4 ts=4 et tw=80 :

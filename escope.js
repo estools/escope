@@ -1035,7 +1035,22 @@
                         type: Variable.Parameter,
                         name: pattern,
                         node: node,
-                        index: i
+                        index: i,
+                        rest: false
+                    });
+                });
+            }
+
+
+            // if there's a rest argument, add that
+            if (node.rest) {
+                this.visitPattern(node.rest, function (pattern) {
+                    that.currentScope().__define(pattern, {
+                        type: Variable.Parameter,
+                        name: pattern,
+                        node: node,
+                        index: node.params.length,
+                        rest: true
                     });
                 });
             }

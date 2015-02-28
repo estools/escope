@@ -576,11 +576,12 @@ describe 'ES6 destructuring assignments', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'function'
-        expect(scope.variables).to.have.length 4
+        expect(scope.variables).to.have.length 5
         expect(scope.variables[0].name).to.be.equal 'arguments'
         expect(scope.variables[1].name).to.be.equal 'a'
         expect(scope.variables[2].name).to.be.equal 'b'
         expect(scope.variables[3].name).to.be.equal 'rest'
+        expect(scope.variables[4].name).to.be.equal 'rest2'
         expect(scope.references).to.have.length 0
 
         # ast = harmony.parse """

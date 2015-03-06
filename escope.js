@@ -78,6 +78,7 @@
         return {
             optimistic: false,
             directive: false,
+            nodejsScope: false,
             sourceType: 'script',  // one of ['script', 'module']
             ecmaVersion: 5
         };
@@ -313,7 +314,11 @@
         }
 
         if (scope.type === 'function') {
-            body = block.body;
+            if (block.type === 'Program') {
+                body = block;
+            } else {
+                body = block.body;
+            }
         } else if (scope.type === 'global') {
             body = block;
         } else {
@@ -372,7 +377,8 @@
     var SCOPE_NORMAL = 0,
         SCOPE_MODULE = 1,
         SCOPE_FUNCTION_EXPRESSION_NAME = 2,
-        SCOPE_TDZ = 3;
+        SCOPE_TDZ = 3,
+        SCOPE_FUNCTION = 4;
 
     /**
      * @class Scope
@@ -387,7 +393,7 @@
             (scopeType === SCOPE_MODULE) ? 'module' :
             (block.type === Syntax.BlockStatement) ? 'block' :
             (block.type === Syntax.SwitchStatement) ? 'switch' :
-            (block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
+            (scopeType === SCOPE_FUNCTION || block.type === Syntax.FunctionExpression || block.type === Syntax.FunctionDeclaration || block.type === Syntax.ArrowFunctionExpression) ? 'function' :
             (block.type === Syntax.CatchClause) ? 'catch' :
             (block.type === Syntax.ForInStatement || block.type === Syntax.ForOfStatement || block.type === Syntax.ForStatement) ? 'for' :
             (block.type === Syntax.WithStatement) ? 'with' :
@@ -768,6 +774,10 @@
         return this.__options.ignoreEval;
     };
 
+    ScopeManager.prototype.__isNodejsScope = function () {
+        return this.__options.nodejsScope;
+    };
+
     ScopeManager.prototype.isModule = function () {
         return this.__options.sourceType === 'module';
     };
@@ -843,6 +853,10 @@
 
     ScopeManager.prototype.__nestScope = function (node, isMethodDefinition) {
         return new Scope(this, node, isMethodDefinition, SCOPE_NORMAL);
+    };
+
+    ScopeManager.prototype.__nestForceFunctionScope = function (node) {
+        return new Scope(this, node, false, SCOPE_FUNCTION);
     };
 
     ScopeManager.prototype.__nestModuleScope = function (node) {
@@ -1209,6 +1223,12 @@
         Program: function (node) {
             this.scopeManager.__nestScope(node);
 
+            if (this.scopeManager.__isNodejsScope()) {
+                // Force strictness of GlobalScope to false when using node.js scope.
+                this.currentScope().isStrict = false;
+                this.scopeManager.__nestForceFunctionScope(node);
+            }
+
             if (this.scopeManager.__isES6() && this.scopeManager.isModule()) {
                 this.scopeManager.__nestModuleScope(node);
             }
@@ -1391,6 +1411,9 @@
      * @param {Object} providedOptions - Options that tailor the scope analysis
      * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
      * @param {boolean} [providedOptions.directive=false]- the directive flag
+     * @param {boolean} [providedOptions.nodejsScope=false]- whether the whole
+     * script is executed under node.js environment. When enabled, escope adds
+     * a function scope immediately following the global scope.
      * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
      * @param {string} [providedOptions.sourceType='script']- the source type of the script. one of 'script' and 'module'
      * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered

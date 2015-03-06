@@ -41,6 +41,7 @@ describe 'import declaration', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'module'
+        expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'v'
         expect(scope.variables[0].defs[0].type).to.be.equal 'ImportBinding'
@@ -60,6 +61,7 @@ describe 'import declaration', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'module'
+        expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'ns'
         expect(scope.variables[0].defs[0].type).to.be.equal 'ImportBinding'
@@ -79,6 +81,7 @@ describe 'import declaration', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'module'
+        expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'x'
         expect(scope.variables[0].defs[0].type).to.be.equal 'ImportBinding'
@@ -98,6 +101,7 @@ describe 'import declaration', ->
 
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'module'
+        expect(scope.isStrict).to.be.true
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'v'
         expect(scope.variables[0].defs[0].type).to.be.equal 'ImportBinding'

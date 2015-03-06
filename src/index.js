@@ -61,6 +61,7 @@ function defaultOptions() {
     return {
         optimistic: false,
         directive: false,
+        nodejsScope: false,
         sourceType: 'script',  // one of ['script', 'module']
         ecmaVersion: 5
     };
@@ -99,6 +100,9 @@ function updateDeeply(target, override) {
  * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
  * @param {boolean} [providedOptions.directive=false]- the directive flag
  * @param {boolean} [providedOptions.ignoreEval=false]- whether to check 'eval()' calls
+ * @param {boolean} [providedOptions.nodejsScope=false]- whether the whole
+ * script is executed under node.js environment. When enabled, escope adds
+ * a function scope immediately following the global scope.
  * @param {string} [providedOptions.sourceType='script']- the source type of the script. one of 'script' and 'module'
  * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
  * @return {ScopeManager}

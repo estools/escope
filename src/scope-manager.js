@@ -64,6 +64,10 @@ export default class ScopeManager {
         return this.__options.ignoreEval;
     }
 
+    __isNodejsScope() {
+        return this.__options.nodejsScope;
+    }
+
     isModule() {
         return this.__options.sourceType === 'module';
     }

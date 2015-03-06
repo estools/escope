@@ -56,7 +56,11 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
     }
 
     if (scope.type === 'function') {
-        body = block.body;
+        if (block.type === 'Program') {
+            body = block;
+        } else {
+            body = block.body;
+        }
     } else if (scope.type === 'global') {
         body = block;
     } else {

@@ -392,6 +392,12 @@ export default class Referencer extends esrecurse.Visitor {
     Program(node) {
         this.scopeManager.__nestGlobalScope(node);
 
+        if (this.scopeManager.__isNodejsScope()) {
+            // Force strictness of GlobalScope to false when using node.js scope.
+            this.currentScope().isStrict = false;
+            this.scopeManager.__nestFunctionScope(node, false);
+        }
+
         if (this.scopeManager.__isES6() && this.scopeManager.isModule()) {
             this.scopeManager.__nestModuleScope(node);
         }

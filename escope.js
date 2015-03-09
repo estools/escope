@@ -958,20 +958,23 @@
     };
 
     Importer.prototype.ImportNamespaceSpecifier = function (node) {
-        if (node.id) {
-            this.visitImport(node.id, node);
+        node.local = (node.local || node.id);
+        if (node.local) {
+            this.visitImport(node.local, node);
         }
     };
 
     Importer.prototype.ImportDefaultSpecifier = function (node) {
-        this.visitImport(node.id, node);
+        node.local = (node.local || node.id);
+        this.visitImport(node.local, node);
     };
 
     Importer.prototype.ImportSpecifier = function (node) {
+        node.local = (node.local || node.id);
         if (node.name) {
             this.visitImport(node.name, node);
         } else {
-            this.visitImport(node.id, node);
+            this.visitImport(node.local, node);
         }
     };
 

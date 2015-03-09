@@ -22,13 +22,13 @@
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 expect = require('chai').expect
-harmony = require '../third_party/esprima'
+harmony = require '../third_party/espree'
 escope = require '..'
 
 describe 'import declaration', ->
     # http://people.mozilla.org/~jorendorff/es6-draft.html#sec-static-and-runtme-semantics-module-records
     it 'should import names from source', ->
-        ast = harmony.parse """
+        ast = harmony """
         import v from "mod";
         """, sourceType: 'module'
 
@@ -48,7 +48,7 @@ describe 'import declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should import namespaces', ->
-        ast = harmony.parse """
+        ast = harmony """
         import * as ns from "mod";
         """, sourceType: 'module'
 
@@ -68,7 +68,7 @@ describe 'import declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should import insided names#1', ->
-        ast = harmony.parse """
+        ast = harmony """
         import {x} from "mod";
         """, sourceType: 'module'
 
@@ -88,7 +88,7 @@ describe 'import declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should import insided names#2', ->
-        ast = harmony.parse """
+        ast = harmony """
         import {x as v} from "mod";
         """, sourceType: 'module'
 

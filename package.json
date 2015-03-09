@@ -22,7 +22,7 @@
     "es6-map": "^0.1.1",
     "es6-weak-map": "^0.1.2",
     "esrecurse": "^1.2.0",
-    "estraverse": ">=1.9.1"
+    "estraverse": "^1.9.1"
   },
   "devDependencies": {
     "browserify": "^9.0.3",

@@ -653,11 +653,18 @@
     Scope.prototype.__referencing = function __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial) {
         var ref;
         // because Array element may be null
-        if (node && node.type === Syntax.Identifier) {
-            ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial);
-            this.references.push(ref);
-            this.__left.push(ref);
+        if (!node || node.type !== Syntax.Identifier) {
+            return;
         }
+
+        // Specially handle like `this`.
+        if (node.name === 'super') {
+            return;
+        }
+
+        ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial);
+        this.references.push(ref);
+        this.__left.push(ref);
     };
 
     Scope.prototype.__detectEval = function __detectEval() {

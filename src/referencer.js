@@ -109,23 +109,23 @@ class Importer extends esrecurse.Visitor {
     }
 
     ImportNamespaceSpecifier(node) {
-        node.local = (node.local || node.id);
-        if (node.local) {
-            this.visitImport(node.local, node);
+        let local = (node.local || node.id);
+        if (local) {
+            this.visitImport(local, node);
         }
     }
 
     ImportDefaultSpecifier(node) {
-        node.local = (node.local || node.id);
-        this.visitImport(node.local, node);
+        let local = (node.local || node.id);
+        this.visitImport(local, node);
     }
 
     ImportSpecifier(node) {
-        node.local = (node.local || node.id);
+        let local = (node.local || node.id);
         if (node.name) {
             this.visitImport(node.name, node);
         } else {
-            this.visitImport(node.local, node);
+            this.visitImport(local, node);
         }
     }
 }

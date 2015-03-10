@@ -559,7 +559,7 @@ export default class Referencer extends esrecurse.Visitor {
         importer.visit(node);
     }
 
-    ExportDeclaration(node) {
+    visitExportDeclaration(node) {
         if (node.source) {
             return;
         }
@@ -571,8 +571,17 @@ export default class Referencer extends esrecurse.Visitor {
         this.visitChildren(node);
     }
 
+    ExportDeclaration(node) {
+        this.visitExportDeclaration(node);
+    }
+
+    ExportNamedDeclaration(node) {
+        this.visitExportDeclaration(node);
+    }
+
     ExportSpecifier(node) {
-        this.visit(node.id);
+        let local = (node.id || node.local);
+        this.visit(local);
     }
 }
 

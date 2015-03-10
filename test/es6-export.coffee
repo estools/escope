@@ -22,13 +22,13 @@
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 expect = require('chai').expect
-harmony = require '../third_party/esprima'
+espree = require '../third_party/espree'
 escope = require '..'
 
 describe 'export declaration', ->
     # http://people.mozilla.org/~jorendorff/es6-draft.html#sec-static-and-runtme-semantics-module-records
     it 'should create vairable bindings', ->
-        ast = harmony.parse """
+        ast = espree """
         export var v;
         """, sourceType: 'module'
 
@@ -47,7 +47,7 @@ describe 'export declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should create function declaration bindings', ->
-        ast = harmony.parse """
+        ast = espree """
         export default function f(){};
         """, sourceType: 'module'
 
@@ -73,7 +73,7 @@ describe 'export declaration', ->
 
 
     it 'should export function expression', ->
-        ast = harmony.parse """
+        ast = espree """
         export default function(){};
         """, sourceType: 'module'
 
@@ -96,7 +96,7 @@ describe 'export declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should export literal', ->
-        ast = harmony.parse """
+        ast = espree """
         export default 42;
         """, sourceType: 'module'
 
@@ -113,7 +113,7 @@ describe 'export declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should refer exported references#1', ->
-        ast = harmony.parse """
+        ast = espree """
         export {x};
         """, sourceType: 'module'
 
@@ -131,7 +131,7 @@ describe 'export declaration', ->
         expect(scope.references[0].identifier.name).to.be.equal 'x'
 
     it 'should refer exported references#2', ->
-        ast = harmony.parse """
+        ast = espree """
         export {v as x};
         """, sourceType: 'module'
 
@@ -149,7 +149,7 @@ describe 'export declaration', ->
         expect(scope.references[0].identifier.name).to.be.equal 'v'
 
     it 'should not refer exported references from other source#1', ->
-        ast = harmony.parse """
+        ast = espree """
         export {x} from "mod";
         """, sourceType: 'module'
 
@@ -163,10 +163,11 @@ describe 'export declaration', ->
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'module'
         expect(scope.variables).to.have.length 0
+        console.log(scope.references)
         expect(scope.references).to.have.length 0
 
     it 'should not refer exported references from other source#2', ->
-        ast = harmony.parse """
+        ast = espree """
         export {v as x} from "mod";
         """, sourceType: 'module'
 
@@ -183,7 +184,7 @@ describe 'export declaration', ->
         expect(scope.references).to.have.length 0
 
     it 'should not refer exported references from other source#3', ->
-        ast = harmony.parse """
+        ast = espree """
         export * from "mod";
         """, sourceType: 'module'
 

@@ -83,6 +83,7 @@ function isPattern(node) {
 
 // Importing ImportDeclaration.
 // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-moduledeclarationinstantiation
+// https://github.com/estree/estree/blob/master/es6.md#importdeclaration
 // FIXME: Now, we don't create module environment, because the context is
 // implementation dependent.
 
@@ -108,20 +109,23 @@ class Importer extends esrecurse.Visitor {
     }
 
     ImportNamespaceSpecifier(node) {
-        if (node.id) {
-            this.visitImport(node.id, node);
+        node.local = (node.local || node.id);
+        if (node.local) {
+            this.visitImport(node.local, node);
         }
     }
 
     ImportDefaultSpecifier(node) {
-        this.visitImport(node.id, node);
+        node.local = (node.local || node.id);
+        this.visitImport(node.local, node);
     }
 
     ImportSpecifier(node) {
+        node.local = (node.local || node.id);
         if (node.name) {
             this.visitImport(node.name, node);
         } else {
-            this.visitImport(node.id, node);
+            this.visitImport(node.local, node);
         }
     }
 }

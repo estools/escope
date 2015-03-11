@@ -21,64 +21,69 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-import estraverse from 'estraverse';
+import { Syntax } from 'estraverse';
 import esrecurse from 'esrecurse';
 import Reference from './reference';
 import Variable from './variable';
 import { ParameterDefinition, Definition } from './definition';
 import assert from 'assert';
 
-const Syntax = estraverse.Syntax;
+class PatternVisitor extends esrecurse.Visitor {
+    constructor(rootPattern, referencer, callback) {
+        super(this);
+        this.referencer = referencer;
+        this.callback = callback;
+    }
 
-function traverseIdentifierInPattern(rootPattern, callback) {
-    estraverse.traverse(rootPattern, {
-        enter(pattern, parent) {
-            var i, iz, element, property;
+    perform(pattern) {
+        if (pattern.type === Syntax.Identifier) {
+            this.callback(pattern, true);
+            return;
+        }
+        this.visit(pattern);
+    }
 
-            switch (pattern.type) {
-                case Syntax.Identifier:
-                    // Toplevel identifier.
-                    if (parent === null) {
-                        callback(pattern, true);
-                    }
-                    break;
+    Identifier(pattern) {
+        this.callback(pattern, false);
+    }
 
-                case Syntax.SpreadElement:
-                    if (pattern.argument.type === Syntax.Identifier) {
-                        callback(pattern.argument, false);
-                    }
-                    break;
+    ObjectPattern(pattern) {
+        var i, iz, property;
+        for (i = 0, iz = pattern.properties.length; i < iz; ++i) {
+            property = pattern.properties[i];
+            if (property.shorthand) {
+                this.visit(property.key);
+                continue;
+            }
+            this.visit(property.value);
+        }
+    }
 
-                case Syntax.ObjectPattern:
-                    for (i = 0, iz = pattern.properties.length; i < iz; ++i) {
-                        property = pattern.properties[i];
-                        if (property.shorthand) {
-                            callback(property.key, false);
-                            continue;
-                        }
-                        if (property.value.type === Syntax.Identifier) {
-                            callback(property.value, false);
-                            continue;
-                        }
-                    }
-                    break;
-
-                case Syntax.ArrayPattern:
-                    for (i = 0, iz = pattern.elements.length; i < iz; ++i) {
-                        element = pattern.elements[i];
-                        if (element && element.type === Syntax.Identifier) {
-                            callback(element, false);
-                        }
-                    }
-                    break;
+    ArrayPattern(pattern) {
+        var i, iz, element;
+        for (i = 0, iz = pattern.elements.length; i < iz; ++i) {
+            element = pattern.elements[i];
+            if (element) {
+                this.visit(element);
             }
         }
-    });
+    }
+
+    AssignmentPattern(pattern) {
+        this.visit(pattern.left);
+        // FIXME: Condier TDZ scope.
+        this.referencer.visit(pattern.right);
+    }
+}
+
+function traverseIdentifierInPattern(rootPattern, referencer, callback) {
+    var visitor = new PatternVisitor(rootPattern, referencer, callback);
+    visitor.perform(rootPattern);
 }
 
 function isPattern(node) {
     var nodeType = node.type;
-    return nodeType === Syntax.Identifier || nodeType === Syntax.ObjectPattern || nodeType === Syntax.ArrayPattern || nodeType === Syntax.SpreadElement;
+    return nodeType === Syntax.Identifier || nodeType === Syntax.ObjectPattern || nodeType === Syntax.ArrayPattern || nodeType === Syntax.SpreadElement || nodeType === Syntax.RestElement || nodeType === Syntax.AssignmentPattern;
 }
 
 // Importing ImportDeclaration.
@@ -178,7 +183,7 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     visitPattern(node, callback) {
-        traverseIdentifierInPattern(node, callback);
+        traverseIdentifierInPattern(node, this, callback);
     }
 
     visitFunction(node) {
@@ -332,9 +337,6 @@ export default class Referencer extends esrecurse.Visitor {
 
         decl = node.declarations[index];
         init = decl.init;
-        // FIXME: Don't consider initializer with complex patterns.
-        // Such as,
-        // var [a, b, c = 20] = array;
         this.visitPattern(decl.id, (pattern, toplevel) => {
             variableTargetScope.__define(pattern,
                 new Definition(

@@ -23,6 +23,7 @@
 
 expect = require('chai').expect
 harmony = require '../third_party/esprima'
+espree = require '../third_party/espree'
 escope = require '..'
 
 describe 'ES6 destructuring assignments', ->
@@ -702,5 +703,80 @@ describe 'ES6 destructuring assignments', ->
             ]
             expect(scope.variables[index].name).to.be.equal name
         expect(scope.references).to.have.length 0
+
+    it 'default values and patterns in var', ->
+        ast = espree """
+        (function () {
+            var [a, b, c, d = 20 ] = array;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 5
+        for name, index in [
+                'arguments'
+                'a'
+                'b'
+                'c'
+                'd'
+            ]
+            expect(scope.variables[index].name).to.be.equal name
+        expect(scope.references).to.have.length 5
+        for name, index in [
+                'a'
+                'b'
+                'c'
+                'd'
+                'array'
+            ]
+            expect(scope.references[index].identifier.name).to.be.equal name
+
+    it 'default values containing references and patterns in var', ->
+        ast = espree """
+        (function () {
+            var [a, b, c, d = e ] = array;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.be.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.be.equal 'function'
+        expect(scope.variables).to.have.length 5
+        for name, index in [
+                'arguments'
+                'a'
+                'b'
+                'c'
+                'd'
+            ]
+            expect(scope.variables[index].name).to.be.equal name
+        expect(scope.references).to.have.length 6
+        for name, index in [
+                'a'
+                'b'
+                'c'
+                'd'
+                'e'
+                'array'
+            ]
+            expect(scope.references[index].identifier.name).to.be.equal name
 
 # vim: set sw=4 ts=4 et tw=80 :

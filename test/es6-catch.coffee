@@ -22,6 +22,7 @@
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 expect = require('chai').expect
 harmony = require '../third_party/esprima'
+espree = require '../third_party/espree'
 escope = require '..'
 
 describe 'ES6 catch', ->
@@ -37,6 +38,7 @@ describe 'ES6 catch', ->
             d;
         }
         """
+
         scopeManager = escope.analyze ast, ecmaVersion: 6
         expect(scopeManager.scopes).to.have.length 4
 
@@ -68,5 +70,23 @@ describe 'ES6 catch', ->
         # expect(scope.variables[2].name).to.be.equal 'c'
         # expect(scope.variables[3].name).to.be.equal 'd'
         # expect(scope.references).to.have.length 0
+
+        scope = scopeManager.scopes[3]
+        expect(scope.type).to.be.equal 'block'
+        expect(scope.block.type).to.be.equal 'BlockStatement'
+        expect(scope.isStrict).to.be.false
+        expect(scope.variables).to.have.length 2
+        expect(scope.variables.map((variable) -> variable.name)).to.be.eql([
+            'e'
+            'c'
+        ])
+        expect(scope.references.map((ref) -> ref.identifier.name)).to.be.eql([
+            'e'
+            'a'
+            'b'
+            'c'
+            'c'
+            'd'
+        ])
 
 # vim: set sw=4 ts=4 et tw=80 :

@@ -163,7 +163,6 @@ describe 'export declaration', ->
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'module'
         expect(scope.variables).to.have.length 0
-        console.log(scope.references)
         expect(scope.references).to.have.length 0
 
     it 'should not refer exported references from other source#2', ->

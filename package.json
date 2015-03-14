@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "acorn": "^0.12.0",
+    "babel": "^4.7.12",
     "browserify": "^9.0.3",
     "chai": "^2.1.1",
     "coffee-script": "^1.9.1",

@@ -37,10 +37,10 @@ var gulp = require('gulp'),
     source = require('vinyl-source-stream'),
     browserify = require('browserify'),
     lazypipe = require('lazypipe'),
-    eslint = require('gulp-eslint');
+    eslint = require('gulp-eslint'),
+    coffee = require('coffee-script/register');
 
 var TEST = [ 'test/*.coffee' ];
-var POWERED = [ 'powered-test/*.js' ];
 var SOURCE = [ 'src/**/*.js' ];
 
 var ESLINT_OPTION = {
@@ -88,16 +88,8 @@ gulp.task('browserify', [ 'build' ], function () {
     .pipe(gulp.dest('build'))
 });
 
-gulp.task('powered-test', function () {
+gulp.task('test', [ 'build' ], function () {
     return gulp.src(TEST)
-        .pipe(sourcemaps.init())
-        .pipe(coffee())
-        .pipe(sourcemaps.write())
-        .pipe(gulp.dest('./powered-test/'));
-});
-
-gulp.task('test', [ 'build', 'powered-test' ], function () {
-    return gulp.src(POWERED)
         .pipe(mocha({
             reporter: 'spec',
             timeout: 100000 // 100s

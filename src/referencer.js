@@ -30,7 +30,7 @@ import assert from 'assert';
 
 class PatternVisitor extends esrecurse.Visitor {
     constructor(rootPattern, referencer, callback) {
-        super(this);
+        super();
         this.referencer = referencer;
         this.callback = callback;
     }
@@ -94,7 +94,7 @@ function isPattern(node) {
 
 class Importer extends esrecurse.Visitor {
     constructor(declaration, referencer) {
-        super(this);
+        super();
         this.declaration = declaration;
         this.referencer = referencer;
     }
@@ -138,7 +138,7 @@ class Importer extends esrecurse.Visitor {
 // Referencing variables and creating bindings.
 export default class Referencer extends esrecurse.Visitor {
     constructor(scopeManager) {
-        super(this, this);
+        super();
         this.scopeManager = scopeManager;
         this.parent = null;
         this.isInnerMethodDefinition = false;

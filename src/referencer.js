@@ -229,7 +229,10 @@ export default class Referencer extends esrecurse.Visitor {
 
         // if there's a rest argument, add that
         if (node.rest) {
-            this.visitPattern(node.rest, (pattern) => {
+            this.visitPattern({
+                type: 'RestElement',
+                argument: node.rest
+            }, (pattern) => {
                 this.currentScope().__define(pattern,
                     new ParameterDefinition(
                         pattern,

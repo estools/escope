@@ -1107,7 +1107,7 @@
     }
 
     /** @name module:escope.version */
-    exports.version = '1.0.2-dev';
+    exports.version = '1.0.3';
     /** @name module:escope.Reference */
     exports.Reference = Reference;
     /** @name module:escope.Variable */

@@ -19,7 +19,7 @@
     "url": "http://github.com/Constellation/escope.git"
   },
   "dependencies": {
-    "estraverse": ">=1.7.1"
+    "estraverse": "^2.0.0"
   },
   "devDependencies": {
     "jshint": "~2.5.10",

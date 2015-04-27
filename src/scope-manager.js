@@ -72,6 +72,10 @@ export default class ScopeManager {
         return this.__options.sourceType === 'module';
     }
 
+    isInstrumentingTree () {
+        return this.__options.instrumentTree;
+    }
+
     // Returns appropliate scope for this node.
     __get(node) {
         return this.__nodeToScope.get(node);

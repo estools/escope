@@ -63,7 +63,8 @@ function defaultOptions() {
         directive: false,
         nodejsScope: false,
         sourceType: 'script',  // one of ['script', 'module']
-        ecmaVersion: 5
+        ecmaVersion: 5,
+        instrumentTree: false
     };
 }
 

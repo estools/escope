@@ -227,37 +227,65 @@ export default class Scope {
         return (!this.dynamic || scopeManager.__isOptimistic());
     }
 
-    __staticClose(scopeManager) {
-        // static resolve
-        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            let ref = this.__left[i];
-            if (!this.__resolve(ref)) {
-                this.__delegateToUpperScope(ref);
-            }
+    __shouldStaticallyCloseForGlobal(ref) {
+        // On global scope, let/const/class declarations should be resolved statically.
+        var name = ref.identifier.name;
+        if (!this.set.has(name)) {
+            return false;
+        }
+
+        var variable = this.set.get(name);
+        //TODO: Confirm the mean of array, and rewrite.
+        var def = variable.defs[0];
+        return def != null && (
+            (def.type === Variable.ClassName) ||
+            (def.type === Variable.Variable && def.parent.kind !== "var")
+        );
+    }
+
+    __staticCloseRef(ref) {
+        if (!this.__resolve(ref)) {
+            this.__delegateToUpperScope(ref);
         }
     }
 
-    __dynamicClose(scopeManager) {
-        // This path is for "global" and "function with eval" environment.
-        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            // notify all names are through to global
-            let ref = this.__left[i];
-            let current = this;
-            do {
-                current.through.push(ref);
-                current = current.upper;
-            } while (current);
+    __dynamicCloseRef(ref) {
+        // notify all names are through to global
+        let current = this;
+        do {
+            current.through.push(ref);
+            current = current.upper;
+        } while (current);
+    }
+
+    __globalCloseRef(ref) {
+        // let/const/class declarations should be resolved statically.
+        // others should be resolved dynamically.
+        if (this.__shouldStaticallyCloseForGlobal(ref)) {
+            this.__staticCloseRef(ref);
+        }
+        else {
+            this.__dynamicCloseRef(ref);
         }
     }
 
     __close(scopeManager) {
+        var closeRef;
         if (this.__shouldStaticallyClose(scopeManager)) {
-            this.__staticClose();
+            closeRef = this.__staticCloseRef;
+        } else if (this.type !== 'global') {
+            closeRef = this.__dynamicCloseRef;
         } else {
-            this.__dynamicClose();
+            closeRef = this.__globalCloseRef;
         }
 
+        // Try Resolving all references in this scope.
+        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
+            let ref = this.__left[i];
+            closeRef.call(this, ref);
+        }
         this.__left = null;
+
         return this.upper;
     }
 

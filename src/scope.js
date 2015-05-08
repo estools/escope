@@ -115,6 +115,13 @@ function registerScope(scopeManager, scope) {
     }
 }
 
+function shouldBeStatically(def) {
+    return (
+        (def.type === Variable.ClassName) ||
+        (def.type === Variable.Variable && def.parent.kind !== "var")
+    );
+}
+
 /**
  * @class Scope
  */
@@ -235,12 +242,8 @@ export default class Scope {
         }
 
         var variable = this.set.get(name);
-        //TODO: Confirm the mean of array, and rewrite.
-        var def = variable.defs[0];
-        return def != null && (
-            (def.type === Variable.ClassName) ||
-            (def.type === Variable.Variable && def.parent.kind !== "var")
-        );
+        var defs = variable.defs;
+        return defs.length > 0 && defs.every(shouldBeStatically);
     }
 
     __staticCloseRef(ref) {
@@ -263,8 +266,7 @@ export default class Scope {
         // others should be resolved dynamically.
         if (this.__shouldStaticallyCloseForGlobal(ref)) {
             this.__staticCloseRef(ref);
-        }
-        else {
+        } else {
             this.__dynamicCloseRef(ref);
         }
     }

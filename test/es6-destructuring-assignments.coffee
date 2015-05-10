@@ -68,6 +68,400 @@ describe 'ES6 destructuring assignments', ->
         expect(scope.references[3].identifier.name).to.be.equal 'array'
         expect(scope.references[3].isWrite()).to.be.false
 
+    it 'Pattern in let in ForInStatement', ->
+        ast = harmony.parse """
+        (function () {
+            for (let [a, b, c] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 4  # [global, function, TDZ, for]
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 1
+        expect(scope.implicit.left[0].identifier.name).to.equal 'array'
+
+        scope = scopeManager.scopes[2]
+        expect(scope.type).to.equal 'TDZ'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.equal 'a'
+        expect(scope.variables[1].name).to.equal 'b'
+        expect(scope.variables[2].name).to.equal 'c'
+        expect(scope.references).to.have.length 1
+        expect(scope.references[0].identifier.name).to.equal 'array'
+        expect(scope.references[0].isWrite()).to.be.false
+
+        scope = scopeManager.scopes[3]
+        expect(scope.type).to.equal 'for'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.equal 'a'
+        expect(scope.variables[1].name).to.equal 'b'
+        expect(scope.variables[2].name).to.equal 'c'
+        expect(scope.references).to.have.length 3
+        expect(scope.references[0].identifier.name).to.equal 'a'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].partial).to.be.true
+        expect(scope.references[0].resolved).to.equal scope.variables[0]
+        expect(scope.references[1].identifier.name).to.equal 'b'
+        expect(scope.references[1].isWrite()).to.be.true
+        expect(scope.references[1].partial).to.be.true
+        expect(scope.references[1].resolved).to.equal scope.variables[1]
+        expect(scope.references[2].identifier.name).to.equal 'c'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].partial).to.be.true
+        expect(scope.references[2].resolved).to.equal scope.variables[2]
+
+    it 'Pattern with default values in var in ForInStatement', ->
+        ast = espree """
+        (function () {
+            for (var [a, b, c = d] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 2
+        expect(scope.implicit.left[0].identifier.name).to.equal 'd'
+        expect(scope.implicit.left[1].identifier.name).to.equal 'array'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 4
+        expect(scope.variables[0].name).to.equal 'arguments'
+        expect(scope.variables[1].name).to.equal 'a'
+        expect(scope.variables[2].name).to.equal 'b'
+        expect(scope.variables[3].name).to.equal 'c'
+        expect(scope.references).to.have.length 6
+        expect(scope.references[0].identifier.name).to.equal 'c'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].writeExpr.name).to.equal 'd'
+        expect(scope.references[0].partial).to.be.false
+        expect(scope.references[0].resolved).to.equal scope.variables[3]
+        expect(scope.references[1].identifier.name).to.equal 'd'
+        expect(scope.references[1].isWrite()).to.be.false
+        expect(scope.references[2].identifier.name).to.equal 'a'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].partial).to.be.true
+        expect(scope.references[2].resolved).to.equal scope.variables[1]
+        expect(scope.references[3].identifier.name).to.equal 'b'
+        expect(scope.references[3].isWrite()).to.be.true
+        expect(scope.references[3].partial).to.be.true
+        expect(scope.references[3].resolved).to.equal scope.variables[2]
+        expect(scope.references[4].identifier.name).to.equal 'c'
+        expect(scope.references[4].isWrite()).to.be.true
+        expect(scope.references[4].writeExpr.name).to.equal 'array'
+        expect(scope.references[4].partial).to.be.true
+        expect(scope.references[4].resolved).to.equal scope.variables[3]
+        expect(scope.references[5].identifier.name).to.equal 'array'
+        expect(scope.references[5].isWrite()).to.be.false
+
+    it 'Pattern with default values in let in ForInStatement', ->
+        ast = espree """
+        (function () {
+            for (let [a, b, c = d] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 4  # [global, function, TDZ, for]
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 2
+        expect(scope.implicit.left[0].identifier.name).to.equal 'array'
+        expect(scope.implicit.left[0].from.type).to.equal 'TDZ'
+        expect(scope.implicit.left[1].identifier.name).to.equal 'd'
+        expect(scope.implicit.left[1].from.type).to.equal 'for'
+
+        scope = scopeManager.scopes[2]
+        expect(scope.type).to.equal 'TDZ'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.equal 'a'
+        expect(scope.variables[1].name).to.equal 'b'
+        expect(scope.variables[2].name).to.equal 'c'
+        expect(scope.references).to.have.length 1
+        expect(scope.references[0].identifier.name).to.equal 'array'
+        expect(scope.references[0].isWrite()).to.be.false
+
+        scope = scopeManager.scopes[3]
+        expect(scope.type).to.equal 'for'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.equal 'a'
+        expect(scope.variables[1].name).to.equal 'b'
+        expect(scope.variables[2].name).to.equal 'c'
+        expect(scope.references).to.have.length 5
+        expect(scope.references[0].identifier.name).to.equal 'c'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].writeExpr.name).to.equal 'd'
+        expect(scope.references[0].partial).to.be.false
+        expect(scope.references[0].resolved).to.equal scope.variables[2]
+        expect(scope.references[1].identifier.name).to.equal 'd'
+        expect(scope.references[1].isWrite()).to.be.false
+        expect(scope.references[2].identifier.name).to.equal 'a'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].writeExpr.name).to.equal 'array'
+        expect(scope.references[2].partial).to.be.true
+        expect(scope.references[2].resolved).to.equal scope.variables[0]
+        expect(scope.references[3].identifier.name).to.equal 'b'
+        expect(scope.references[3].isWrite()).to.be.true
+        expect(scope.references[3].writeExpr.name).to.equal 'array'
+        expect(scope.references[3].partial).to.be.true
+        expect(scope.references[3].resolved).to.equal scope.variables[1]
+        expect(scope.references[4].identifier.name).to.equal 'c'
+        expect(scope.references[4].isWrite()).to.be.true
+        expect(scope.references[4].writeExpr.name).to.equal 'array'
+        expect(scope.references[4].partial).to.be.true
+        expect(scope.references[4].resolved).to.equal scope.variables[2]
+
+    it 'Pattern with nested default values in var in ForInStatement', ->
+        ast = espree """
+        (function () {
+            for (var [a, [b, c = d] = e] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 3
+        expect(scope.implicit.left[0].identifier.name).to.equal 'd'
+        expect(scope.implicit.left[1].identifier.name).to.equal 'e'
+        expect(scope.implicit.left[2].identifier.name).to.equal 'array'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 4
+        expect(scope.variables[0].name).to.equal 'arguments'
+        expect(scope.variables[1].name).to.equal 'a'
+        expect(scope.variables[2].name).to.equal 'b'
+        expect(scope.variables[3].name).to.equal 'c'
+        expect(scope.references).to.have.length 9
+        expect(scope.references[0].identifier.name).to.equal 'b'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].writeExpr.name).to.equal 'e'
+        expect(scope.references[0].partial).to.be.true
+        expect(scope.references[0].resolved).to.equal scope.variables[2]
+        expect(scope.references[1].identifier.name).to.equal 'c'
+        expect(scope.references[1].isWrite()).to.be.true
+        expect(scope.references[1].writeExpr.name).to.equal 'e'
+        expect(scope.references[1].partial).to.be.true
+        expect(scope.references[1].resolved).to.equal scope.variables[3]
+        expect(scope.references[2].identifier.name).to.equal 'c'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].writeExpr.name).to.equal 'd'
+        expect(scope.references[2].partial).to.be.false
+        expect(scope.references[2].resolved).to.equal scope.variables[3]
+        expect(scope.references[3].identifier.name).to.equal 'd'
+        expect(scope.references[3].isWrite()).to.be.false
+        expect(scope.references[4].identifier.name).to.equal 'e'
+        expect(scope.references[4].isWrite()).to.be.false
+        expect(scope.references[5].identifier.name).to.equal 'a'
+        expect(scope.references[5].isWrite()).to.be.true
+        expect(scope.references[5].writeExpr.name).to.equal 'array'
+        expect(scope.references[5].partial).to.be.true
+        expect(scope.references[5].resolved).to.equal scope.variables[1]
+        expect(scope.references[6].identifier.name).to.equal 'b'
+        expect(scope.references[6].isWrite()).to.be.true
+        expect(scope.references[6].writeExpr.name).to.equal 'array'
+        expect(scope.references[6].partial).to.be.true
+        expect(scope.references[6].resolved).to.equal scope.variables[2]
+        expect(scope.references[7].identifier.name).to.equal 'c'
+        expect(scope.references[7].isWrite()).to.be.true
+        expect(scope.references[7].writeExpr.name).to.equal 'array'
+        expect(scope.references[7].partial).to.be.true
+        expect(scope.references[7].resolved).to.equal scope.variables[3]
+        expect(scope.references[8].identifier.name).to.equal 'array'
+        expect(scope.references[8].isWrite()).to.be.false
+
+    it 'Pattern with nested default values in let in ForInStatement', ->
+        ast = espree """
+        (function () {
+            for (let [a, [b, c = d] = e] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 4  # [global, function, TDZ, for]
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 3
+        expect(scope.implicit.left[0].identifier.name).to.equal 'array'
+        expect(scope.implicit.left[0].from.type).to.equal 'TDZ'
+        expect(scope.implicit.left[1].identifier.name).to.equal 'd'
+        expect(scope.implicit.left[1].from.type).to.equal 'for'
+        expect(scope.implicit.left[2].identifier.name).to.equal 'e'
+        expect(scope.implicit.left[2].from.type).to.equal 'for'
+
+        scope = scopeManager.scopes[2]
+        expect(scope.type).to.equal 'TDZ'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.equal 'a'
+        expect(scope.variables[1].name).to.equal 'b'
+        expect(scope.variables[2].name).to.equal 'c'
+        expect(scope.references).to.have.length 1
+        expect(scope.references[0].identifier.name).to.equal 'array'
+        expect(scope.references[0].isWrite()).to.be.false
+
+        scope = scopeManager.scopes[3]
+        expect(scope.type).to.equal 'for'
+        expect(scope.variables).to.have.length 3
+        expect(scope.variables[0].name).to.equal 'a'
+        expect(scope.variables[1].name).to.equal 'b'
+        expect(scope.variables[2].name).to.equal 'c'
+        expect(scope.references).to.have.length 8
+        expect(scope.references[0].identifier.name).to.equal 'b'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].writeExpr.name).to.equal 'e'
+        expect(scope.references[0].partial).to.be.true
+        expect(scope.references[0].resolved).to.equal scope.variables[1]
+        expect(scope.references[1].identifier.name).to.equal 'c'
+        expect(scope.references[1].isWrite()).to.be.true
+        expect(scope.references[1].writeExpr.name).to.equal 'e'
+        expect(scope.references[1].partial).to.be.true
+        expect(scope.references[1].resolved).to.equal scope.variables[2]
+        expect(scope.references[2].identifier.name).to.equal 'c'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].writeExpr.name).to.equal 'd'
+        expect(scope.references[2].partial).to.be.false
+        expect(scope.references[2].resolved).to.equal scope.variables[2]
+        expect(scope.references[3].identifier.name).to.equal 'd'
+        expect(scope.references[3].isWrite()).to.be.false
+        expect(scope.references[4].identifier.name).to.equal 'e'
+        expect(scope.references[4].isWrite()).to.be.false
+        expect(scope.references[5].identifier.name).to.equal 'a'
+        expect(scope.references[5].isWrite()).to.be.true
+        expect(scope.references[5].writeExpr.name).to.equal 'array'
+        expect(scope.references[5].partial).to.be.true
+        expect(scope.references[5].resolved).to.equal scope.variables[0]
+        expect(scope.references[6].identifier.name).to.equal 'b'
+        expect(scope.references[6].isWrite()).to.be.true
+        expect(scope.references[6].writeExpr.name).to.equal 'array'
+        expect(scope.references[6].partial).to.be.true
+        expect(scope.references[6].resolved).to.equal scope.variables[1]
+        expect(scope.references[7].identifier.name).to.equal 'c'
+        expect(scope.references[7].isWrite()).to.be.true
+        expect(scope.references[7].writeExpr.name).to.equal 'array'
+        expect(scope.references[7].partial).to.be.true
+        expect(scope.references[7].resolved).to.equal scope.variables[2]
+
+    it 'Pattern with default values in var in ForInStatement (separate declarations)', ->
+        ast = espree """
+        (function () {
+            var a, b, c;
+            for ([a, b, c = d] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 2
+        expect(scope.implicit.left[0].identifier.name).to.equal 'd'
+        expect(scope.implicit.left[1].identifier.name).to.equal 'array'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 4
+        expect(scope.variables[0].name).to.equal 'arguments'
+        expect(scope.variables[1].name).to.equal 'a'
+        expect(scope.variables[2].name).to.equal 'b'
+        expect(scope.variables[3].name).to.equal 'c'
+        expect(scope.references).to.have.length 6
+        expect(scope.references[0].identifier.name).to.equal 'a'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].partial).to.be.true
+        expect(scope.references[0].resolved).to.equal scope.variables[1]
+        expect(scope.references[1].identifier.name).to.equal 'b'
+        expect(scope.references[1].isWrite()).to.be.true
+        expect(scope.references[1].partial).to.be.true
+        expect(scope.references[1].resolved).to.equal scope.variables[2]
+        expect(scope.references[2].identifier.name).to.equal 'c'
+        expect(scope.references[2].isWrite()).to.be.true
+        expect(scope.references[2].writeExpr.name).to.equal 'd'
+        expect(scope.references[2].partial).to.be.false
+        expect(scope.references[2].resolved).to.equal scope.variables[3]
+        expect(scope.references[3].identifier.name).to.equal 'c'
+        expect(scope.references[3].isWrite()).to.be.true
+        expect(scope.references[3].writeExpr.name).to.equal 'array'
+        expect(scope.references[3].partial).to.be.true
+        expect(scope.references[3].resolved).to.equal scope.variables[3]
+        expect(scope.references[4].identifier.name).to.equal 'd'
+        expect(scope.references[4].isWrite()).to.be.false
+        expect(scope.references[5].identifier.name).to.equal 'array'
+        expect(scope.references[5].isWrite()).to.be.false
+
+    it 'Pattern with default values in var in ForInStatement (separate declarations and with MemberExpression)', ->
+        ast = espree """
+        (function () {
+            var obj;
+            for ([obj.a, obj.b, obj.c = d] in array);
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 2
+        expect(scope.implicit.left[0].identifier.name).to.equal 'd'
+        expect(scope.implicit.left[1].identifier.name).to.equal 'array'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 2
+        expect(scope.variables[0].name).to.equal 'arguments'
+        expect(scope.variables[1].name).to.equal 'obj'
+        expect(scope.references).to.have.length 5
+        expect(scope.references[0].identifier.name).to.equal 'obj'  # obj.a
+        expect(scope.references[0].isWrite()).to.be.false
+        expect(scope.references[0].isRead()).to.be.true
+        expect(scope.references[0].resolved).to.equal scope.variables[1]
+        expect(scope.references[1].identifier.name).to.equal 'obj'  # obj.b
+        expect(scope.references[1].isWrite()).to.be.false
+        expect(scope.references[1].isRead()).to.be.true
+        expect(scope.references[1].resolved).to.equal scope.variables[1]
+        expect(scope.references[2].identifier.name).to.equal 'obj'  # obj.c
+        expect(scope.references[2].isWrite()).to.be.false
+        expect(scope.references[2].isRead()).to.be.true
+        expect(scope.references[2].resolved).to.equal scope.variables[1]
+        expect(scope.references[3].identifier.name).to.equal 'd'
+        expect(scope.references[3].isWrite()).to.be.false
+        expect(scope.references[3].isRead()).to.be.true
+        expect(scope.references[4].identifier.name).to.equal 'array'
+        expect(scope.references[4].isWrite()).to.be.false
+        expect(scope.references[4].isRead()).to.be.true
 
     it 'ArrayPattern in var', ->
         ast = harmony.parse """
@@ -340,6 +734,47 @@ describe 'ES6 destructuring assignments', ->
         expect(scope.references[3].identifier.name).to.be.equal 'array'
         expect(scope.references[3].isWrite()).to.be.false
 
+    it 'ArrayPattern with MemberExpression in AssignmentExpression', ->
+        ast = harmony.parse """
+        (function () {
+            var obj;
+            [obj.a, obj.b, obj.c] = array;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 1
+        expect(scope.implicit.left[0].identifier.name).to.equal 'array'
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 2
+        expect(scope.variables[0].name).to.equal 'arguments'
+        expect(scope.variables[1].name).to.equal 'obj'
+        expect(scope.references).to.have.length 4
+        expect(scope.references[0].identifier.name).to.equal 'obj'
+        expect(scope.references[0].isWrite()).to.be.false
+        expect(scope.references[0].isRead()).to.be.true
+        expect(scope.references[0].resolved).to.equal scope.variables[1]
+        expect(scope.references[1].identifier.name).to.equal 'obj'
+        expect(scope.references[1].isWrite()).to.be.false
+        expect(scope.references[1].isRead()).to.be.true
+        expect(scope.references[1].resolved).to.equal scope.variables[1]
+        expect(scope.references[2].identifier.name).to.equal 'obj'
+        expect(scope.references[2].isWrite()).to.be.false
+        expect(scope.references[2].isRead()).to.be.true
+        expect(scope.references[2].resolved).to.equal scope.variables[1]
+        expect(scope.references[3].identifier.name).to.equal 'array'
+        expect(scope.references[3].isWrite()).to.be.false
+        expect(scope.references[3].isRead()).to.be.true
+
     it 'SpreadElement in AssignmentExpression', ->
         ast = harmony.parse """
         (function () {
@@ -427,6 +862,47 @@ describe 'ES6 destructuring assignments', ->
             expect(scope.references[index].resolved).to.be.null
         expect(scope.references[5].identifier.name).to.be.equal 'array'
         expect(scope.references[5].isWrite()).to.be.false
+
+    it 'SpreadElement with MemberExpression in AssignmentExpression', ->
+        ast = harmony.parse """
+        (function () {
+            [a, b, ...obj.rest] = array;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+        expect(scope.implicit.left).to.have.length 4
+        expect(scope.implicit.left.map((ref) => ref.identifier.name)).to.deep.equal [
+            'a'
+            'b'
+            'obj'
+            'array'
+        ]
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 1
+        expect(scope.variables[0].name).to.equal 'arguments'
+        expect(scope.references).to.have.length 4
+        expect(scope.references[0].identifier.name).to.equal 'a'
+        expect(scope.references[0].isWrite()).to.be.true
+        expect(scope.references[0].partial).to.be.true
+        expect(scope.references[0].resolved).to.be.null
+        expect(scope.references[1].identifier.name).to.equal 'b'
+        expect(scope.references[1].isWrite()).to.be.true
+        expect(scope.references[1].partial).to.be.true
+        expect(scope.references[1].resolved).to.be.null
+        expect(scope.references[2].identifier.name).to.equal 'obj'
+        expect(scope.references[2].isWrite()).to.be.false
+        expect(scope.references[3].identifier.name).to.equal 'array'
+        expect(scope.references[3].isWrite()).to.be.false
 
     it 'ObjectPattern in AssignmentExpression', ->
         ast = harmony.parse """
@@ -731,12 +1207,13 @@ describe 'ES6 destructuring assignments', ->
                 'd'
             ]
             expect(scope.variables[index].name).to.be.equal name
-        expect(scope.references).to.have.length 5
+        expect(scope.references).to.have.length 6
         for name, index in [
                 'a'
                 'b'
                 'c'
-                'd'
+                'd' # assign 20
+                'd' # assign array
                 'array'
             ]
             expect(scope.references[index].identifier.name).to.be.equal name
@@ -768,15 +1245,58 @@ describe 'ES6 destructuring assignments', ->
                 'd'
             ]
             expect(scope.variables[index].name).to.be.equal name
-        expect(scope.references).to.have.length 6
+        expect(scope.references).to.have.length 7
         for name, index in [
-                'a'
-                'b'
-                'c'
-                'd'
+                'a' # assign array
+                'b' # assign array
+                'c' # assign array
+                'd' # assign e
+                'd' # assign array
                 'e'
                 'array'
             ]
             expect(scope.references[index].identifier.name).to.be.equal name
+
+    it 'nested default values containing references and patterns in var', ->
+        ast = espree """
+        (function () {
+            var [a, b, [c, d = e] = f ] = array;
+        }());
+        """
+
+        scopeManager = escope.analyze ast, ecmaVersion: 6
+        expect(scopeManager.scopes).to.have.length 2
+
+        scope = scopeManager.scopes[0]
+        globalScope = scope
+        expect(scope.type).to.equal 'global'
+        expect(scope.variables).to.have.length 0
+        expect(scope.references).to.have.length 0
+
+        scope = scopeManager.scopes[1]
+        expect(scope.type).to.equal 'function'
+        expect(scope.variables).to.have.length 5
+        for name, index in [
+                'arguments'
+                'a'
+                'b'
+                'c'
+                'd'
+            ]
+            expect(scope.variables[index].name).to.equal name
+        expect(scope.references).to.have.length 10
+        for name, index in [
+                'a' # assign array
+                'b' # assign array
+                'c' # assign f
+                'c' # assign array
+                'd' # assign f
+                'd' # assign e
+                'd' # assign array
+                'e'
+                'f'
+                'array'
+            ]
+            expect(scope.references[index].identifier.name).to.equal name
 
 # vim: set sw=4 ts=4 et tw=80 :

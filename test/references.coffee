@@ -22,13 +22,13 @@
 #  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 expect = require('chai').expect
-harmony = require '../third_party/esprima'
+espree = require '../third_party/espree'
 escope = require '..'
 
 describe 'References:', ->
     describe 'When there is a `let` declaration on global,', ->
         it 'the reference on global should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             let a = 0;
             """
 
@@ -48,7 +48,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it 'the reference in functions should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             let a = 0;
             function foo() {
                 let b = a;
@@ -70,9 +70,31 @@ describe 'References:', ->
             expect(reference.isWrite()).to.be.false
             expect(reference.isRead()).to.be.true
 
+        it 'the reference in default parameters should be resolved.', ->
+            ast = espree """
+            let a = 0;
+            function foo(b = a) {
+            }
+            """
+
+            scopeManager = escope.analyze ast, ecmaVersion: 6
+            expect(scopeManager.scopes).to.have.length 2  # [global, foo]
+
+            scope = scopeManager.scopes[1]
+            expect(scope.variables).to.have.length 2  # [arguments, b]
+            expect(scope.references).to.have.length 2  # [b, a]
+
+            reference = scope.references[1]
+            expect(reference.from).to.equal scope
+            expect(reference.identifier.name).to.equal 'a'
+            expect(reference.resolved).to.equal scopeManager.scopes[0].variables[0]
+            expect(reference.writeExpr).to.be.undefined
+            expect(reference.isWrite()).to.be.false
+            expect(reference.isRead()).to.be.true
+
     describe 'When there is a `const` declaration on global,', ->
         it 'the reference on global should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             const a = 0;
             """
 
@@ -92,7 +114,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it 'the reference in functions should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             const a = 0;
             function foo() {
                 const b = a;
@@ -116,7 +138,7 @@ describe 'References:', ->
 
     describe 'When there is a `var` declaration on global,', ->
         it 'the reference on global should NOT be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             var a = 0;
             """
 
@@ -136,7 +158,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it 'the reference in functions should NOT be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             var a = 0;
             function foo() {
                 var b = a;
@@ -160,7 +182,7 @@ describe 'References:', ->
 
     describe 'When there is a `function` declaration on global,', ->
         it 'the reference on global should NOT be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             function a() {}
             a();
             """
@@ -181,7 +203,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.true
 
         it 'the reference in functions should NOT be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             function a() {}
             function foo() {
                 let b = a();
@@ -205,7 +227,7 @@ describe 'References:', ->
 
     describe 'When there is a `class` declaration on global,', ->
         it 'the reference on global should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             class A {}
             let b = new A();
             """
@@ -226,7 +248,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.true
 
         it 'the reference in functions should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             class A {}
             function foo() {
                 let b = new A();
@@ -250,7 +272,7 @@ describe 'References:', ->
 
     describe 'When there is a `let` declaration in functions,', ->
         it 'the reference on the function should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             function foo() {
                 let a = 0;
             }
@@ -272,7 +294,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it 'the reference in nested functions should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             function foo() {
                 let a = 0;
                 function bar() {
@@ -298,7 +320,7 @@ describe 'References:', ->
 
     describe 'When there is a `var` declaration in functions,', ->
         it 'the reference on the function should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             function foo() {
                 var a = 0;
             }
@@ -320,7 +342,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it 'the reference in nested functions should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             function foo() {
                 var a = 0;
                 function bar() {
@@ -346,7 +368,7 @@ describe 'References:', ->
 
     describe 'When there is a `let` declaration with destructuring assignment', ->
         it '"let [a] = [1];", the reference should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             let [a] = [1];
             """
 
@@ -366,7 +388,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it '"let {a} = {a: 1};", the reference should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             let {a} = {a: 1};
             """
 
@@ -386,7 +408,7 @@ describe 'References:', ->
             expect(reference.isRead()).to.be.false
 
         it '"let {a: {a}} = {a: {a: 1}};", the reference should be resolved.', ->
-            ast = harmony.parse """
+            ast = espree """
             let {a: {a}} = {a: {a: 1}};
             """
 

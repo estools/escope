@@ -261,11 +261,11 @@ export default class Referencer extends esrecurse.Visitor {
         letOrConstDecl = node.left;
         this.visitVariableDeclaration(this.currentScope(), Variable.Variable, letOrConstDecl, 0);
         this.visitPattern(letOrConstDecl.declarations[0].id, (pattern) => {
-            this.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true);
+            this.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true, true);
         });
     }
 
-    referencingDefaultValue(pattern, assignments, maybeImplicitGlobal = null) {
+    referencingDefaultValue(pattern, assignments, maybeImplicitGlobal, init) {
         const scope = this.currentScope();
         assignments.forEach(assignment => {
             scope.__referencing(
@@ -273,7 +273,8 @@ export default class Referencer extends esrecurse.Visitor {
                 Reference.WRITE,
                 assignment.right,
                 maybeImplicitGlobal,
-                pattern !== assignment.left);
+                pattern !== assignment.left,
+                init);
         });
     }
 
@@ -317,6 +318,7 @@ export default class Referencer extends esrecurse.Visitor {
         // Consider this function is in the MethodDefinition.
         this.scopeManager.__nestFunctionScope(node, this.isInnerMethodDefinition);
 
+        // Process parameter declarations.
         for (i = 0, iz = node.params.length; i < iz; ++i) {
             this.visitPattern(node.params[i], {processRightHandNodes: true}, (pattern, info) => {
                 this.currentScope().__define(pattern,
@@ -327,7 +329,7 @@ export default class Referencer extends esrecurse.Visitor {
                         info.rest
                     ));
 
-                this.referencingDefaultValue(pattern, info.assignments);
+                this.referencingDefaultValue(pattern, info.assignments, null, true);
             });
         }
 
@@ -417,7 +419,7 @@ export default class Referencer extends esrecurse.Visitor {
             if (node.left.type === Syntax.VariableDeclaration) {
                 this.visit(node.left);
                 this.visitPattern(node.left.declarations[0].id, (pattern) => {
-                    this.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true);
+                    this.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true, true);
                 });
             } else {
                 this.visitPattern(node.left, {processRightHandNodes: true}, (pattern, info) => {
@@ -428,8 +430,8 @@ export default class Referencer extends esrecurse.Visitor {
                             node: node
                         };
                     }
-                    this.referencingDefaultValue(pattern, info.assignments, maybeImplicitGlobal);
-                    this.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true);
+                    this.referencingDefaultValue(pattern, info.assignments, maybeImplicitGlobal, false);
+                    this.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, true, false);
                 });
             }
             this.visit(node.right);
@@ -455,10 +457,10 @@ export default class Referencer extends esrecurse.Visitor {
                 ));
 
             if (!fromTDZ) {
-                this.referencingDefaultValue(pattern, info.assignments);
+                this.referencingDefaultValue(pattern, info.assignments, null, true);
             }
             if (init) {
-                this.currentScope().__referencing(pattern, Reference.WRITE, init, null, !info.topLevel);
+                this.currentScope().__referencing(pattern, Reference.WRITE, init, null, !info.topLevel, true);
             }
         });
     }
@@ -474,8 +476,8 @@ export default class Referencer extends esrecurse.Visitor {
                             node: node
                         };
                     }
-                    this.referencingDefaultValue(pattern, info.assignments, maybeImplicitGlobal);
-                    this.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !info.topLevel);
+                    this.referencingDefaultValue(pattern, info.assignments, maybeImplicitGlobal, false);
+                    this.currentScope().__referencing(pattern, Reference.WRITE, node.right, maybeImplicitGlobal, !info.topLevel, false);
                 });
             } else {
                 this.currentScope().__referencing(node.left, Reference.RW, node.right);
@@ -499,7 +501,7 @@ export default class Referencer extends esrecurse.Visitor {
                     null,
                     null
                 ));
-            this.referencingDefaultValue(pattern, info.assignments);
+            this.referencingDefaultValue(pattern, info.assignments, null, true);
         });
         this.visit(node.body);
 

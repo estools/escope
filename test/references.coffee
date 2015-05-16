@@ -427,4 +427,117 @@ describe 'References:', ->
             expect(reference.isWrite()).to.be.true
             expect(reference.isRead()).to.be.false
 
+    describe 'Reference.init should be a boolean value of whether it is one to initialize or not.', ->
+        trueCodes = [
+            'var a = 0;'
+            'let a = 0;'
+            'const a = 0;'
+            'var [a] = [];'
+            'let [a] = [];'
+            'const [a] = [];'
+            'var [a = 1] = [];'
+            'let [a = 1] = [];'
+            'const [a = 1] = [];'
+            'var {a} = {};'
+            'let {a} = {};'
+            'const {a} = {};'
+            'var {b: a} = {};'
+            'let {b: a} = {};'
+            'const {b: a} = {};'
+            'var {b: a = 0} = {};'
+            'let {b: a = 0} = {};'
+            'const {b: a = 0} = {};'
+            'for (var a in []);'
+            'for (let a in []);'
+            'for (var [a] in []);'
+            'for (let [a] in []);'
+            'for (var [a = 0] in []);'
+            'for (let [a = 0] in []);'
+            'for (var {a} in []);'
+            'for (let {a} in []);'
+            'for (var {a = 0} in []);'
+            'for (let {a = 0} in []);'
+            'new function(a = 0) {}'
+            'new function([a = 0] = []) {}'
+            'new function({b: a = 0} = {}) {}'
+        ]
+        for code in trueCodes then do (code) ->
+            it '"' + code + '", all references should be true.', ->
+                ast = espree code
+
+                scopeManager = escope.analyze ast, ecmaVersion: 6
+                expect(scopeManager.scopes).to.be.length.of.at.least 1
+
+                scope = scopeManager.scopes[scopeManager.scopes.length - 1]
+                expect(scope.variables).to.have.length.of.at.least 1
+                expect(scope.references).to.have.length.of.at.least 1
+
+                for reference in scope.references
+                    expect(reference.identifier.name).to.equal 'a'
+                    expect(reference.isWrite()).to.be.true
+                    expect(reference.init).to.be.true
+
+        falseCodes = [
+            'let a; a = 0;'
+            'let a; [a] = [];'
+            'let a; [a = 1] = [];'
+            'let a; ({a}) = {};'
+            'let a; ({b: a}) = {};'
+            'let a; ({b: a = 0}) = {};'
+            'let a; for (a in []);'
+            'let a; for ([a] in []);'
+            'let a; for ([a = 0] in []);'
+            'let a; for ({a} in []);'
+            'let a; for ({a = 0} in []);'
+        ]
+        for code in falseCodes then do (code) ->
+            it '"' + code + '", all references should be false.', ->
+                ast = espree code
+
+                scopeManager = escope.analyze ast, ecmaVersion: 6
+                expect(scopeManager.scopes).to.be.length.of.at.least 1
+
+                scope = scopeManager.scopes[scopeManager.scopes.length - 1]
+                expect(scope.variables).to.have.length 1
+                expect(scope.references).to.have.length.of.at.least 1
+
+                for reference in scope.references
+                    expect(reference.identifier.name).to.equal 'a'
+                    expect(reference.isWrite()).to.be.true
+                    expect(reference.init).to.be.false
+
+        falseCodes = [
+            'let a; let b = a;'
+            'let a; let [b] = a;'
+            'let a; let [b = a] = [];'
+            'let a; for (var b in a);'
+            'let a; for (var [b = a] in []);'
+            'let a; for (let b in a);'
+            'let a; for (let [b = a] in []);'
+            'let a,b; b = a;'
+            'let a,b; [b] = a;'
+            'let a,b; [b = a] = [];'
+            'let a,b; for (b in a);'
+            'let a,b; for ([b = a] in []);'
+            'let a; a.foo = 0;'
+            'let a,b; b = a.foo;'
+        ]
+        for code in falseCodes then do (code) ->
+            it '"' + code + '", readonly references of "a" should be undefined.', ->
+                ast = espree code
+
+                scopeManager = escope.analyze ast, ecmaVersion: 6
+                expect(scopeManager.scopes).to.be.length.of.at.least 1
+
+                scope = scopeManager.scopes[0]
+                expect(scope.variables).to.have.length.of.at.least 1
+                expect(scope.variables[0].name).to.equal 'a'
+
+                references = scope.variables[0].references
+                expect(references).to.have.length.of.at.least 1
+
+                for reference in references
+                    expect(reference.isRead()).to.be.true
+                    expect(reference.init).to.be.undefined
+
 # vim: set sw=4 ts=4 et tw=80 :

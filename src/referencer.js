@@ -149,10 +149,10 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     close(node) {
+        if (this.scopeManager.isInstrumentingTree()) {
+            node.scope = this.currentScope();
+        }
         while (this.currentScope() && node === this.currentScope().block) {
-            if (this.scopeManager.isInstrumentingTree()) {
-                node.scope = this.currentScope();
-            }
             this.scopeManager.__currentScope = this.currentScope().__close(this.scopeManager);
         }
     }

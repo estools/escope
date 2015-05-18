@@ -74,21 +74,15 @@ class PatternVisitor extends esrecurse.Visitor {
 
     AssignmentPattern(pattern) {
         this.assignments.push(pattern);
-        try {
-            this.visit(pattern.left);
-            this.rightHandNodes.push(pattern.right);
-        } finally {
-            this.assignments.pop();
-        }
+        this.visit(pattern.left);
+        this.rightHandNodes.push(pattern.right);
+        this.assignments.pop();
     }
 
     RestElement(pattern) {
         this.restElements.push(pattern);
-        try {
-            this.visit(pattern.argument);
-        } finally {
-            this.restElements.pop();
-        }
+        this.visit(pattern.argument);
+        this.restElements.pop();
     }
 
     MemberExpression(node) {
@@ -127,12 +121,9 @@ class PatternVisitor extends esrecurse.Visitor {
 
     AssignmentExpression(node) {
         this.assignments.push(node);
-        try {
-            this.visit(node.left);
-            this.rightHandNodes.push(node.right);
-        } finally {
-            this.assignments.pop();
-        }
+        this.visit(node.left);
+        this.rightHandNodes.push(node.right);
+        this.assignments.pop();
     }
 
     CallExpression(node) {

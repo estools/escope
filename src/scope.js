@@ -344,7 +344,7 @@ export default class Scope {
         }
     }
 
-    __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial) {
+    __referencing(node, assign, writeExpr, maybeImplicitGlobal, partial, init) {
         // because Array element may be null
         if (!node || node.type !== Syntax.Identifier) {
             return;
@@ -355,7 +355,7 @@ export default class Scope {
             return;
         }
 
-        let ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial);
+        let ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial, !!init);
         this.references.push(ref);
         this.__left.push(ref);
     }

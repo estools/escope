@@ -30,7 +30,7 @@
     "browserify": "^9.0.3",
     "chai": "^2.1.1",
     "coffee-script": "^1.9.1",
-    "espree": "^1.11.0",
+    "espree": "^2.0.2",
     "esprima": "^2.1.0",
     "gulp": "~3.8.10",
     "gulp-babel": "^4.0.0",

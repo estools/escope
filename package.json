@@ -49,7 +49,7 @@
     "minimist": "^1.1.0",
     "vinyl-source-stream": "^1.0.0"
   },
-  "license": "BSD",
+  "license": "BSD-2-Clause",
   "scripts": {
     "test": "gulp travis",
     "unit-test": "gulp test",

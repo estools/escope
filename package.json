@@ -1,7 +1,7 @@
 {
   "name": "escope",
   "description": "ECMAScript scope analyzer",
-  "homepage": "http://github.com/estools/escope.html",
+  "homepage": "http://github.com/estools/escope",
   "main": "lib/index.js",
   "version": "3.0.1",
   "engines": {
@@ -49,12 +49,7 @@
     "minimist": "^1.1.0",
     "vinyl-source-stream": "^1.0.0"
   },
-  "licenses": [
-    {
-      "type": "BSD",
-      "url": "http://github.com/estools/escope/raw/master/LICENSE.BSD"
-    }
-  ],
+  "license": "BSD",
   "scripts": {
     "test": "gulp travis",
     "unit-test": "gulp test",

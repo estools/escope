@@ -227,6 +227,8 @@ export default class Scope {
             this.upper.childScopes.push(this);
         }
 
+        this.__declaredVariables = scopeManager.__declaredVariables;
+
         registerScope(scopeManager, this);
     }
 
@@ -315,6 +317,19 @@ export default class Scope {
         this.through.push(ref);
     }
 
+    __addDeclaredVariablesOfNode(variable, node) {
+        if (node == null) {
+            return;
+        }
+
+        var variables = this.__declaredVariables.get(node);
+        if (variables == null) {
+            variables = [];
+            this.__declaredVariables.set(node, variables);
+        }
+        variables.push(variable);
+    }
+
     __defineGeneric(name, set, variables, node, def) {
         var variable;
 
@@ -327,6 +342,10 @@ export default class Scope {
 
         if (def) {
             variable.defs.push(def);
+            if (def.type !== Variable.TDZ) {
+                this.__addDeclaredVariablesOfNode(variable, def.node);
+                this.__addDeclaredVariablesOfNode(variable, def.parent);
+            }
         }
         if (node) {
             variable.identifiers.push(node);

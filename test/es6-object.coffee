@@ -45,7 +45,7 @@ describe 'ES6 object', ->
         scope = scopeManager.scopes[1]
         expect(scope.type).to.be.equal 'function'
         expect(scope.block.type).to.be.equal 'FunctionExpression'
-        expect(scope.isStrict).to.be.true
+        expect(scope.isStrict).to.be.false
         expect(scope.variables).to.have.length 1
         expect(scope.variables[0].name).to.be.equal 'arguments'
         expect(scope.references).to.have.length 0

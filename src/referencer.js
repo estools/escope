@@ -387,7 +387,7 @@ export default class Referencer extends esrecurse.Visitor {
             this.visit(node.key);
         }
 
-        isMethodDefinition = node.type === Syntax.MethodDefinition || node.method;
+        isMethodDefinition = node.type === Syntax.MethodDefinition;
         if (isMethodDefinition) {
             previous = this.pushInnerMethodDefinition(true);
         }

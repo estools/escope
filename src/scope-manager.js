@@ -83,6 +83,7 @@ export default class ScopeManager {
      *
      * "are declared by the node" means the node is same as `Variable.defs[].node` or `Variable.defs[].parent`.
      * If the node declares nothing, this method returns an empty array.
+     * CAUTION: This API is experimental. See https://github.com/estools/escope/pull/69 for more details.
      *
      * @param {Esprima.Node} node - a node to get.
      * @returns {Variable[]} variables that declared by the node.

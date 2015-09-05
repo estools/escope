@@ -47,21 +47,16 @@ class PatternVisitor extends esrecurse.Visitor {
         });
     }
 
-    ObjectPattern(pattern) {
-        var i, iz, property;
-        for (i = 0, iz = pattern.properties.length; i < iz; ++i) {
-            property = pattern.properties[i];
-
-            // Computed property's key is a right hand node.
-            if (property.computed) {
-                this.rightHandNodes.push(property.key);
-            }
-
-            // If it's shorthand, its key is same as its value.
-            // If it's shorthand and has its default value, its key is same as its value.left (the value is AssignmentPattern).
-            // If it's not shorthand, the name of new variable is its value's.
-            this.visit(property.value);
+    Property(property) {
+        // Computed property's key is a right hand node.
+        if (property.computed) {
+            this.rightHandNodes.push(property.key);
         }
+
+        // If it's shorthand, its key is same as its value.
+        // If it's shorthand and has its default value, its key is same as its value.left (the value is AssignmentPattern).
+        // If it's not shorthand, the name of new variable is its value's.
+        this.visit(property.value);
     }
 
     ArrayPattern(pattern) {
@@ -107,16 +102,6 @@ class PatternVisitor extends esrecurse.Visitor {
 
     ArrayExpression(node) {
         node.elements.forEach(this.visit, this);
-    }
-
-    ObjectExpression(node) {
-        node.properties.forEach(property => {
-            // Computed property's key is a right hand node.
-            if (property.computed) {
-                this.rightHandNodes.push(property.key);
-            }
-            this.visit(property.value);
-        });
     }
 
     AssignmentExpression(node) {

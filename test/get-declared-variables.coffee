@@ -239,4 +239,13 @@ describe 'ScopeManager.prototype.getDeclaredVariables', ->
         ]
 
 
+    it 'should not get duplicate even if it\'s declared twice', ->
+        ast = espree """
+        var a = 0, a = 1;
+        """
+
+        verify ast, 'VariableDeclaration', [
+            ['a']
+        ]
+
 # vim: set sw=4 ts=4 et tw=80 :

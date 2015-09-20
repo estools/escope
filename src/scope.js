@@ -327,7 +327,9 @@ export default class Scope {
             variables = [];
             this.__declaredVariables.set(node, variables);
         }
-        variables.push(variable);
+        if (variables.indexOf(variable) === -1) {
+            variables.push(variable);
+        }
     }
 
     __defineGeneric(name, set, variables, node, def) {

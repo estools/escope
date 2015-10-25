@@ -149,7 +149,7 @@ export default class Scope {
          * a few exceptions to this rule. With 'global' and 'with' scopes you
          * can only decide at runtime which variable a reference refers to.
          * Moreover, if 'eval()' is used in a scope, it might introduce new
-         * bindings in this or its prarent scopes.
+         * bindings in this or its parent scopes.
          * All those scopes are considered 'dynamic'.
          * @member {boolean} Scope#dynamic
          */

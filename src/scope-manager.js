@@ -73,7 +73,7 @@ export default class ScopeManager {
         return this.__options.sourceType === 'module';
     }
 
-    // Returns appropliate scope for this node.
+    // Returns appropriate scope for this node.
     __get(node) {
         return this.__nodeToScope.get(node);
     }

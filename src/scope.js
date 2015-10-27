@@ -56,7 +56,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
     }
 
     if (scope.type === 'function') {
-        if (block.type === 'Program') {
+        if (block.type === Syntax.Program) {
             body = block;
         } else {
             body = block.body;
@@ -71,7 +71,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
     if (useDirective) {
         for (i = 0, iz = body.body.length; i < iz; ++i) {
             stmt = body.body[i];
-            if (stmt.type !== 'DirectiveStatement') {
+            if (stmt.type !== Syntax.DirectiveStatement) {
                 break;
             }
             if (stmt.raw === '"use strict"' || stmt.raw === '\'use strict\'') {
@@ -118,7 +118,7 @@ function registerScope(scopeManager, scope) {
 function shouldBeStatically(def) {
     return (
         (def.type === Variable.ClassName) ||
-        (def.type === Variable.Variable && def.parent.kind !== "var")
+        (def.type === Variable.Variable && def.parent.kind !== 'var')
     );
 }
 

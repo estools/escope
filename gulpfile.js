@@ -51,23 +51,24 @@ var ESLINT_OPTION = {
         'no-shadow': 0,
         'no-new': 0,
         'no-underscore-dangle': 0,
-        'no-multi-spaces': false,
+        'no-multi-spaces': 0,
         'no-native-reassign': 0,
         'no-loop-func': 0,
         'no-lone-blocks': 0
     },
-    settings: {
-        "ecmascript": 6,
-        "jsx": false
+    ecmaFeatures: {
+        jsx: false,
+        modules: true
     },
     env: {
-        'node': true
+        node: true,
+        es6: true
     }
 };
 
 var build = lazypipe()
     .pipe(sourcemaps.init)
-    .pipe(babel)
+    .pipe(babel, { presets: ['es2015'] })
     .pipe(sourcemaps.write)
     .pipe(gulp.dest, 'lib');
 

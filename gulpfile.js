@@ -32,16 +32,18 @@ var gulp = require('gulp'),
     filter = require('gulp-filter'),
     tagVersion = require('gulp-tag-version'),
     sourcemaps = require('gulp-sourcemaps'),
-    coffee = require('gulp-coffee'),
     plumber = require('gulp-plumber'),
     source = require('vinyl-source-stream'),
     browserify = require('browserify'),
     lazypipe = require('lazypipe'),
     eslint = require('gulp-eslint'),
-    coffee = require('coffee-script/register'),
     fs = require('fs');
 
-var TEST = [ 'test/*.coffee' ];
+require('babel-register')({
+    only: /escope\/(src|test)\//
+});
+
+var TEST = [ 'test/*.js' ];
 var SOURCE = [ 'src/**/*.js' ];
 
 var ESLINT_OPTION = {

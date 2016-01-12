@@ -38,7 +38,8 @@ var gulp = require('gulp'),
     browserify = require('browserify'),
     lazypipe = require('lazypipe'),
     eslint = require('gulp-eslint'),
-    coffee = require('coffee-script/register');
+    coffee = require('coffee-script/register'),
+    fs = require('fs');
 
 var TEST = [ 'test/*.coffee' ];
 var SOURCE = [ 'src/**/*.js' ];
@@ -66,9 +67,11 @@ var ESLINT_OPTION = {
     }
 };
 
+var BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
+
 var build = lazypipe()
     .pipe(sourcemaps.init)
-    .pipe(babel, { presets: ['es2015'] })
+    .pipe(babel, BABEL_OPTIONS)
     .pipe(sourcemaps.write)
     .pipe(gulp.dest, 'lib');
 

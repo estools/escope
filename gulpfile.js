@@ -32,15 +32,18 @@ var gulp = require('gulp'),
     filter = require('gulp-filter'),
     tagVersion = require('gulp-tag-version'),
     sourcemaps = require('gulp-sourcemaps'),
-    coffee = require('gulp-coffee'),
     plumber = require('gulp-plumber'),
     source = require('vinyl-source-stream'),
     browserify = require('browserify'),
     lazypipe = require('lazypipe'),
     eslint = require('gulp-eslint'),
-    coffee = require('coffee-script/register');
+    fs = require('fs');
 
-var TEST = [ 'test/*.coffee' ];
+require('babel-register')({
+    only: /escope\/(src|test)\//
+});
+
+var TEST = [ 'test/*.js' ];
 var SOURCE = [ 'src/**/*.js' ];
 
 var ESLINT_OPTION = {
@@ -66,9 +69,11 @@ var ESLINT_OPTION = {
     }
 };
 
+var BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
+
 var build = lazypipe()
     .pipe(sourcemaps.init)
-    .pipe(babel, { presets: ['es2015'] })
+    .pipe(babel, BABEL_OPTIONS)
     .pipe(sourcemaps.write)
     .pipe(gulp.dest, 'lib');
 

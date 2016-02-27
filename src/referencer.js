@@ -575,6 +575,10 @@ export default class Referencer extends esrecurse.Visitor {
         let local = (node.id || node.local);
         this.visit(local);
     }
+
+    MetaProperty() {
+        // do nothing.
+    }
 }
 
 /* vim: set sw=4 ts=4 et tw=80 : */

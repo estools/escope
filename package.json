@@ -30,7 +30,7 @@
     "babel-register": "^6.3.13",
     "browserify": "^13.0.0",
     "chai": "^3.4.1",
-    "espree": "^2.2.5",
+    "espree": "^3.1.1",
     "esprima": "^2.7.1",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",

@@ -38,7 +38,7 @@ describe('fallback option', function() {
         }).to.throw("Unknown node type NumericLiteral");
     });
 
-    it('should not raise an error even if it encountered an unknown node.', function() {
+    it('should not raise an error even if it encountered an unknown node when fallback is iteration.', function() {
         const ast = esprima.parse(`
             var foo = 0;
         `);
@@ -47,6 +47,16 @@ describe('fallback option', function() {
 
         analyze(ast); // default is `fallback: 'iteration'`
         analyze(ast, {fallback: 'iteration'});
+    });
+
+    it('should not raise an error even if it encountered an unknown node when fallback is a function.', function() {
+        const ast = esprima.parse(`
+            var foo = 0;
+        `);
+
+        ast.body[0].declarations[0].init.type = 'NumericLiteral';
+
+        analyze(ast, {fallback: node => Object.keys(node)});
     });
 });
 

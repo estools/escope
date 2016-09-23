@@ -222,11 +222,13 @@ export default class Referencer extends esrecurse.Visitor {
             });
         }
 
-        // Skip BlockStatement to prevent creating BlockStatement scope.
-        if (node.body.type === Syntax.BlockStatement) {
-            this.visitChildren(node.body);
-        } else {
-            this.visit(node.body);
+        if (node.body) {
+            // Skip BlockStatement to prevent creating BlockStatement scope.
+            if (node.body.type === Syntax.BlockStatement) {
+                this.visitChildren(node.body);
+            } else {
+                this.visit(node.body);
+            }
         }
 
         this.close(node);

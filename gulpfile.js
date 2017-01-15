@@ -40,7 +40,7 @@ var gulp = require('gulp'),
     fs = require('fs');
 
 require('babel-register')({
-    only: /escope\/(src|test)\//
+    only: /eslint-scope\/(src|test)\//
 });
 
 var TEST = [ 'test/*.js' ];

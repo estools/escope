@@ -94,7 +94,7 @@ gulp.task('browserify', [ 'build' ], function () {
     .pipe(gulp.dest('build'))
 });
 
-gulp.task('test', [ 'build' ], function () {
+gulp.task('test', [ 'lint', 'build' ], function () {
     return gulp.src(TEST)
         .pipe(mocha({
             reporter: 'spec',

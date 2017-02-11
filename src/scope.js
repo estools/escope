@@ -61,6 +61,10 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
         } else {
             body = block.body;
         }
+
+        if (!body) {
+            return false;
+        }
     } else if (scope.type === 'global') {
         body = block;
     } else {

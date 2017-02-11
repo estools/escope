@@ -24,7 +24,6 @@
 "use strict";
 
 const Syntax = require('estraverse').Syntax;
-const Map = require('es6-map');
 
 const Reference = require('./reference');
 const Variable = require('./variable');

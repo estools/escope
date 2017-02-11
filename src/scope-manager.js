@@ -23,7 +23,6 @@
 */
 "use strict";
 
-const WeakMap = require('es6-weak-map');
 const Scope = require('./scope');
 const assert = require('assert');
 

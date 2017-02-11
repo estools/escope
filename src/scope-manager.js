@@ -21,29 +21,28 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+"use strict";
 
-import WeakMap from 'es6-weak-map';
-import Scope from './scope';
-import assert from 'assert';
+const WeakMap = require('es6-weak-map');
+const Scope = require('./scope');
+const assert = require('assert');
 
-import {
-    GlobalScope,
-    CatchScope,
-    WithScope,
-    ModuleScope,
-    ClassScope,
-    SwitchScope,
-    FunctionScope,
-    ForScope,
-    TDZScope,
-    FunctionExpressionNameScope,
-    BlockScope
-} from './scope';
+const GlobalScope = Scope.GlobalScope;
+const CatchScope = Scope.CatchScope;
+const WithScope = Scope.WithScope;
+const ModuleScope = Scope.ModuleScope;
+const ClassScope = Scope.ClassScope;
+const SwitchScope = Scope.SwitchScope;
+const FunctionScope = Scope.FunctionScope;
+const ForScope = Scope.ForScope;
+const TDZScope = Scope.TDZScope;
+const FunctionExpressionNameScope = Scope.FunctionExpressionNameScope;
+const BlockScope = Scope.BlockScope;
 
 /**
  * @class ScopeManager
  */
-export default class ScopeManager {
+class ScopeManager {
     constructor(options) {
         this.scopes = [];
         this.globalScope = null;
@@ -241,5 +240,7 @@ export default class ScopeManager {
         return this.__options.ecmaVersion >= 6;
     }
 }
+
+module.exports = ScopeManager;
 
 /* vim: set sw=4 ts=4 et tw=80 : */

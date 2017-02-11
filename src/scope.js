@@ -21,14 +21,15 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+"use strict";
 
-import { Syntax } from 'estraverse';
-import Map from 'es6-map';
+const Syntax = require('estraverse').Syntax;
+const Map = require('es6-map');
 
-import Reference from './reference';
-import Variable from './variable';
-import Definition from './definition';
-import assert from 'assert';
+const Reference = require('./reference');
+const Variable = require('./variable');
+const Definition = require('./definition').Definition;
+const assert = require('assert');
 
 function isStrictScope(scope, block, isMethodDefinition, useDirective) {
     var body, i, iz, stmt, expr;
@@ -129,7 +130,7 @@ function shouldBeStatically(def) {
 /**
  * @class Scope
  */
-export default class Scope {
+class Scope {
     constructor(scopeManager, type, upperScope, block, isMethodDefinition) {
         /**
          * One of 'TDZ', 'module', 'block', 'switch', 'function', 'catch', 'with', 'function', 'class', 'global'.
@@ -462,7 +463,7 @@ export default class Scope {
     }
 }
 
-export class GlobalScope extends Scope {
+class GlobalScope extends Scope {
     constructor(scopeManager, block) {
         super(scopeManager, 'global', null, block, false);
         this.implicit = {
@@ -518,13 +519,13 @@ export class GlobalScope extends Scope {
     }
 }
 
-export class ModuleScope extends Scope {
+class ModuleScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'module', upperScope, block, false);
     }
 }
 
-export class FunctionExpressionNameScope extends Scope {
+class FunctionExpressionNameScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'function-expression-name', upperScope, block, false);
         this.__define(block.id,
@@ -540,13 +541,13 @@ export class FunctionExpressionNameScope extends Scope {
     }
 }
 
-export class CatchScope extends Scope {
+class CatchScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'catch', upperScope, block, false);
     }
 }
 
-export class WithScope extends Scope {
+class WithScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'with', upperScope, block, false);
     }
@@ -567,25 +568,25 @@ export class WithScope extends Scope {
     }
 }
 
-export class TDZScope extends Scope {
+class TDZScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'TDZ', upperScope, block, false);
     }
 }
 
-export class BlockScope extends Scope {
+class BlockScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'block', upperScope, block, false);
     }
 }
 
-export class SwitchScope extends Scope {
+class SwitchScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'switch', upperScope, block, false);
     }
 }
 
-export class FunctionScope extends Scope {
+class FunctionScope extends Scope {
     constructor(scopeManager, upperScope, block, isMethodDefinition) {
         super(scopeManager, 'function', upperScope, block, isMethodDefinition);
 
@@ -636,16 +637,31 @@ export class FunctionScope extends Scope {
     }
 }
 
-export class ForScope extends Scope {
+ class ForScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'for', upperScope, block, false);
     }
 }
 
-export class ClassScope extends Scope {
+class ClassScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'class', upperScope, block, false);
     }
 }
+
+module.exports = {
+    Scope,
+    GlobalScope,
+    ModuleScope,
+    FunctionExpressionNameScope,
+    CatchScope,
+    WithScope,
+    TDZScope,
+    BlockScope,
+    SwitchScope,
+    FunctionScope,
+    ForScope,
+    ClassScope
+};
 
 /* vim: set sw=4 ts=4 et tw=80 : */

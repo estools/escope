@@ -19,11 +19,11 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"use strict";
 
-
-import { expect } from 'chai';
-import { analyze } from '..';
-import { parse } from 'esprima';
+const expect = require('chai').expect;
+const parse = require('../third_party/esprima').parse;
+const analyze = require('..').analyze;
 
 describe('implicit global reference', function() {
     it('assignments global scope', function() {
@@ -32,7 +32,7 @@ describe('implicit global reference', function() {
             x = 300;
         `);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.defs.map(def => def.type)))).to.be.eql(
             [
@@ -53,7 +53,7 @@ describe('implicit global reference', function() {
             x = 300;
         `);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.defs.map(def => def.type)))).to.be.eql(
             [
@@ -77,7 +77,7 @@ describe('implicit global reference', function() {
             }
         `);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.defs.map(def => def.type)))).to.be.eql(
             [
@@ -103,7 +103,7 @@ describe('implicit global reference', function() {
             }
         `);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
@@ -133,7 +133,7 @@ describe('implicit global reference', function() {
             }
         `);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
@@ -161,7 +161,7 @@ describe('implicit global reference', function() {
                 for (x in y) { }
             }`);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
@@ -191,7 +191,7 @@ describe('implicit global reference', function() {
             }
         `);
 
-        const { scopes } = analyze(ast);
+        const scopes = analyze(ast).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [

@@ -21,6 +21,7 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+"use strict";
 
 const READ = 0x1;
 const WRITE = 0x2;
@@ -30,7 +31,7 @@ const RW = READ | WRITE;
  * A Reference represents a single occurrence of an identifier in code.
  * @class Reference
  */
-export default class Reference {
+class Reference {
     constructor(ident, scope, flag,  writeExpr, maybeImplicitGlobal, partial, init) {
         /**
          * Identifier syntax node.
@@ -150,5 +151,7 @@ Reference.WRITE = WRITE;
  * @private
  */
 Reference.RW = RW;
+
+module.exports = Reference;
 
 /* vim: set sw=4 ts=4 et tw=80 : */

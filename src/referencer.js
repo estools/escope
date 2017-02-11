@@ -21,13 +21,18 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-import { Syntax } from 'estraverse';
-import esrecurse from 'esrecurse';
-import Reference from './reference';
-import Variable from './variable';
-import PatternVisitor from './pattern-visitor';
-import { ParameterDefinition, Definition } from './definition';
-import assert from 'assert';
+"use strict";
+
+const Syntax = require('estraverse').Syntax;
+const esrecurse = require('esrecurse');
+const Reference = require('./reference');
+const Variable = require('./variable');
+const PatternVisitor = require('./pattern-visitor');
+const definition = require('./definition');
+const assert = require('assert');
+
+const ParameterDefinition = definition.ParameterDefinition;
+const Definition = definition.Definition;
 
 function traverseIdentifierInPattern(options, rootPattern, referencer, callback) {
     // Call the callback at left hand identifier nodes, and Collect right hand nodes.
@@ -90,7 +95,7 @@ class Importer extends esrecurse.Visitor {
 }
 
 // Referencing variables and creating bindings.
-export default class Referencer extends esrecurse.Visitor {
+class Referencer extends esrecurse.Visitor {
     constructor(options, scopeManager) {
         super(null, options);
         this.options = options;
@@ -584,5 +589,7 @@ export default class Referencer extends esrecurse.Visitor {
         // do nothing.
     }
 }
+
+module.exports = Referencer;
 
 /* vim: set sw=4 ts=4 et tw=80 : */

@@ -19,11 +19,11 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"use strict";
 
-
-import { expect } from 'chai';
-import { analyze } from '..';
-import { parse } from 'esprima';
+const expect = require('chai').expect;
+const parse = require('../third_party/esprima').parse;
+const analyze = require('..').analyze;
 
 describe('optimistic', function() {
     it('direct call to eval', function() {
@@ -37,7 +37,7 @@ describe('optimistic', function() {
             }
         `);
 
-        const { scopes } = analyze(ast, {optimistic: true});
+        const scopes = analyze(ast, {optimistic: true}).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
@@ -67,7 +67,7 @@ describe('optimistic', function() {
             }
         `);
 
-        const { scopes } = analyze(ast, {optimistic: true});
+        const scopes = analyze(ast, {optimistic: true}).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [

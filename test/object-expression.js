@@ -1,5 +1,7 @@
-import { expect } from 'chai';
-import { analyze } from '..';
+"use strict";
+
+const expect = require('chai').expect;
+const analyze = require('..').analyze;
 
 describe('object expression', function() {
     it('doesn\'t require property type', function() {

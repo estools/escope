@@ -26,7 +26,6 @@
 
 var gulp = require('gulp'),
     mocha = require('gulp-mocha'),
-    babel = require('gulp-babel'),
     git = require('gulp-git'),
     bump = require('gulp-bump'),
     filter = require('gulp-filter'),
@@ -37,10 +36,6 @@ var gulp = require('gulp'),
     lazypipe = require('lazypipe'),
     eslint = require('gulp-eslint'),
     fs = require('fs');
-
-require('babel-register')({
-    only: /eslint-scope\/(src|test)\//
-});
 
 var TEST = [ 'test/*.js' ];
 var SOURCE = [ 'src/**/*.js' ];
@@ -68,32 +63,12 @@ var ESLINT_OPTION = {
     }
 };
 
-var BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
-
-var build = lazypipe()
-    .pipe(sourcemaps.init)
-    .pipe(babel, BABEL_OPTIONS)
-    .pipe(sourcemaps.write)
-    .pipe(gulp.dest, 'lib');
-
-gulp.task('build-for-watch', function () {
-    return gulp.src(SOURCE).pipe(plumber()).pipe(build());
-});
-
-gulp.task('build', function () {
-    return gulp.src(SOURCE).pipe(build());
-});
-
-gulp.task('test', [ 'lint', 'build' ], function () {
+gulp.task('test', function () {
     return gulp.src(TEST)
         .pipe(mocha({
             reporter: 'spec',
             timeout: 100000 // 100s
         }));
-});
-
-gulp.task('watch', [ 'build-for-watch' ], function () {
-    gulp.watch(SOURCE, [ 'build-for-watch' ]);
 });
 
 // Currently, not works for ES6.
@@ -135,9 +110,9 @@ function inc(importance) {
         }));
 }
 
-gulp.task('patch', [ 'build' ], function () { return inc('patch'); })
-gulp.task('minor', [ 'build' ], function () { return inc('minor'); })
-gulp.task('major', [ 'build' ], function () { return inc('major'); })
+gulp.task('patch', function () { return inc('patch'); })
+gulp.task('minor', function () { return inc('minor'); })
+gulp.task('major', function () { return inc('major'); })
 
 gulp.task('travis', [ 'test' ]);
 gulp.task('default', [ 'travis' ]);

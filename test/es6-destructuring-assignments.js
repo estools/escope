@@ -20,11 +20,12 @@
 //  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 //  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"use strict";
 
-import { expect } from 'chai';
-import harmony from '../third_party/esprima';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+const expect = require('chai').expect;
+const harmony = require('../third_party/esprima');
+const espree = require('../third_party/espree');
+const analyze = require('..').analyze;
 
 describe('ES6 destructuring assignments', function() {
     it('Pattern in var in ForInStatement', function() {
@@ -713,7 +714,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(4);
-        expect(scope.implicit.left.map(({ identifier }) => identifier.name)).to.deep.equal([
+        expect(scope.implicit.left.map((left) => left.identifier.name)).to.deep.equal([
             'a',
             'b',
             'c',
@@ -797,7 +798,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(4);
-        expect(scope.implicit.left.map(({ identifier }) => identifier.name)).to.deep.equal([
+        expect(scope.implicit.left.map((left) => left.identifier.name)).to.deep.equal([
             'a',
             'b',
             'rest',
@@ -838,7 +839,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(6);
-        expect(scope.implicit.left.map(({ identifier }) => identifier.name)).to.deep.equal([
+        expect(scope.implicit.left.map((left) => left.identifier.name)).to.deep.equal([
             'a',
             'b',
             'c',
@@ -886,7 +887,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(4);
-        expect(scope.implicit.left.map(({ identifier }) => identifier.name)).to.deep.equal([
+        expect(scope.implicit.left.map((left) => left.identifier.name)).to.deep.equal([
             'a',
             'b',
             'obj',
@@ -933,7 +934,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(4);
-        expect(scope.implicit.left.map(({ identifier }) => identifier.name)).to.deep.equal([
+        expect(scope.implicit.left.map((left) => left.identifier.name)).to.deep.equal([
             'shorthand',
             'value',
             'world',
@@ -982,7 +983,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(8);
-        expect(scope.implicit.left.map(({ identifier }) => identifier.name)).to.deep.equal([
+        expect(scope.implicit.left.map((left) => left.identifier.name)).to.deep.equal([
             'shorthand',
             'a',
             'b',

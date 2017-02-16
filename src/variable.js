@@ -70,14 +70,14 @@ class Variable {
     }
 }
 
-Variable.CatchClause = 'CatchClause';
-Variable.Parameter = 'Parameter';
-Variable.FunctionName = 'FunctionName';
-Variable.ClassName = 'ClassName';
-Variable.Variable = 'Variable';
-Variable.ImportBinding = 'ImportBinding';
-Variable.TDZ = 'TDZ';
-Variable.ImplicitGlobalVariable = 'ImplicitGlobalVariable';
+Variable.CatchClause = "CatchClause";
+Variable.Parameter = "Parameter";
+Variable.FunctionName = "FunctionName";
+Variable.ClassName = "ClassName";
+Variable.Variable = "Variable";
+Variable.ImportBinding = "ImportBinding";
+Variable.TDZ = "TDZ";
+Variable.ImplicitGlobalVariable = "ImplicitGlobalVariable";
 
 module.exports = Variable;
 

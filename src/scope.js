@@ -23,13 +23,24 @@
 */
 "use strict";
 
-const Syntax = require('estraverse').Syntax;
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-undefined */
 
-const Reference = require('./reference');
-const Variable = require('./variable');
-const Definition = require('./definition').Definition;
-const assert = require('assert');
+const Syntax = require("estraverse").Syntax;
 
+const Reference = require("./reference");
+const Variable = require("./variable");
+const Definition = require("./definition").Definition;
+const assert = require("assert");
+
+/**
+ * Test if scope is struct
+ * @param {Scope} scope - scope
+ * @param {Block} block - block
+ * @param {boolean} isMethodDefinition - is method definiton
+ * @param {boolean} useDirective - use directive
+ * @returns {boolean} is strict scope
+ */
 function isStrictScope(scope, block, isMethodDefinition, useDirective) {
     var body, i, iz, stmt, expr;
 
@@ -47,15 +58,15 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
         return true;
     }
 
-    if (scope.type === 'class' || scope.type === 'module') {
+    if (scope.type === "class" || scope.type === "module") {
         return true;
     }
 
-    if (scope.type === 'block' || scope.type === 'switch') {
+    if (scope.type === "block" || scope.type === "switch") {
         return false;
     }
 
-    if (scope.type === 'function') {
+    if (scope.type === "function") {
         if (block.type === Syntax.Program) {
             body = block;
         } else {
@@ -65,7 +76,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
         if (!body) {
             return false;
         }
-    } else if (scope.type === 'global') {
+    } else if (scope.type === "global") {
         body = block;
     } else {
         return false;
@@ -78,7 +89,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
             if (stmt.type !== Syntax.DirectiveStatement) {
                 break;
             }
-            if (stmt.raw === '"use strict"' || stmt.raw === '\'use strict\'') {
+            if (stmt.raw === "\"use strict\"" || stmt.raw === "'use strict'") {
                 return true;
             }
         }
@@ -89,15 +100,15 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
                 break;
             }
             expr = stmt.expression;
-            if (expr.type !== Syntax.Literal || typeof expr.value !== 'string') {
+            if (expr.type !== Syntax.Literal || typeof expr.value !== "string") {
                 break;
             }
-            if (expr.raw != null) {
-                if (expr.raw === '"use strict"' || expr.raw === '\'use strict\'') {
+            if (expr.raw !== null && expr.raw !== undefined) {
+                if (expr.raw === "\"use strict\"" || expr.raw === "'use strict'") {
                     return true;
                 }
             } else {
-                if (expr.value === 'use strict') {
+                if (expr.value === "use strict") {
                     return true;
                 }
             }
@@ -106,6 +117,12 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
     return false;
 }
 
+/**
+ * Register scope
+ * @param {ScopeManager} scopeManager - scope manager
+ * @param {Scope} scope - scope
+ * @returns {void}
+ */
 function registerScope(scopeManager, scope) {
     var scopes;
 
@@ -119,10 +136,15 @@ function registerScope(scopeManager, scope) {
     }
 }
 
+/**
+ * Should be statically
+ * @param {Object} def - def
+ * @returns {boolean} should be statically
+ */
 function shouldBeStatically(def) {
     return (
         (def.type === Variable.ClassName) ||
-        (def.type === Variable.Variable && def.parent.kind !== 'var')
+        (def.type === Variable.Variable && def.parent.kind !== "var")
     );
 }
 
@@ -157,7 +179,7 @@ class Scope {
          * All those scopes are considered 'dynamic'.
          * @member {boolean} Scope#dynamic
          */
-        this.dynamic = this.type === 'global' || this.type === 'with';
+        this.dynamic = this.type === "global" || this.type === "with";
         /**
          * A reference to the scope-defining syntax node.
          * @member {esprima.Node} Scope#block
@@ -193,7 +215,7 @@ class Scope {
          * @member {Scope} Scope#variableScope
          */
         this.variableScope =
-            (this.type === 'global' || this.type === 'function' || this.type === 'module') ? this : upperScope.variableScope;
+            (this.type === "global" || this.type === "function" || this.type === "module") ? this : upperScope.variableScope;
          /**
          * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
@@ -281,7 +303,7 @@ class Scope {
         var closeRef;
         if (this.__shouldStaticallyClose(scopeManager)) {
             closeRef = this.__staticCloseRef;
-        } else if (this.type !== 'global') {
+        } else if (this.type !== "global") {
             closeRef = this.__dynamicCloseRef;
         } else {
             closeRef = this.__globalCloseRef;
@@ -322,12 +344,12 @@ class Scope {
     }
 
     __addDeclaredVariablesOfNode(variable, node) {
-        if (node == null) {
+        if (node === null || node === undefined) {
             return;
         }
 
         var variables = this.__declaredVariables.get(node);
-        if (variables == null) {
+        if (variables === null || variables === undefined) {
             variables = [];
             this.__declaredVariables.set(node, variables);
         }
@@ -376,7 +398,7 @@ class Scope {
         }
 
         // Specially handle like `this`.
-        if (node.name === 'super') {
+        if (node.name === "super") {
             return;
         }
 
@@ -407,12 +429,12 @@ class Scope {
      * returns resolved {Reference}
      * @method Scope#resolve
      * @param {Esprima.Identifier} ident - identifier to be resolved.
-     * @return {Reference}
+     * @returns {Reference} reference
      */
     resolve(ident) {
         var ref, i, iz;
-        assert(this.__isClosed(), 'Scope should be closed.');
-        assert(ident.type === Syntax.Identifier, 'Target should be identifier.');
+        assert(this.__isClosed(), "Scope should be closed.");
+        assert(ident.type === Syntax.Identifier, "Target should be identifier.");
         for (i = 0, iz = this.references.length; i < iz; ++i) {
             ref = this.references[i];
             if (ref.identifier === ident) {
@@ -425,7 +447,7 @@ class Scope {
     /**
      * returns this scope is static
      * @method Scope#isStatic
-     * @return {boolean}
+     * @returns {boolean} static
      */
     isStatic() {
         return !this.dynamic;
@@ -434,7 +456,7 @@ class Scope {
     /**
      * returns this scope has materialized arguments
      * @method Scope#isArgumentsMaterialized
-     * @return {boolean}
+     * @returns {boolean} arguemnts materialized
      */
     isArgumentsMaterialized() {
         return true;
@@ -443,7 +465,7 @@ class Scope {
     /**
      * returns this scope has materialized `this` reference
      * @method Scope#isThisMaterialized
-     * @return {boolean}
+     * @returns {boolean} this materialized
      */
     isThisMaterialized() {
         return true;
@@ -464,7 +486,7 @@ class Scope {
 
 class GlobalScope extends Scope {
     constructor(scopeManager, block) {
-        super(scopeManager, 'global', null, block, false);
+        super(scopeManager, "global", null, block, false);
         this.implicit = {
             set: new Map(),
             variables: [],
@@ -520,13 +542,13 @@ class GlobalScope extends Scope {
 
 class ModuleScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'module', upperScope, block, false);
+        super(scopeManager, "module", upperScope, block, false);
     }
 }
 
 class FunctionExpressionNameScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'function-expression-name', upperScope, block, false);
+        super(scopeManager, "function-expression-name", upperScope, block, false);
         this.__define(block.id,
                 new Definition(
                     Variable.FunctionName,
@@ -542,13 +564,13 @@ class FunctionExpressionNameScope extends Scope {
 
 class CatchScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'catch', upperScope, block, false);
+        super(scopeManager, "catch", upperScope, block, false);
     }
 }
 
 class WithScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'with', upperScope, block, false);
+        super(scopeManager, "with", upperScope, block, false);
     }
 
     __close(scopeManager) {
@@ -569,25 +591,25 @@ class WithScope extends Scope {
 
 class TDZScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'TDZ', upperScope, block, false);
+        super(scopeManager, "TDZ", upperScope, block, false);
     }
 }
 
 class BlockScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'block', upperScope, block, false);
+        super(scopeManager, "block", upperScope, block, false);
     }
 }
 
 class SwitchScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'switch', upperScope, block, false);
+        super(scopeManager, "switch", upperScope, block, false);
     }
 }
 
 class FunctionScope extends Scope {
     constructor(scopeManager, upperScope, block, isMethodDefinition) {
-        super(scopeManager, 'function', upperScope, block, isMethodDefinition);
+        super(scopeManager, "function", upperScope, block, isMethodDefinition);
 
         // section 9.2.13, FunctionDeclarationInstantiation.
         // NOTE Arrow functions never have an arguments objects.
@@ -613,9 +635,9 @@ class FunctionScope extends Scope {
             return true;
         }
 
-        let variable = this.set.get('arguments');
-        assert(variable, 'Always have arguments variable.');
-        return variable.tainted || variable.references.length  !== 0;
+        let variable = this.set.get("arguments");
+        assert(variable, "Always have arguments variable.");
+        return variable.tainted || variable.references.length !== 0;
     }
 
     isThisMaterialized() {
@@ -627,24 +649,24 @@ class FunctionScope extends Scope {
 
     __defineArguments() {
         this.__defineGeneric(
-                'arguments',
+                "arguments",
                 this.set,
                 this.variables,
                 null,
                 null);
-        this.taints.set('arguments', true);
+        this.taints.set("arguments", true);
     }
 }
 
- class ForScope extends Scope {
+class ForScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'for', upperScope, block, false);
+        super(scopeManager, "for", upperScope, block, false);
     }
 }
 
 class ClassScope extends Scope {
     constructor(scopeManager, upperScope, block) {
-        super(scopeManager, 'class', upperScope, block, false);
+        super(scopeManager, "class", upperScope, block, false);
     }
 }
 

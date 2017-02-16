@@ -23,8 +23,10 @@
 */
 "use strict";
 
-const Scope = require('./scope');
-const assert = require('assert');
+/* eslint-disable no-underscore-dangle */
+
+const Scope = require("./scope");
+const assert = require("assert");
 
 const GlobalScope = Scope.GlobalScope;
 const CatchScope = Scope.CatchScope;
@@ -68,7 +70,7 @@ class ScopeManager {
     }
 
     isModule() {
-        return this.__options.sourceType === 'module';
+        return this.__options.sourceType === "module";
     }
 
     isImpliedStrict() {
@@ -103,16 +105,21 @@ class ScopeManager {
      * @method ScopeManager#acquire
      * @param {Esprima.Node} node - node for the acquired scope.
      * @param {boolean=} inner - look up the most inner scope, default value is false.
-     * @return {Scope?}
+     * @returns {Scope?} Scope from node
      */
     acquire(node, inner) {
         var scopes, scope, i, iz;
 
-        function predicate(scope) {
-            if (scope.type === 'function' && scope.functionExpressionScope) {
+        /**
+         * predicate
+         * @param {Scope} testScope - scope to test
+         * @returns {boolean} predicate
+         */
+        function predicate(testScope) {
+            if (testScope.type === "function" && testScope.functionExpressionScope) {
                 return false;
             }
-            if (scope.type === 'TDZ') {
+            if (testScope.type === "TDZ") {
                 return false;
             }
             return true;
@@ -152,7 +159,7 @@ class ScopeManager {
      * acquire all scopes from node.
      * @method ScopeManager#acquireAll
      * @param {Esprima.Node} node - node for the acquired scope.
-     * @return {Scope[]?}
+     * @returns {Scopes?} Scope array
      */
     acquireAll(node) {
         return this.__get(node);
@@ -163,7 +170,7 @@ class ScopeManager {
      * @method ScopeManager#release
      * @param {Esprima.Node} node - releasing node.
      * @param {boolean=} inner - look up the most inner scope, default value is false.
-     * @return {Scope?} upper scope for the node.
+     * @returns {Scope?} upper scope for the node.
      */
     release(node, inner) {
         var scopes, scope;
@@ -195,7 +202,7 @@ class ScopeManager {
         return this.__nestScope(new GlobalScope(this, node));
     }
 
-    __nestBlockScope(node, isMethodDefinition) {
+    __nestBlockScope(node) {
         return this.__nestScope(new BlockScope(this, this.__currentScope, node));
     }
 

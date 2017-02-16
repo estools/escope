@@ -23,7 +23,7 @@
 */
 "use strict";
 
-const Variable = require('./variable');
+const Variable = require("./variable");
 
 /**
  * @class Definition

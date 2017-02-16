@@ -22,13 +22,15 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-const parse = require('../third_party/espree');
+const expect = require("chai").expect;
+const analyze = require("..").analyze;
 
-describe('ES6 new.target', function() {
-    it('should not make references of new.target', function() {
+const parse = require("../third_party/espree");
+
+describe("ES6 new.target", function() {
+    it("should not make references of new.target", function() {
         const ast = parse(`
             class A {
                 constructor() {
@@ -41,11 +43,11 @@ describe('ES6 new.target', function() {
         expect(scopeManager.scopes).to.have.length(3);
 
         const scope = scopeManager.scopes[2];
-        expect(scope.type).to.be.equal('function');
-        expect(scope.block.type).to.be.equal('FunctionExpression');
+        expect(scope.type).to.be.equal("function");
+        expect(scope.block.type).to.be.equal("FunctionExpression");
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('arguments');
+        expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.references).to.have.length(0);
     });
 });

@@ -47,35 +47,50 @@
  */
 "use strict";
 
-/*jslint bitwise:true */
+/* eslint no-underscore-dangle: ["error", { "allow": ["__currentScope"] }] */
 
-const assert = require('assert');
+const assert = require("assert");
 
-const ScopeManager = require('./scope-manager');
-const Referencer = require('./referencer');
-const Reference = require('./reference');
-const Variable = require('./variable');
-const Scope = require('./scope');
-const version = require('../package.json').version;
+const ScopeManager = require("./scope-manager");
+const Referencer = require("./referencer");
+const Reference = require("./reference");
+const Variable = require("./variable");
+const Scope = require("./scope");
+const version = require("../package.json").version;
 
+/**
+ * Set the default options
+ * @returns {Object} options
+ */
 function defaultOptions() {
     return {
         optimistic: false,
         directive: false,
         nodejsScope: false,
         impliedStrict: false,
-        sourceType: 'script',  // one of ['script', 'module']
+        sourceType: "script",  // one of ['script', 'module']
         ecmaVersion: 5,
         childVisitorKeys: null,
-        fallback: 'iteration'
+        fallback: "iteration"
     };
 }
 
+/**
+ * Preform deep update on option object
+ * @param {Object} target - Options
+ * @param {Object} override - Updates
+ * @returns {Object} Updated options
+ */
 function updateDeeply(target, override) {
     var key, val;
 
-    function isHashObject(target) {
-        return typeof target === 'object' && target instanceof Object && !(target instanceof Array) && !(target instanceof RegExp);
+    /**
+     * Is hash object
+     * @param {Object} value - Test value
+     * @returns {boolean} Result
+     */
+    function isHashObject(value) {
+        return typeof value === "object" && value instanceof Object && !(value instanceof Array) && !(value instanceof RegExp);
     }
 
     for (key in override) {
@@ -99,7 +114,7 @@ function updateDeeply(target, override) {
  * Main interface function. Takes an Esprima syntax tree and returns the
  * analyzed scopes.
  * @function analyze
- * @param {esprima.Tree} tree
+ * @param {esprima.Tree} tree - Abstract Syntax Tree
  * @param {Object} providedOptions - Options that tailor the scope analysis
  * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
  * @param {boolean} [providedOptions.directive=false]- the directive flag
@@ -113,7 +128,7 @@ function updateDeeply(target, override) {
  * @param {number} [providedOptions.ecmaVersion=5]- which ECMAScript version is considered
  * @param {Object} [providedOptions.childVisitorKeys=null] - Additional known visitor keys. See [esrecurse](https://github.com/estools/esrecurse)'s the `childVisitorKeys` option.
  * @param {string} [providedOptions.fallback='iteration'] - A kind of the fallback in order to encounter with unknown node. See [esrecurse](https://github.com/estools/esrecurse)'s the `fallback` option.
- * @return {ScopeManager}
+ * @returns {ScopeManager} ScopeManager
  */
 function analyze(tree, providedOptions) {
     var scopeManager, referencer, options;
@@ -125,7 +140,7 @@ function analyze(tree, providedOptions) {
     referencer = new Referencer(options, scopeManager);
     referencer.visit(tree);
 
-    assert(scopeManager.__currentScope === null, 'currentScope should be null.');
+    assert(scopeManager.__currentScope === null, "currentScope should be null.");
 
     return scopeManager;
 }

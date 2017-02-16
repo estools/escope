@@ -22,12 +22,12 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
 
-describe('ES6 super', function() {
-    it('is not handled as reference', function() {
+describe("ES6 super", function() {
+    it("is not handled as reference", function() {
         const ast = parse(`
             class Hello {
                 constructor() {
@@ -44,27 +44,27 @@ describe('ES6 super', function() {
         expect(scopeManager.scopes).to.have.length(4);
 
         let scope = scopeManager.scopes[0];
-        expect(scope.type).to.be.equal('global');
+        expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('Hello');
+        expect(scope.variables[0].name).to.be.equal("Hello");
         expect(scope.references).to.have.length(0);
 
         scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('class');
+        expect(scope.type).to.be.equal("class");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('Hello');
+        expect(scope.variables[0].name).to.be.equal("Hello");
         expect(scope.references).to.have.length(0);
 
         scope = scopeManager.scopes[2];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('arguments');
+        expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.references).to.have.length(0);  // super is specially handled like `this`.
 
         scope = scopeManager.scopes[3];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('arguments');
+        expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.references).to.have.length(0);  // super is specially handled like `this`.
     });
 });

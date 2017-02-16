@@ -22,13 +22,15 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const esprima = require('../third_party/esprima').parse;
-const espree = require('../third_party/espree');
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('ES6 rest arguments', function() {
-    it('materialize rest argument in scope (esprima: rest property of FunctionDeclaration)', function() {
+const expect = require("chai").expect;
+const esprima = require("../third_party/esprima").parse;
+const espree = require("../third_party/espree");
+const analyze = require("..").analyze;
+
+describe("ES6 rest arguments", function() {
+    it("materialize rest argument in scope (esprima: rest property of FunctionDeclaration)", function() {
         const ast = esprima(`
             function foo(...bar) {
                 return bar;
@@ -39,21 +41,21 @@ describe('ES6 rest arguments', function() {
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
-        expect(scope.type).to.be.equal('global');
-        expect(scope.block.type).to.be.equal('Program');
+        expect(scope.type).to.be.equal("global");
+        expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
 
         scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(2);
-        expect(scope.variables[0].name).to.be.equal('arguments');
-        expect(scope.variables[1].name).to.be.equal('bar');
-        expect(scope.variables[1].defs[0].name.name).to.be.equal('bar');
+        expect(scope.variables[0].name).to.be.equal("arguments");
+        expect(scope.variables[1].name).to.be.equal("bar");
+        expect(scope.variables[1].defs[0].name.name).to.be.equal("bar");
         expect(scope.variables[1].defs[0].rest).to.be.true;
     });
 
-    it('materialize rest argument in scope (espree: RestElement)', function() {
+    it("materialize rest argument in scope (espree: RestElement)", function() {
         const ast = espree(`
             function foo(...bar) {
                 return bar;
@@ -64,17 +66,17 @@ describe('ES6 rest arguments', function() {
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
-        expect(scope.type).to.be.equal('global');
-        expect(scope.block.type).to.be.equal('Program');
+        expect(scope.type).to.be.equal("global");
+        expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
 
         scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(2);
-        expect(scope.variables[0].name).to.be.equal('arguments');
-        expect(scope.variables[1].name).to.be.equal('bar');
-        expect(scope.variables[1].defs[0].name.name).to.be.equal('bar');
+        expect(scope.variables[0].name).to.be.equal("arguments");
+        expect(scope.variables[1].name).to.be.equal("bar");
+        expect(scope.variables[1].defs[0].name.name).to.be.equal("bar");
         expect(scope.variables[1].defs[0].rest).to.be.true;
     });
 });

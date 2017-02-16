@@ -23,24 +23,35 @@
 */
 "use strict";
 
-const Syntax = require('estraverse').Syntax;
-const esrecurse = require('esrecurse');
-const Reference = require('./reference');
-const Variable = require('./variable');
-const PatternVisitor = require('./pattern-visitor');
-const definition = require('./definition');
-const assert = require('assert');
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-undefined */
+
+const Syntax = require("estraverse").Syntax;
+const esrecurse = require("esrecurse");
+const Reference = require("./reference");
+const Variable = require("./variable");
+const PatternVisitor = require("./pattern-visitor");
+const definition = require("./definition");
+const assert = require("assert");
 
 const ParameterDefinition = definition.ParameterDefinition;
 const Definition = definition.Definition;
 
+/**
+ * Traverse identifier in pattern
+ * @param {Object} options - options
+ * @param {pattern} rootPattern - root pattern
+ * @param {Refencer} referencer - referencer
+ * @param {callback} callback - callback
+ * @returns {void}
+ */
 function traverseIdentifierInPattern(options, rootPattern, referencer, callback) {
     // Call the callback at left hand identifier nodes, and Collect right hand nodes.
     var visitor = new PatternVisitor(options, rootPattern, callback);
     visitor.visit(rootPattern);
 
     // Process the right hand nodes recursively.
-    if (referencer != null) {
+    if (referencer !== null && referencer !== undefined) {
         visitor.rightHandNodes.forEach(referencer.visit, referencer);
     }
 }
@@ -156,9 +167,9 @@ class Referencer extends esrecurse.Visitor {
     }
 
     visitPattern(node, options, callback) {
-        if (typeof options === 'function') {
+        if (typeof options === "function") {
             callback = options;
-            options = {processRightHandNodes: false}
+            options = {processRightHandNodes: false};
         }
         traverseIdentifierInPattern(
             this.options,
@@ -196,25 +207,34 @@ class Referencer extends esrecurse.Visitor {
         // Consider this function is in the MethodDefinition.
         this.scopeManager.__nestFunctionScope(node, this.isInnerMethodDefinition);
 
+        const that = this;
+        /**
+         * Visit pattern callback
+         * @param {pattern} pattern - pattern
+         * @param {Object} info - info
+         * @returns {void}
+         */
+        function visitPatternCallback(pattern, info) {
+            that.currentScope().__define(pattern,
+                new ParameterDefinition(
+                    pattern,
+                    node,
+                    i,
+                    info.rest
+                ));
+
+            that.referencingDefaultValue(pattern, info.assignments, null, true);
+        }
+
         // Process parameter declarations.
         for (i = 0, iz = node.params.length; i < iz; ++i) {
-            this.visitPattern(node.params[i], {processRightHandNodes: true}, (pattern, info) => {
-                this.currentScope().__define(pattern,
-                    new ParameterDefinition(
-                        pattern,
-                        node,
-                        i,
-                        info.rest
-                    ));
-
-                this.referencingDefaultValue(pattern, info.assignments, null, true);
-            });
+            this.visitPattern(node.params[i], {processRightHandNodes: true}, visitPatternCallback);
         }
 
         // if there's a rest argument, add that
         if (node.rest) {
             this.visitPattern({
-                type: 'RestElement',
+                type: "RestElement",
                 argument: node.rest
             }, (pattern) => {
                 this.currentScope().__define(pattern,
@@ -289,7 +309,7 @@ class Referencer extends esrecurse.Visitor {
     }
 
     visitForIn(node) {
-        if (node.left.type === Syntax.VariableDeclaration && node.left.kind !== 'var') {
+        if (node.left.type === Syntax.VariableDeclaration && node.left.kind !== "var") {
             this.materializeTDZScope(node.right, node);
             this.visit(node.right);
             this.close(node.right);
@@ -349,7 +369,7 @@ class Referencer extends esrecurse.Visitor {
 
     AssignmentExpression(node) {
         if (PatternVisitor.isPattern(node.left)) {
-            if (node.operator === '=') {
+            if (node.operator === "=") {
                 this.visitPattern(node.left, {processRightHandNodes: true}, (pattern, info) => {
                     var maybeImplicitGlobal = null;
                     if (!this.currentScope().isStrict) {
@@ -451,7 +471,7 @@ class Referencer extends esrecurse.Visitor {
         // NOTE: In ES6, ForStatement dynamically generates
         // per iteration environment. However, escope is
         // a static analyzer, we only generate one scope for ForStatement.
-        if (node.init && node.init.type === Syntax.VariableDeclaration && node.init.kind !== 'var') {
+        if (node.init && node.init.type === Syntax.VariableDeclaration && node.init.kind !== "var") {
             this.scopeManager.__nestForScope(node);
         }
 
@@ -470,7 +490,7 @@ class Referencer extends esrecurse.Visitor {
 
     CallExpression(node) {
         // Check this is direct call to eval
-        if (!this.scopeManager.__ignoreEval() && node.callee.type === Syntax.Identifier && node.callee.name === 'eval') {
+        if (!this.scopeManager.__ignoreEval() && node.callee.type === Syntax.Identifier && node.callee.name === "eval") {
             // NOTE: This should be `variableScope`. Since direct eval call always creates Lexical environment and
             // let / const should be enclosed into it. Only VariableDeclaration affects on the caller's environment.
             this.currentScope().variableScope.__detectEval();
@@ -504,7 +524,7 @@ class Referencer extends esrecurse.Visitor {
 
     VariableDeclaration(node) {
         var variableTargetScope, i, iz, decl;
-        variableTargetScope = (node.kind === 'var') ? this.currentScope().variableScope : this.currentScope();
+        variableTargetScope = (node.kind === "var") ? this.currentScope().variableScope : this.currentScope();
         for (i = 0, iz = node.declarations.length; i < iz; ++i) {
             decl = node.declarations[i];
             this.visitVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
@@ -554,7 +574,7 @@ class Referencer extends esrecurse.Visitor {
     ImportDeclaration(node) {
         var importer;
 
-        assert(this.scopeManager.__isES6() && this.scopeManager.isModule(), 'ImportDeclaration should appear when the mode is ES6 and in the module context.');
+        assert(this.scopeManager.__isES6() && this.scopeManager.isModule(), "ImportDeclaration should appear when the mode is ES6 and in the module context.");
 
         importer = new Importer(node, this);
         importer.visit(node);

@@ -22,16 +22,23 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const visit = require('esrecurse').visit;
-const espree = require('../third_party/espree');
-const analyze = require('..').analyze;
+const expect = require("chai").expect;
+const visit = require("esrecurse").visit;
+const espree = require("../third_party/espree");
+const analyze = require("..").analyze;
 
-describe('ScopeManager.prototype.getDeclaredVariables', function() {
-    const verify = (ast, type, expectedNamesList) => {
+describe("ScopeManager.prototype.getDeclaredVariables", function() {
+    /**
+     * Verify
+     * @param {AST} ast - Abstract syntax tree
+     * @param {string} type - type
+     * @param {array} expectedNamesList - expected names
+     * @returns {void}
+     */
+    function verify(ast, type, expectedNamesList) {
         const scopeManager = analyze(ast, {
             ecmaVersion: 6,
-            sourceType: 'module'
+            sourceType: "module"
         });
 
         visit(ast, {
@@ -41,7 +48,7 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
 
                 expect(actual).to.have.length(expected.length);
                 if (actual.length > 0) {
-                    const end = actual.length-1;
+                    const end = actual.length - 1;
                     for (let i = 0; i <= end; i++) {
                         expect(actual[i].name).to.be.equal(expected[i]);
                     }
@@ -52,26 +59,26 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
         });
 
         expect(expectedNamesList).to.have.length(0);
-    };
+    }
 
 
-    it('should get variables that declared on `VariableDeclaration`', function() {
+    it("should get variables that declared on `VariableDeclaration`", function() {
         const ast = espree(`
             var {a, x: [b], y: {c = 0}} = foo;
             let {d, x: [e], y: {f = 0}} = foo;
             const {g, x: [h], y: {i = 0}} = foo, {j, k = function() { let l; }} = bar;
         `);
 
-        verify(ast, 'VariableDeclaration', [
-            ['a', 'b', 'c'],
-            ['d', 'e', 'f'],
-            ['g', 'h', 'i', 'j', 'k'],
-            ['l']
+        verify(ast, "VariableDeclaration", [
+            ["a", "b", "c"],
+            ["d", "e", "f"],
+            ["g", "h", "i", "j", "k"],
+            ["l"]
         ]);
     });
 
 
-    it('should get variables that declared on `VariableDeclaration` in for-in/of', function() {
+    it("should get variables that declared on `VariableDeclaration` in for-in/of", function() {
         const ast = espree(`
             for (var {a, x: [b], y: {c = 0}} in foo) {
                 let g;
@@ -81,33 +88,33 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             }
         `);
 
-        verify(ast, 'VariableDeclaration', [
-            ['a', 'b', 'c'],
-            ['g'],
-            ['d', 'e', 'f'],
-            ['h']
+        verify(ast, "VariableDeclaration", [
+            ["a", "b", "c"],
+            ["g"],
+            ["d", "e", "f"],
+            ["h"]
         ]);
     });
 
 
-    it('should get variables that declared on `VariableDeclarator`', function() {
+    it("should get variables that declared on `VariableDeclarator`", function() {
         const ast = espree(`
             var {a, x: [b], y: {c = 0}} = foo;
             let {d, x: [e], y: {f = 0}} = foo;
             const {g, x: [h], y: {i = 0}} = foo, {j, k = function() { let l; }} = bar;
         `);
 
-        verify(ast, 'VariableDeclarator', [
-            ['a', 'b', 'c'],
-            ['d', 'e', 'f'],
-            ['g', 'h', 'i'],
-            ['j', 'k'],
-            ['l']
+        verify(ast, "VariableDeclarator", [
+            ["a", "b", "c"],
+            ["d", "e", "f"],
+            ["g", "h", "i"],
+            ["j", "k"],
+            ["l"]
         ]);
     });
 
 
-    it('should get variables that declared on `FunctionDeclaration`', function() {
+    it("should get variables that declared on `FunctionDeclaration`", function() {
         const ast = espree(`
             function foo({a, x: [b], y: {c = 0}}, [d, e]) {
                 let z;
@@ -117,14 +124,14 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             }
         `);
 
-        verify(ast, 'FunctionDeclaration', [
-            ['foo', 'a', 'b', 'c', 'd', 'e'],
-            ['bar', 'f', 'g', 'h', 'i', 'j']
+        verify(ast, "FunctionDeclaration", [
+            ["foo", "a", "b", "c", "d", "e"],
+            ["bar", "f", "g", "h", "i", "j"]
         ]);
     });
 
 
-    it('should get variables that declared on `FunctionExpression`', function() {
+    it("should get variables that declared on `FunctionExpression`", function() {
         const ast = espree(`
             (function foo({a, x: [b], y: {c = 0}}, [d, e]) {
                 let z;
@@ -134,15 +141,15 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             });
         `);
 
-        verify(ast, 'FunctionExpression', [
-            ['foo', 'a', 'b', 'c', 'd', 'e'],
-            ['bar', 'f', 'g', 'h', 'i', 'j'],
-            ['q']
+        verify(ast, "FunctionExpression", [
+            ["foo", "a", "b", "c", "d", "e"],
+            ["bar", "f", "g", "h", "i", "j"],
+            ["q"]
         ]);
     });
 
 
-    it('should get variables that declared on `ArrowFunctionExpression`', function() {
+    it("should get variables that declared on `ArrowFunctionExpression`", function() {
         const ast = espree(`
             (({a, x: [b], y: {c = 0}}, [d, e]) => {
                 let z;
@@ -152,40 +159,40 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             });
         `);
 
-        verify(ast, 'ArrowFunctionExpression', [
-            ['a', 'b', 'c', 'd', 'e'],
-            ['f', 'g', 'h', 'i', 'j']
+        verify(ast, "ArrowFunctionExpression", [
+            ["a", "b", "c", "d", "e"],
+            ["f", "g", "h", "i", "j"]
         ]);
     });
 
 
-    it('should get variables that declared on `ClassDeclaration`', function() {
+    it("should get variables that declared on `ClassDeclaration`", function() {
         const ast = espree(`
             class A { foo(x) { let y; } }
             class B { foo(x) { let y; } }
         `);
 
-        verify(ast, 'ClassDeclaration', [
-            ['A', 'A'], // outer scope's and inner scope's.
-            ['B', 'B']
+        verify(ast, "ClassDeclaration", [
+            ["A", "A"], // outer scope's and inner scope's.
+            ["B", "B"]
         ]);
     });
 
 
-    it('should get variables that declared on `ClassExpression`', function() {
+    it("should get variables that declared on `ClassExpression`", function() {
         const ast = espree(`
             (class A { foo(x) { let y; } });
             (class B { foo(x) { let y; } });
         `);
 
-        verify(ast, 'ClassExpression', [
-            ['A'],
-            ['B']
+        verify(ast, "ClassExpression", [
+            ["A"],
+            ["B"]
         ]);
     });
 
 
-    it('should get variables that declared on `CatchClause`', function() {
+    it("should get variables that declared on `CatchClause`", function() {
         const ast = espree(`
             try {} catch ({a, b}) {
                 let x;
@@ -195,77 +202,77 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             }
         `);
 
-        verify(ast, 'CatchClause', [
-            ['a', 'b'],
-            ['c', 'd']
+        verify(ast, "CatchClause", [
+            ["a", "b"],
+            ["c", "d"]
         ]);
     });
 
 
-    it('should get variables that declared on `ImportDeclaration`', function() {
+    it("should get variables that declared on `ImportDeclaration`", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+            {sourceType: "module"}
         );
 
-        verify(ast, 'ImportDeclaration', [
+        verify(ast, "ImportDeclaration", [
             [],
-            ['a'],
-            ['b', 'c', 'd']
+            ["a"],
+            ["b", "c", "d"]
         ]);
     });
 
 
-    it('should get variables that declared on `ImportSpecifier`', function() {
+    it("should get variables that declared on `ImportSpecifier`", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+            {sourceType: "module"}
         );
 
-        verify(ast, 'ImportSpecifier', [
-            ['c'],
-            ['d']
+        verify(ast, "ImportSpecifier", [
+            ["c"],
+            ["d"]
         ]);
     });
 
 
-    it('should get variables that declared on `ImportDefaultSpecifier`', function() {
+    it("should get variables that declared on `ImportDefaultSpecifier`", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+            {sourceType: "module"}
         );
 
-        verify(ast, 'ImportDefaultSpecifier', [
-            ['b']
+        verify(ast, "ImportDefaultSpecifier", [
+            ["b"]
         ]);
     });
 
 
-    it('should get variables that declared on `ImportNamespaceSpecifier`', function() {
+    it("should get variables that declared on `ImportNamespaceSpecifier`", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+            {sourceType: "module"}
         );
 
-        verify(ast, 'ImportNamespaceSpecifier', [
-            ['a']
+        verify(ast, "ImportNamespaceSpecifier", [
+            ["a"]
         ]);
     });
 
 
-    it('should not get duplicate even if it\'s declared twice', function() {
-        const ast = espree(`var a = 0, a = 1;`);
+    it("should not get duplicate even if it's declared twice", function() {
+        const ast = espree("var a = 0, a = 1;");
 
-        verify(ast, 'VariableDeclaration', [
-            ['a']
+        verify(ast, "VariableDeclaration", [
+            ["a"]
         ]);
     });
 });

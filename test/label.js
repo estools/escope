@@ -22,31 +22,33 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('label', function() {
-    it('should not create variables', function() {
-        const ast = parse(`function bar() { q: for(;;) { break q; } }`);
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
+
+describe("label", function() {
+    it("should not create variables", function() {
+        const ast = parse("function bar() { q: for(;;) { break q; } }");
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(2);
         const globalScope = scopeManager.scopes[0];
-        expect(globalScope.type).to.be.equal('global');
+        expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(1);
-        expect(globalScope.variables[0].name).to.be.equal('bar');
+        expect(globalScope.variables[0].name).to.be.equal("bar");
         expect(globalScope.references).to.have.length(0);
 
         const scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('arguments');
+        expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.isArgumentsMaterialized()).to.be.false;
         expect(scope.references).to.have.length(0);
     });
 
-    it('should count child node references', function() {
+    it("should count child node references", function() {
         const ast = parse(`
             var foo = 5;
 
@@ -59,11 +61,11 @@ describe('label', function() {
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(1);
         const globalScope = scopeManager.scopes[0];
-        expect(globalScope.type).to.be.equal('global');
+        expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(1);
-        expect(globalScope.variables[0].name).to.be.equal('foo');
+        expect(globalScope.variables[0].name).to.be.equal("foo");
         expect(globalScope.through.length).to.be.equal(3);
-        expect(globalScope.through[2].identifier.name).to.be.equal('foo');
+        expect(globalScope.through[2].identifier.name).to.be.equal("foo");
         expect(globalScope.through[2].isRead()).to.be.true;
     });
 });

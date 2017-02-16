@@ -21,12 +21,12 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
 
-describe('implicit global reference', function() {
-    it('assignments global scope', function() {
+describe("implicit global reference", function() {
+    it("assignments global scope", function() {
         const ast = parse(`
             var x = 20;
             x = 300;
@@ -38,7 +38,7 @@ describe('implicit global reference', function() {
             [
                 [
                     [
-                        'Variable'
+                        "Variable"
                     ]
                 ]
             ]
@@ -47,7 +47,7 @@ describe('implicit global reference', function() {
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql([]);
     });
 
-    it('assignments global scope without definition', function() {
+    it("assignments global scope without definition", function() {
         const ast = parse(`
             x = 300;
             x = 300;
@@ -64,12 +64,12 @@ describe('implicit global reference', function() {
 
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql(
             [
-                'x'
+                "x"
             ]
         );
     });
 
-    it('assignments global scope without definition eval', function() {
+    it("assignments global scope without definition eval", function() {
         const ast = parse(`
             function inner() {
                 eval(str);
@@ -83,7 +83,7 @@ describe('implicit global reference', function() {
             [
                 [
                     [
-                        'FunctionName'
+                        "FunctionName"
                     ]
                 ],
                 [
@@ -96,7 +96,7 @@ describe('implicit global reference', function() {
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql([]);
     });
 
-    it('assignment leaks', function() {
+    it("assignment leaks", function() {
         const ast = parse(`
             function outer() {
                 x = 20;
@@ -108,22 +108,22 @@ describe('implicit global reference', function() {
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
                 [
-                    'outer'
+                    "outer"
                 ],
                 [
-                    'arguments'
+                    "arguments"
                 ]
             ]
         );
 
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql(
             [
-                'x'
+                "x"
             ]
         );
     });
 
-    it('assignment doesn\'t leak', function() {
+    it("assignment doesn't leak", function() {
         const ast = parse(`
             function outer() {
                 function inner() {
@@ -138,15 +138,15 @@ describe('implicit global reference', function() {
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
                 [
-                    'outer'
+                    "outer"
                 ],
                 [
-                    'arguments',
-                    'inner',
-                    'x'
+                    "arguments",
+                    "inner",
+                    "x"
                 ],
                 [
-                    'arguments'
+                    "arguments"
                 ]
             ]
         );
@@ -155,7 +155,7 @@ describe('implicit global reference', function() {
     });
 
 
-    it('for-in-statement leaks', function() {
+    it("for-in-statement leaks", function() {
         const ast = parse(`
             function outer() {
                 for (x in y) { }
@@ -166,22 +166,22 @@ describe('implicit global reference', function() {
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
                 [
-                    'outer'
+                    "outer"
                 ],
                 [
-                    'arguments'
+                    "arguments"
                 ]
             ]
         );
 
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql(
             [
-                'x'
+                "x"
             ]
         );
     });
 
-    it('for-in-statement doesn\'t leaks', function() {
+    it("for-in-statement doesn't leaks", function() {
         const ast = parse(`
             function outer() {
                 function inner() {
@@ -196,15 +196,15 @@ describe('implicit global reference', function() {
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
                 [
-                    'outer'
+                    "outer"
                 ],
                 [
-                    'arguments',
-                    'inner',
-                    'x'
+                    "arguments",
+                    "inner",
+                    "x"
                 ],
                 [
-                    'arguments'
+                    "arguments"
                 ]
             ]
         );

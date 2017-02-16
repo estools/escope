@@ -22,12 +22,14 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('function name', function() {
-    it('should create its special scope', function() {
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
+
+describe("function name", function() {
+    it("should create its special scope", function() {
         const ast = parse(`
             (function name() {
             }());
@@ -36,25 +38,25 @@ describe('function name', function() {
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(3);
         const globalScope = scopeManager.scopes[0];
-        expect(globalScope.type).to.be.equal('global');
+        expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
         expect(globalScope.isArgumentsMaterialized()).to.be.true;
 
         // Function expression name scope
         let scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('function-expression-name');
+        expect(scope.type).to.be.equal("function-expression-name");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('name');
+        expect(scope.variables[0].name).to.be.equal("name");
         expect(scope.isArgumentsMaterialized()).to.be.true;
         expect(scope.references).to.have.length(0);
         expect(scope.upper === globalScope).to.be.true;
 
         // Function scope
         scope = scopeManager.scopes[2];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('arguments');
+        expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.isArgumentsMaterialized()).to.be.false;
         expect(scope.references).to.have.length(0);
         expect(scope.upper === scopeManager.scopes[1]).to.be.true;

@@ -21,12 +21,12 @@
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
 
-describe('optimistic', function() {
-    it('direct call to eval', function() {
+describe("optimistic", function() {
+    it("direct call to eval", function() {
         const ast = parse(`
             function outer() {
                 eval(str);
@@ -42,21 +42,21 @@ describe('optimistic', function() {
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
                 [
-                    'outer'
+                    "outer"
                 ],
                 [
-                    'arguments',
-                    'i',
-                    'inner'
+                    "arguments",
+                    "i",
+                    "inner"
                 ],
                 [
-                    'arguments'
+                    "arguments"
                 ]
             ]
         );
     });
 
-    it('with statement', function() {
+    it("with statement", function() {
         const ast = parse(`
             function outer() {
                 eval(str);
@@ -72,11 +72,11 @@ describe('optimistic', function() {
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
                 [
-                    'outer'
+                    "outer"
                 ],
                 [
-                    'arguments',
-                    'i'
+                    "arguments",
+                    "i"
                 ],
                 [
                 ]

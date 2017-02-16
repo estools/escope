@@ -22,12 +22,14 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const esprima = require('esprima');
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('catch', function() {
-    it('creates scope', function() {
+const expect = require("chai").expect;
+const esprima = require("esprima");
+const analyze = require("..").analyze;
+
+describe("catch", function() {
+    it("creates scope", function() {
         const ast = esprima.parse(`
             (function () {
                 try {
@@ -39,21 +41,21 @@ describe('catch', function() {
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(3);
         const globalScope = scopeManager.scopes[0];
-        expect(globalScope.type).to.be.equal('global');
+        expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
         let scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('function');
+        expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('arguments');
+        expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.isArgumentsMaterialized()).to.be.false;
         expect(scope.references).to.have.length(0);
 
         scope = scopeManager.scopes[2];
-        expect(scope.type).to.be.equal('catch');
+        expect(scope.type).to.be.equal("catch");
         expect(scope.variables).to.have.length(1);
-        expect(scope.variables[0].name).to.be.equal('e');
+        expect(scope.variables[0].name).to.be.equal("e");
         expect(scope.isArgumentsMaterialized()).to.be.true;
         expect(scope.references).to.have.length(0);
     });

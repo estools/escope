@@ -22,12 +22,14 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('ES6 catch', function() {
-    it('takes binding pattern', function() {
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
+
+describe("ES6 catch", function() {
+    it("takes binding pattern", function() {
         const ast = parse(`
             try {
             } catch ({ a, b, c, d }) {
@@ -44,22 +46,22 @@ describe('ES6 catch', function() {
         expect(scopeManager.scopes).to.have.length(4);
 
         let scope = scopeManager.scopes[0];
-        expect(scope.type).to.be.equal('global');
-        expect(scope.block.type).to.be.equal('Program');
+        expect(scope.type).to.be.equal("global");
+        expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
         scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('block');
-        expect(scope.block.type).to.be.equal('BlockStatement');
+        expect(scope.type).to.be.equal("block");
+        expect(scope.block.type).to.be.equal("BlockStatement");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
         scope = scopeManager.scopes[2];
-        expect(scope.type).to.be.equal('catch');
-        expect(scope.block.type).to.be.equal('CatchClause');
+        expect(scope.type).to.be.equal("catch");
+        expect(scope.block.type).to.be.equal("CatchClause");
         expect(scope.isStrict).to.be.false;
 
         // FIXME After Esprima's bug is fixed, I'll add tests #33
@@ -73,21 +75,21 @@ describe('ES6 catch', function() {
         // expect(scope.references).to.have.length(0);
 
         scope = scopeManager.scopes[3];
-        expect(scope.type).to.be.equal('block');
-        expect(scope.block.type).to.be.equal('BlockStatement');
+        expect(scope.type).to.be.equal("block");
+        expect(scope.block.type).to.be.equal("BlockStatement");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(2);
         expect(scope.variables.map(variable => variable.name)).to.be.eql([
-            'e',
-            'c'
+            "e",
+            "c"
         ]);
         expect(scope.references.map(ref => ref.identifier.name)).to.be.eql([
-            'e',
-            'a',
-            'b',
-            'c',
-            'c',
-            'd'
+            "e",
+            "a",
+            "b",
+            "c",
+            "c",
+            "d"
         ]);
     });
 });

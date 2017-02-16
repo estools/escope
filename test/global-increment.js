@@ -22,18 +22,20 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('global increment', function() {
-    it('becomes read/write', function() {
-        const ast = parse(`b++;`);
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
+
+describe("global increment", function() {
+    it("becomes read/write", function() {
+        const ast = parse("b++;");
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(1);
         const globalScope = scopeManager.scopes[0];
-        expect(globalScope.type).to.be.equal('global');
+        expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(1);
         expect(globalScope.references[0].isReadWrite()).to.be.true;

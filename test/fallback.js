@@ -22,41 +22,41 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const esprima = require('../third_party/esprima');
-const analyze = require('..').analyze;
+const expect = require("chai").expect;
+const esprima = require("../third_party/esprima");
+const analyze = require("..").analyze;
 
 
-describe('fallback option', function() {
-    it('should raise an error when it encountered an unknown node if no fallback.', function() {
+describe("fallback option", function() {
+    it("should raise an error when it encountered an unknown node if no fallback.", function() {
         const ast = esprima.parse(`
             var foo = 0;
         `);
 
-        ast.body[0].declarations[0].init.type = 'NumericLiteral';
+        ast.body[0].declarations[0].init.type = "NumericLiteral";
 
         expect(function() {
-            analyze(ast, {fallback: 'none'});
+            analyze(ast, {fallback: "none"});
         }).to.throw("Unknown node type NumericLiteral");
     });
 
-    it('should not raise an error even if it encountered an unknown node when fallback is iteration.', function() {
+    it("should not raise an error even if it encountered an unknown node when fallback is iteration.", function() {
         const ast = esprima.parse(`
             var foo = 0;
         `);
 
-        ast.body[0].declarations[0].init.type = 'NumericLiteral';
+        ast.body[0].declarations[0].init.type = "NumericLiteral";
 
         analyze(ast); // default is `fallback: 'iteration'`
-        analyze(ast, {fallback: 'iteration'});
+        analyze(ast, {fallback: "iteration"});
     });
 
-    it('should not raise an error even if it encountered an unknown node when fallback is a function.', function() {
+    it("should not raise an error even if it encountered an unknown node when fallback is a function.", function() {
         const ast = esprima.parse(`
             var foo = 0;
         `);
 
-        ast.body[0].declarations[0].init.type = 'NumericLiteral';
+        ast.body[0].declarations[0].init.type = "NumericLiteral";
 
         analyze(ast, {fallback: node => Object.keys(node)});
     });

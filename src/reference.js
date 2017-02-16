@@ -32,7 +32,7 @@ const RW = READ | WRITE;
  * @class Reference
  */
 class Reference {
-    constructor(ident, scope, flag,  writeExpr, maybeImplicitGlobal, partial, init) {
+    constructor(ident, scope, flag, writeExpr, maybeImplicitGlobal, partial, init) {
         /**
          * Identifier syntax node.
          * @member {esprima#Identifier} Reference#identifier
@@ -84,7 +84,7 @@ class Reference {
     /**
      * Whether the reference is static.
      * @method Reference#isStatic
-     * @return {boolean}
+     * @returns {boolean} static
      */
     isStatic() {
         return !this.tainted && this.resolved && this.resolved.scope.isStatic();
@@ -93,7 +93,7 @@ class Reference {
     /**
      * Whether the reference is writeable.
      * @method Reference#isWrite
-     * @return {boolean}
+     * @returns {boolean} write
      */
     isWrite() {
         return !!(this.flag & Reference.WRITE);
@@ -102,7 +102,7 @@ class Reference {
     /**
      * Whether the reference is readable.
      * @method Reference#isRead
-     * @return {boolean}
+     * @returns {boolean} read
      */
     isRead() {
         return !!(this.flag & Reference.READ);
@@ -111,7 +111,7 @@ class Reference {
     /**
      * Whether the reference is read-only.
      * @method Reference#isReadOnly
-     * @return {boolean}
+     * @returns {boolean} read only
      */
     isReadOnly() {
         return this.flag === Reference.READ;
@@ -120,7 +120,7 @@ class Reference {
     /**
      * Whether the reference is write-only.
      * @method Reference#isWriteOnly
-     * @return {boolean}
+     * @returns {boolean} write only
      */
     isWriteOnly() {
         return this.flag === Reference.WRITE;
@@ -129,7 +129,7 @@ class Reference {
     /**
      * Whether the reference is read-write.
      * @method Reference#isReadWrite
-     * @return {boolean}
+     * @returns {boolean} read write
      */
     isReadWrite() {
         return this.flag === Reference.RW;

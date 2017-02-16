@@ -22,23 +22,23 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const esprima = require('esprima');
-const analyze = require('..').analyze;
+const expect = require("chai").expect;
+const esprima = require("esprima");
+const analyze = require("..").analyze;
 
-describe('childVisitorKeys option', function() {
-    it('should handle as a known node if the childVisitorKeys option was given.', function() {
+describe("childVisitorKeys option", function() {
+    it("should handle as a known node if the childVisitorKeys option was given.", function() {
         const ast = esprima.parse(`
             var foo = 0;
         `);
 
-        ast.body[0].declarations[0].init.type = 'NumericLiteral';
+        ast.body[0].declarations[0].init.type = "NumericLiteral";
 
         // should no error
         analyze(
             ast,
             {
-                fallback: 'none',
+                fallback: "none",
                 childVisitorKeys: {
                     NumericLiteral: []
                 }
@@ -46,13 +46,13 @@ describe('childVisitorKeys option', function() {
         );
     });
 
-    it('should not visit to properties which are not given.', function() {
+    it("should not visit to properties which are not given.", function() {
         const ast = esprima.parse(`
             let foo = bar;
         `);
 
         ast.body[0].declarations[0].init = {
-            type: 'TestNode',
+            type: "TestNode",
             argument: ast.body[0].declarations[0].init
         };
 
@@ -72,13 +72,13 @@ describe('childVisitorKeys option', function() {
         expect(globalScope.through).to.have.length(0);
     });
 
-    it('should visit to given properties.', function() {
+    it("should visit to given properties.", function() {
         const ast = esprima.parse(`
             let foo = bar;
         `);
 
         ast.body[0].declarations[0].init = {
-            type: 'TestNode',
+            type: "TestNode",
             argument: ast.body[0].declarations[0].init
         };
 
@@ -86,7 +86,7 @@ describe('childVisitorKeys option', function() {
             ast,
             {
                 childVisitorKeys: {
-                    TestNode: ['argument']
+                    TestNode: ["argument"]
                 }
             }
         );
@@ -96,7 +96,7 @@ describe('childVisitorKeys option', function() {
 
         // `bar` in TestNode has been visited.
         expect(globalScope.through).to.have.length(1);
-        expect(globalScope.through[0].identifier.name).to.equal('bar');
+        expect(globalScope.through[0].identifier.name).to.equal("bar");
     });
 });
 

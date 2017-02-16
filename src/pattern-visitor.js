@@ -23,9 +23,16 @@
 */
 "use strict";
 
-const Syntax = require('estraverse').Syntax;
-const esrecurse = require('esrecurse');
+/* eslint-disable no-undefined */
 
+const Syntax = require("estraverse").Syntax;
+const esrecurse = require("esrecurse");
+
+/**
+ * Get last array element
+ * @param {array} xs - array
+ * @returns {any} Last elment
+ */
 function getLast(xs) {
     return xs[xs.length - 1] || null;
 }
@@ -56,7 +63,7 @@ class PatternVisitor extends esrecurse.Visitor {
         const lastRestElement = getLast(this.restElements);
         this.callback(pattern, {
             topLevel: pattern === this.rootPattern,
-            rest: lastRestElement != null && lastRestElement.argument === pattern,
+            rest: lastRestElement !== null && lastRestElement !== undefined && lastRestElement.argument === pattern,
             assignments: this.assignments
         });
     }
@@ -127,7 +134,9 @@ class PatternVisitor extends esrecurse.Visitor {
 
     CallExpression(node) {
         // arguments are right hand nodes.
-        node.arguments.forEach(a => { this.rightHandNodes.push(a); });
+        node.arguments.forEach(a => {
+            this.rightHandNodes.push(a);
+        });
         this.visit(node.callee);
     }
 }

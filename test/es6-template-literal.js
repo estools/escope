@@ -22,12 +22,14 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 "use strict";
 
-const expect = require('chai').expect;
-const parse = require('../third_party/esprima').parse;
-const analyze = require('..').analyze;
+/* eslint-disable no-unused-expressions */
 
-describe('ES6 template literal', function() {
-    it('refer variables', function() {
+const expect = require("chai").expect;
+const parse = require("../third_party/esprima").parse;
+const analyze = require("..").analyze;
+
+describe("ES6 template literal", function() {
+    it("refer variables", function() {
         const ast = parse(`
             (function () {
                 let i, j, k;
@@ -41,28 +43,28 @@ describe('ES6 template literal', function() {
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
-        expect(scope.type).to.be.equal('global');
-        expect(scope.block.type).to.be.equal('Program');
+        expect(scope.type).to.be.equal("global");
+        expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
 
         scope = scopeManager.scopes[1];
-        expect(scope.type).to.be.equal('function');
-        expect(scope.block.type).to.be.equal('FunctionExpression');
+        expect(scope.type).to.be.equal("function");
+        expect(scope.block.type).to.be.equal("FunctionExpression");
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(6);
-        expect(scope.variables[0].name).to.be.equal('arguments');
-        expect(scope.variables[1].name).to.be.equal('i');
-        expect(scope.variables[2].name).to.be.equal('j');
-        expect(scope.variables[3].name).to.be.equal('k');
-        expect(scope.variables[4].name).to.be.equal('testing');
-        expect(scope.variables[5].name).to.be.equal('template');
+        expect(scope.variables[0].name).to.be.equal("arguments");
+        expect(scope.variables[1].name).to.be.equal("i");
+        expect(scope.variables[2].name).to.be.equal("j");
+        expect(scope.variables[3].name).to.be.equal("k");
+        expect(scope.variables[4].name).to.be.equal("testing");
+        expect(scope.variables[5].name).to.be.equal("template");
         expect(scope.references).to.have.length(5);
-        expect(scope.references[0].identifier.name).to.be.equal('template');
-        expect(scope.references[1].identifier.name).to.be.equal('testing');
-        expect(scope.references[2].identifier.name).to.be.equal('i');
-        expect(scope.references[3].identifier.name).to.be.equal('j');
-        expect(scope.references[4].identifier.name).to.be.equal('template');
+        expect(scope.references[0].identifier.name).to.be.equal("template");
+        expect(scope.references[1].identifier.name).to.be.equal("testing");
+        expect(scope.references[2].identifier.name).to.be.equal("i");
+        expect(scope.references[3].identifier.name).to.be.equal("j");
+        expect(scope.references[4].identifier.name).to.be.equal("template");
     });
 });
 

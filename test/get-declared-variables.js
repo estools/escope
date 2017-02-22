@@ -24,17 +24,11 @@
 
 const expect = require("chai").expect;
 const visit = require("esrecurse").visit;
-const espree = require("../third_party/espree");
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("ScopeManager.prototype.getDeclaredVariables", function() {
-    /**
-     * Verify
-     * @param {AST} ast - Abstract syntax tree
-     * @param {string} type - type
-     * @param {array} expectedNamesList - expected names
-     * @returns {void}
-     */
+    /* eslint-disable require-jsdoc */
     function verify(ast, type, expectedNamesList) {
         const scopeManager = analyze(ast, {
             ecmaVersion: 6,
@@ -60,7 +54,6 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
 
         expect(expectedNamesList).to.have.length(0);
     }
-
 
     it("should get variables that declared on `VariableDeclaration`", function() {
         const ast = espree(`
@@ -173,7 +166,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
         `);
 
         verify(ast, "ClassDeclaration", [
-            ["A", "A"], // outer scope's and inner scope's.
+            ["A", "A"], // outer scope"s and inner scope"s.
             ["B", "B"]
         ]);
     });
@@ -213,8 +206,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
-            import b, {c, x as d} from "ccc";`,
-            {sourceType: "module"}
+            import b, {c, x as d} from "ccc";`
         );
 
         verify(ast, "ImportDeclaration", [
@@ -229,8 +221,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
-            import b, {c, x as d} from "ccc";`,
-            {sourceType: "module"}
+            import b, {c, x as d} from "ccc";`
         );
 
         verify(ast, "ImportSpecifier", [
@@ -244,8 +235,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
-            import b, {c, x as d} from "ccc";`,
-            {sourceType: "module"}
+            import b, {c, x as d} from "ccc";`
         );
 
         verify(ast, "ImportDefaultSpecifier", [
@@ -258,8 +248,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
-            import b, {c, x as d} from "ccc";`,
-            {sourceType: "module"}
+            import b, {c, x as d} from "ccc";`
         );
 
         verify(ast, "ImportNamespaceSpecifier", [

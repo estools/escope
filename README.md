@@ -14,10 +14,10 @@ Example:
 
 ```js
 var eslintScope = require('eslint-scope');
-var esprima = require('esprima');
+var espree = require('espree');
 var estraverse = require('estraverse');
 
-var ast = esprima.parse(code);
+var ast = espree.parse(code);
 var scopeManager = eslintScope.analyze(ast);
 
 var currentScope = scopeManager.acquire(ast);   // global scope
@@ -25,7 +25,7 @@ var currentScope = scopeManager.acquire(ast);   // global scope
 estraverse.traverse(ast, {
     enter: function(node, parent) {
         // do stuff
-        
+
         if (/Function/.test(node.type)) {
             currentScope = scopeManager.acquire(node);  // get current function scope
         }
@@ -34,7 +34,7 @@ estraverse.traverse(ast, {
         if (/Function/.test(node.type)) {
             currentScope = currentScope.upper;  // set to parent scope
         }
-        
+
         // do stuff
     }
 });

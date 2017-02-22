@@ -22,12 +22,12 @@
 "use strict";
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("optimistic", function() {
     it("direct call to eval", function() {
-        const ast = parse(`
+        const ast = espree(`
             function outer() {
                 eval(str);
                 var i = 20;
@@ -57,7 +57,7 @@ describe("optimistic", function() {
     });
 
     it("with statement", function() {
-        const ast = parse(`
+        const ast = espree(`
             function outer() {
                 eval(str);
                 var i = 20;
@@ -65,7 +65,7 @@ describe("optimistic", function() {
                     i;
                 }
             }
-        `);
+        `, "script");
 
         const scopes = analyze(ast, {optimistic: true}).scopes;
 

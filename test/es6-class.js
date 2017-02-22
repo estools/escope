@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("ES6 class", function() {
     it("declaration name creates class scope", function() {
-        const ast = parse(`
+        const ast = espree(`
             class Derived extends Base {
                 constructor() {
                 }
@@ -69,7 +69,7 @@ describe("ES6 class", function() {
     });
 
     it("expression name creates class scope#1", function() {
-        const ast = parse(`
+        const ast = espree(`
             (class Derived extends Base {
                 constructor() {
                 }
@@ -101,7 +101,7 @@ describe("ES6 class", function() {
     });
 
     it("expression name creates class scope#2", function() {
-        const ast = parse(`
+        const ast = espree(`
             (class extends Base {
                 constructor() {
                 }
@@ -129,7 +129,7 @@ describe("ES6 class", function() {
     });
 
     it("computed property key may refer variables", function() {
-        const ast = parse(`
+        const ast = espree(`
             (function () {
                 var yuyushiki = 42;
                 (class {
@@ -171,7 +171,7 @@ describe("ES6 class", function() {
     });
 
     it("regression #49", function() {
-        const ast = parse(`
+        const ast = espree(`
             class Shoe {
                 constructor() {
                     //Shoe.x = true;

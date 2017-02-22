@@ -23,13 +23,13 @@
 "use strict";
 
 const expect = require("chai").expect;
-const esprima = require("../third_party/esprima");
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 
 describe("fallback option", function() {
     it("should raise an error when it encountered an unknown node if no fallback.", function() {
-        const ast = esprima.parse(`
+        const ast = espree(`
             var foo = 0;
         `);
 
@@ -41,18 +41,18 @@ describe("fallback option", function() {
     });
 
     it("should not raise an error even if it encountered an unknown node when fallback is iteration.", function() {
-        const ast = esprima.parse(`
+        const ast = espree(`
             var foo = 0;
         `);
 
         ast.body[0].declarations[0].init.type = "NumericLiteral";
 
-        analyze(ast); // default is `fallback: 'iteration'`
+        analyze(ast); // default is `fallback: "iteration"`
         analyze(ast, {fallback: "iteration"});
     });
 
     it("should not raise an error even if it encountered an unknown node when fallback is a function.", function() {
-        const ast = esprima.parse(`
+        const ast = espree(`
             var foo = 0;
         `);
 

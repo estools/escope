@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const esprima = require("esprima");
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("arguments", function() {
     it("arguments are correctly materialized", function() {
-        const ast = esprima.parse(`
+        const ast = espree(`
             (function () {
                 arguments;
             }());

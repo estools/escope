@@ -23,12 +23,12 @@
 "use strict";
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("ES6 super", function() {
     it("is not handled as reference", function() {
-        const ast = espree(`
+        const ast = parse(`
             class Hello {
                 constructor() {
                     super();

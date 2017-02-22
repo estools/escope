@@ -22,12 +22,12 @@
 "use strict";
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("implicit global reference", function() {
     it("assignments global scope", function() {
-        const ast = espree(`
+        const ast = parse(`
             var x = 20;
             x = 300;
         `);
@@ -48,7 +48,7 @@ describe("implicit global reference", function() {
     });
 
     it("assignments global scope without definition", function() {
-        const ast = espree(`
+        const ast = parse(`
             x = 300;
             x = 300;
         `);
@@ -70,7 +70,7 @@ describe("implicit global reference", function() {
     });
 
     it("assignments global scope without definition eval", function() {
-        const ast = espree(`
+        const ast = parse(`
             function inner() {
                 eval(str);
                 x = 300;
@@ -97,7 +97,7 @@ describe("implicit global reference", function() {
     });
 
     it("assignment leaks", function() {
-        const ast = espree(`
+        const ast = parse(`
             function outer() {
                 x = 20;
             }
@@ -123,8 +123,8 @@ describe("implicit global reference", function() {
         );
     });
 
-    it("assignment doesn\'t leak", function() {
-        const ast = espree(`
+    it("assignment doesn't leak", function() {
+        const ast = parse(`
             function outer() {
                 function inner() {
                     x = 20;
@@ -154,8 +154,9 @@ describe("implicit global reference", function() {
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql([]);
     });
 
+
     it("for-in-statement leaks", function() {
-        const ast = espree(`
+        const ast = parse(`
             function outer() {
                 for (x in y) { }
             }`);
@@ -180,8 +181,8 @@ describe("implicit global reference", function() {
         );
     });
 
-    it("for-in-statement doesn\'t leaks", function() {
-        const ast = espree(`
+    it("for-in-statement doesn't leaks", function() {
+        const ast = parse(`
             function outer() {
                 function inner() {
                     for (x in y) { }

@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("global increment", function() {
     it("becomes read/write", function() {
-        const ast = espree("b++;");
+        const ast = parse("b++;");
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(1);

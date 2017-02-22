@@ -25,12 +25,13 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const harmony = require("../third_party/esprima");
+const espree = require("../third_party/espree");
 const analyze = require("..").analyze;
 
 describe("ES6 destructuring assignments", function() {
     it("Pattern in var in ForInStatement", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 for (var [a, b, c] in array);
             }());
@@ -71,7 +72,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("Pattern in let in ForInStatement", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 for (let [a, b, c] in array);
             }());
@@ -466,7 +467,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("ArrayPattern in var", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 var [a, b, c] = array;
             }());
@@ -507,7 +508,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("SpreadElement in var", function() {
-        let ast = espree(`
+        let ast = harmony.parse(`
             (function () {
                 var [a, b, ...rest] = array;
             }());
@@ -546,7 +547,7 @@ describe("ES6 destructuring assignments", function() {
         expect(scope.references[3].identifier.name).to.be.equal("array");
         expect(scope.references[3].isWrite()).to.be.false;
 
-        ast = espree(`
+        ast = harmony.parse(`
             (function () {
                 var [a, b, ...[c, d, ...rest]] = array;
             }());
@@ -596,7 +597,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("ObjectPattern in var", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 var {
                     shorthand,
@@ -643,7 +644,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("complex pattern in var", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 var {
                     shorthand,
@@ -701,7 +702,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("ArrayPattern in AssignmentExpression", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 [a, b, c] = array;
             }());
@@ -744,7 +745,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("ArrayPattern with MemberExpression in AssignmentExpression", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 var obj;
                 [obj.a, obj.b, obj.c] = array;
@@ -785,7 +786,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("SpreadElement in AssignmentExpression", function() {
-        let ast = espree(`
+        let ast = harmony.parse(`
             (function () {
                 [a, b, ...rest] = array;
             }());
@@ -826,7 +827,7 @@ describe("ES6 destructuring assignments", function() {
         expect(scope.references[3].identifier.name).to.be.equal("array");
         expect(scope.references[3].isWrite()).to.be.false;
 
-        ast = espree(`
+        ast = harmony.parse(`
             (function () {
                 [a, b, ...[c, d, ...rest]] = array;
             }());
@@ -874,7 +875,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("SpreadElement with MemberExpression in AssignmentExpression", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 [a, b, ...obj.rest] = array;
             }());
@@ -915,7 +916,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("ObjectPattern in AssignmentExpression", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 ({
                     shorthand,
@@ -964,7 +965,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("complex pattern in AssignmentExpression", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function () {
                 ({
                     shorthand,
@@ -1019,7 +1020,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("ArrayPattern in parameters", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function ([a, b, c]) {
             }(array));
         `);
@@ -1046,7 +1047,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("SpreadElement in parameters", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function ([a, b, ...rest], ...rest2) {
             }(array));
         `);
@@ -1069,14 +1070,61 @@ describe("ES6 destructuring assignments", function() {
         expect(scope.variables[1].name).to.be.equal("a");
         expect(scope.variables[2].name).to.be.equal("b");
         expect(scope.variables[3].name).to.be.equal("rest");
-        expect(scope.variables[3].defs[0].rest).to.be.true;
+        expect(scope.variables[3].defs[0].rest).to.be.false;
         expect(scope.variables[4].name).to.be.equal("rest2");
         expect(scope.variables[4].defs[0].rest).to.be.true;
         expect(scope.references).to.have.length(0);
+
+        // ast = espree.parse(`
+        //     (function ([a, b, ...[c, d, ...rest]]) {
+        //     }(array));
+        // `);
+
+        // scopeManager = analyze(ast, {ecmaVersion: 6});
+        // expect(scopeManager.scopes).to.have.length(2);
+
+        // scope = scopeManager.scopes[0];
+        // expect(scope.type).to.be.equal('global');
+        // expect(scope.variables).to.have.length(0);
+        // expect(scope.references).to.have.length(0);
+        // expect(scope.implicit.left).to.have.length(1);
+        // expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
+
+        // scope = scopeManager.scopes[1];
+        // expect(scope.type).to.be.equal('function');
+
+        // expect(scope.variables).to.have.length(6);
+        // const expectedVariableNames = [
+        //     'arguments'
+        //     'a'
+        //     'b'
+        //     'c'
+        //     'd'
+        //     'rest'
+        // ];
+        // for (let index = 0; index < expectedVariableNames.length; index++) {
+        //     expect(scope.variables[index].name).to.be.equal(expectedVariableNames[index]);
+        // }
+
+        // expect(scope.references).to.have.length(6);
+        // const expectedReferenceNames = [
+        //         'a'
+        //         'b'
+        //         'c'
+        //         'd'
+        //         'rest'
+        //     ]
+        // for (let index = 0; index < expectedReferenceNames.length; index++) {
+        //     expect(scope.references[index].identifier.name).to.be.equal(expectedReferenceNames[index]);
+        //     expect(scope.references[index].isWrite()).to.be.true
+        //     expect(scope.references[index].partial).to.be.true
+        // }
+        // expect(scope.references[5].identifier.name).to.be.equal('array');
+        // expect(scope.references[5].isWrite()).to.be.false;
     });
 
     it("ObjectPattern in parameters", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function ({
                     shorthand,
                     key: value,
@@ -1109,7 +1157,7 @@ describe("ES6 destructuring assignments", function() {
     });
 
     it("complex pattern in parameters", function() {
-        const ast = espree(`
+        const ast = harmony.parse(`
             (function ({
                     shorthand,
                     key: [ a, b, c, d, e ],

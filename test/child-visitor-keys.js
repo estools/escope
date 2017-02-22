@@ -23,12 +23,12 @@
 "use strict";
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const esprima = require("esprima");
 const analyze = require("..").analyze;
 
 describe("childVisitorKeys option", function() {
     it("should handle as a known node if the childVisitorKeys option was given.", function() {
-        const ast = espree(`
+        const ast = esprima.parse(`
             var foo = 0;
         `);
 
@@ -47,7 +47,7 @@ describe("childVisitorKeys option", function() {
     });
 
     it("should not visit to properties which are not given.", function() {
-        const ast = espree(`
+        const ast = esprima.parse(`
             let foo = bar;
         `);
 
@@ -73,7 +73,7 @@ describe("childVisitorKeys option", function() {
     });
 
     it("should visit to given properties.", function() {
-        const ast = espree(`
+        const ast = esprima.parse(`
             let foo = bar;
         `);
 

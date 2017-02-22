@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("ES6 iteration scope", function() {
     it("let materialize iteration scope for ForInStatement#1", function() {
-        const ast = espree(`
+        const ast = parse(`
             (function () {
                 let i = 20;
                 for (let i in i) {
@@ -83,7 +83,7 @@ describe("ES6 iteration scope", function() {
     });
 
     it("let materialize iteration scope for ForInStatement#2", function() {
-        const ast = espree(`
+        const ast = parse(`
             (function () {
                 let i = 20;
                 for (let { i, j, k } in i) {
@@ -146,7 +146,7 @@ describe("ES6 iteration scope", function() {
     });
 
     it("let materialize iteration scope for ForStatement#2", function() {
-        const ast = espree(`
+        const ast = parse(`
             (function () {
                 let i = 20;
                 let obj = {};

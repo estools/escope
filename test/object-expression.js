@@ -4,8 +4,8 @@ const expect = require("chai").expect;
 const analyze = require("..").analyze;
 
 describe("object expression", function() {
-    it("doesn\'t require property type", function() {
-        // Hardcoded AST.  Escope adds an extra "Property"
+    it("doesn't require property type", function() {
+        // Hardcoded AST.  Esprima adds an extra 'Property'
         // key/value to ObjectExpressions, so we're not using
         // it parse a program string.
         const ast = {

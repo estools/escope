@@ -35,7 +35,7 @@ class Reference {
     constructor(ident, scope, flag, writeExpr, maybeImplicitGlobal, partial, init) {
         /**
          * Identifier syntax node.
-         * @member {espreeIdentifier} Reference#identifier
+         * @member {esprima#Identifier} Reference#identifier
          */
         this.identifier = ident;
         /**
@@ -64,7 +64,7 @@ class Reference {
         if (this.isWrite()) {
             /**
              * If reference is writeable, this is the tree being written to it.
-             * @member {espreeNode} Reference#writeExpr
+             * @member {esprima#Node} Reference#writeExpr
              */
             this.writeExpr = writeExpr;
             /**

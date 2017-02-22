@@ -41,7 +41,7 @@ const NODE = "node",
     // Files
     MAKEFILE = "./Makefile.js",
     JS_FILES = "src/**/*.js",
-    TEST_FILES = "test/*.js";
+    TEST_FILES = "test/**/*.js";
 
 //------------------------------------------------------------------------------
 // Tasks

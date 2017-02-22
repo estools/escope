@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("function name", function() {
     it("should create its special scope", function() {
-        const ast = espree(`
+        const ast = parse(`
             (function name() {
             }());
         `);

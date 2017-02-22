@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("ES6 arrow function expression", function() {
     it("materialize scope for arrow function expression", function() {
-        const ast = espree(`
+        const ast = parse(`
             var arrow = () => {
                 let i = 0;
                 var j = 20;
@@ -58,7 +58,7 @@ describe("ES6 arrow function expression", function() {
     });
 
     it("generate bindings for parameters", function() {
-        const ast = espree("var arrow = (a, b, c, d) => {}");
+        const ast = parse("var arrow = (a, b, c, d) => {}");
 
         const scopeManager = analyze(ast, {ecmaVersion: 6});
         expect(scopeManager.scopes).to.have.length(2);

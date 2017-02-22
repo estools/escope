@@ -25,13 +25,13 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const espree = require("../third_party/espree");
 const analyze = require("..").analyze;
 
 describe("import declaration", function() {
     // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-static-and-runtme-semantics-module-records
     it("should import names from source", function() {
-        const ast = espree("import v from \"mod\";");
+        const ast = espree("import v from \"mod\";", {sourceType: "module"});
 
         const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: "module"});
         expect(scopeManager.scopes).to.have.length(2);
@@ -50,7 +50,8 @@ describe("import declaration", function() {
     });
 
     it("should import namespaces", function() {
-        const ast = espree("import * as ns from \"mod\";");
+        const ast = espree( "import * as ns from \"mod\";", {sourceType: "module"
+        });
 
         const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: "module"});
         expect(scopeManager.scopes).to.have.length(2);
@@ -69,7 +70,8 @@ describe("import declaration", function() {
     });
 
     it("should import insided names#1", function() {
-        const ast = espree("import {x} from \"mod\";");
+        const ast = espree("import {x} from \"mod\";", {sourceType: "module"
+        });
 
         const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: "module"});
         expect(scopeManager.scopes).to.have.length(2);
@@ -88,7 +90,7 @@ describe("import declaration", function() {
     });
 
     it("should import insided names#2", function() {
-        const ast = espree("import {x as v} from \"mod\";");
+        const ast = espree("import {x as v} from \"mod\";", {sourceType: "module"});
 
         const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: "module"});
         expect(scopeManager.scopes).to.have.length(2);

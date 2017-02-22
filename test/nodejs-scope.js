@@ -25,13 +25,13 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("nodejsScope option", function() {
     it("creates a function scope following the global scope immediately", function() {
-        const ast = espree(`
-            "use strict";
+        const ast = parse(`
+            'use strict';
             var hello = 20;
         `);
 
@@ -54,8 +54,9 @@ describe("nodejsScope option", function() {
     });
 
     it("creates a function scope following the global scope immediately and creates module scope", function() {
-        const ast = espree(`
-            import {x as v} from "mod";`
+        const ast = parse(`
+            import {x as v} from "mod";`,
+            {sourceType: "module" }
         );
 
         const scopeManager = analyze(ast, {ecmaVersion: 6, nodejsScope: true, sourceType: "module"});

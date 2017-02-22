@@ -25,7 +25,7 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const espree = require("../third_party/espree");
 const analyze = require("..").analyze;
 
 describe("References:", function() {

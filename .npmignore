@@ -2,6 +2,7 @@ npm-debug.log
 .DS_Store
 .vimrc.local
 t.js
+esprima.js
 .travis.yml
 .npmignore
 /tmp/

@@ -21,16 +21,35 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-"use strict";
 
-var espree = require("espree");
+var espree = require('espree');
 
-module.exports = function(code, sourceType) {
-    sourceType = sourceType || "module";
-
+module.exports = function (code) {
     return espree.parse(code, {
+
+        // attach range information to each node
+        range: true,
+
+        // attach line/column location information to each node
+        loc: true,
+
+        // create a top-level comments array containing all comments
+        comments: true,
+
+        // attach comments to the closest relevant node as leadingComments and
+        // trailingComments
+        attachComment: true,
+
+        // create a top-level tokens array containing all tokens
+        tokens: true,
+
+        // try to continue parsing if an error is encountered, store errors in a
+        // top-level errors array
+        tolerant: true,
+
         // enable es6 features.
-        sourceType: sourceType
+        ecmaVersion: 6,
+        sourceType: "module"
     });
 };
 

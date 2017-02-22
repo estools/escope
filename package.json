@@ -31,6 +31,7 @@
     "eslint-config-eslint": "^3.0.0",
     "eslint-release": "^0.10.1",
     "espree": "^3.1.1",
+    "esprima": "^2.7.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "npm-license": "^0.3.3",

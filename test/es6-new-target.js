@@ -25,12 +25,13 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
 const analyze = require("..").analyze;
+
+const parse = require("../third_party/espree");
 
 describe("ES6 new.target", function() {
     it("should not make references of new.target", function() {
-        const ast = espree(`
+        const ast = parse(`
             class A {
                 constructor() {
                     new.target;

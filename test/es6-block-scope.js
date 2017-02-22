@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const espree = require("./util/espree");
+const parse = require("../third_party/esprima").parse;
 const analyze = require("..").analyze;
 
 describe("ES6 block scope", function() {
     it("let is materialized in ES6 block scope#1", function() {
-        const ast = espree(`
+        const ast = parse(`
             {
                 let i = 20;
                 i;
@@ -54,7 +54,7 @@ describe("ES6 block scope", function() {
     });
 
     it("let is materialized in ES6 block scope#2", function() {
-        const ast = espree(`
+        const ast = parse(`
             {
                 let i = 20;
                 var i = 20;
@@ -81,7 +81,7 @@ describe("ES6 block scope", function() {
     });
 
     it("function delaration is materialized in ES6 block scope", function() {
-        const ast = espree(`
+        const ast = parse(`
             {
                 function test() {
                 }
@@ -111,7 +111,7 @@ describe("ES6 block scope", function() {
     });
 
     it("let is not hoistable#1", function() {
-        const ast = espree(`
+        const ast = parse(`
             var i = 42; (1)
             {
                 i;  // (2) ReferenceError at runtime.
@@ -140,7 +140,7 @@ describe("ES6 block scope", function() {
     });
 
     it("let is not hoistable#2", function() {
-        const ast = espree(`
+        const ast = parse(`
             (function () {
                 var i = 42; // (1)
                 i;  // (1)

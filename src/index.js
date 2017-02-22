@@ -39,7 +39,7 @@
  * <em>escope</em> works on a syntax tree of the parsed source code which has
  * to adhere to the <a
  * href="https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API">
- * Mozilla Parser API</a>. E.g. <a href="https://github.com/eslint/espree">espree</a> is a parser
+ * Mozilla Parser API</a>. E.g. <a href="http://esprima.org">esprima</a> is a parser
  * that produces such syntax trees.
  * <p>
  * The main interface is the {@link analyze} function.
@@ -111,10 +111,10 @@ function updateDeeply(target, override) {
 }
 
 /**
- * Main interface function. Takes an Espree syntax tree and returns the
+ * Main interface function. Takes an Esprima syntax tree and returns the
  * analyzed scopes.
  * @function analyze
- * @param {espree.Tree} tree - Abstract Syntax Tree
+ * @param {esprima.Tree} tree - Abstract Syntax Tree
  * @param {Object} providedOptions - Options that tailor the scope analysis
  * @param {boolean} [providedOptions.optimistic=false] - the optimistic flag
  * @param {boolean} [providedOptions.directive=false]- the directive flag

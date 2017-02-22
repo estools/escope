@@ -38,7 +38,7 @@ class Variable {
         /**
          * List of defining occurrences of this variable (like in 'var ...'
          * statements or as parameter), as AST nodes.
-         * @member {espree.Identifier[]} Variable#identifiers
+         * @member {esprima.Identifier[]} Variable#identifiers
          */
         this.identifiers = [];
         /**

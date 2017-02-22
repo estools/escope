@@ -25,18 +25,18 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("with", function() {
     it("creates scope", function() {
-        const ast = parse(`
+        const ast = espree(`
             (function () {
                 with (obj) {
                     testing;
                 }
             }());
-        `);
+        `, "script");
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(3);

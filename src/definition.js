@@ -35,15 +35,15 @@ class Definition {
          */
         this.type = type;
         /**
-         * @member {esprima.Identifier} Definition#name - the identifier AST node of the occurrence.
+         * @member {espree.Identifier} Definition#name - the identifier AST node of the occurrence.
          */
         this.name = name;
         /**
-         * @member {esprima.Node} Definition#node - the enclosing node of the identifier.
+         * @member {espree.Node} Definition#node - the enclosing node of the identifier.
          */
         this.node = node;
         /**
-         * @member {esprima.Node?} Definition#parent - the enclosing statement node of the identifier.
+         * @member {espree.Node?} Definition#parent - the enclosing statement node of the identifier.
          */
         this.parent = parent;
         /**

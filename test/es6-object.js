@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("ES6 object", function() {
     it("method definition", function() {
-        const ast = parse(`
+        const ast = espree(`
             ({
                 constructor() {
                 }
@@ -54,7 +54,7 @@ describe("ES6 object", function() {
     });
 
     it("computed property key may refer variables", function() {
-        const ast = parse(`
+        const ast = espree(`
             (function () {
                 var yuyushiki = 42;
                 ({

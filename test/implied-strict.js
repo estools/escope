@@ -25,15 +25,15 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("impliedStrict option", function() {
     it("ensures all user scopes are strict if ecmaVersion >= 5", function() {
-        const ast = parse(`
+        const ast = espree(`
             function foo() {
                 function bar() {
-                    'use strict';
+                    "use strict";
                 }
             }
         `);
@@ -58,7 +58,7 @@ describe("impliedStrict option", function() {
     });
 
     it("ensures impliedStrict option is only effective when ecmaVersion option >= 5", function() {
-        const ast = parse(`
+        const ast = espree(`
             function foo() {}
         `);
 
@@ -77,7 +77,7 @@ describe("impliedStrict option", function() {
     });
 
     it("omits a nodejs global scope when ensuring all user scopes are strict", function() {
-        const ast = parse(`
+        const ast = espree(`
             function foo() {}
         `);
 
@@ -101,9 +101,8 @@ describe("impliedStrict option", function() {
     });
 
     it("omits a module global scope when ensuring all user scopes are strict", function() {
-        const ast = parse(`
-            function foo() {}`,
-            {sourceType: "module"}
+        const ast = espree(`
+            function foo() {}`
         );
 
         let scopeManager = analyze(ast, {ecmaVersion: 6, impliedStrict: true, sourceType: "module"});

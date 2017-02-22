@@ -182,7 +182,7 @@ class Scope {
         this.dynamic = this.type === "global" || this.type === "with";
         /**
          * A reference to the scope-defining syntax node.
-         * @member {esprima.Node} Scope#block
+         * @member {espree.Node} Scope#block
          */
         this.block = block;
          /**
@@ -428,7 +428,7 @@ class Scope {
     /**
      * returns resolved {Reference}
      * @method Scope#resolve
-     * @param {Esprima.Identifier} ident - identifier to be resolved.
+     * @param {Espree.Identifier} ident - identifier to be resolved.
      * @returns {Reference} reference
      */
     resolve(ident) {

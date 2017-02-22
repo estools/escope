@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("label", function() {
     it("should not create variables", function() {
-        const ast = parse("function bar() { q: for(;;) { break q; } }");
+        const ast = espree("function bar() { q: for(;;) { break q; } }");
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(2);
@@ -49,7 +49,7 @@ describe("label", function() {
     });
 
     it("should count child node references", function() {
-        const ast = parse(`
+        const ast = espree(`
             var foo = 5;
 
             label: while (true) {

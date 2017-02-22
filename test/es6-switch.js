@@ -25,12 +25,12 @@
 /* eslint-disable no-unused-expressions */
 
 const expect = require("chai").expect;
-const parse = require("../third_party/esprima").parse;
+const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
 describe("ES6 switch", function() {
     it("materialize scope", function() {
-        const ast = parse(`
+        const ast = espree(`
             switch (ok) {
                 case hello:
                     let i = 20;

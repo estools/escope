@@ -114,7 +114,7 @@ class PatternVisitor extends esrecurse.Visitor {
     // ForInStatement.left and AssignmentExpression.left are LeftHandSideExpression.
     // By spec, LeftHandSideExpression is Pattern or MemberExpression.
     //   (see also: https://github.com/estree/estree/pull/20#issuecomment-74584758)
-    // But espree 2.0 and esprima 2.0 parse to ArrayExpression, ObjectExpression, etc...
+    // But espree 2.0 parses to ArrayExpression, ObjectExpression, etc...
     //
 
     SpreadElement(node) {

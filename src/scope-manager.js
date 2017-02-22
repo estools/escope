@@ -93,7 +93,7 @@ class ScopeManager {
      * If the node declares nothing, this method returns an empty array.
      * CAUTION: This API is experimental. See https://github.com/estools/escope/pull/69 for more details.
      *
-     * @param {Esprima.Node} node - a node to get.
+     * @param {Espree.Node} node - a node to get.
      * @returns {Variable[]} variables that declared by the node.
      */
     getDeclaredVariables(node) {
@@ -103,7 +103,7 @@ class ScopeManager {
     /**
      * acquire scope from node.
      * @method ScopeManager#acquire
-     * @param {Esprima.Node} node - node for the acquired scope.
+     * @param {Espree.Node} node - node for the acquired scope.
      * @param {boolean=} inner - look up the most inner scope, default value is false.
      * @returns {Scope?} Scope from node
      */
@@ -158,7 +158,7 @@ class ScopeManager {
     /**
      * acquire all scopes from node.
      * @method ScopeManager#acquireAll
-     * @param {Esprima.Node} node - node for the acquired scope.
+     * @param {Espree.Node} node - node for the acquired scope.
      * @returns {Scopes?} Scope array
      */
     acquireAll(node) {
@@ -168,7 +168,7 @@ class ScopeManager {
     /**
      * release the node.
      * @method ScopeManager#release
-     * @param {Esprima.Node} node - releasing node.
+     * @param {Espree.Node} node - releasing node.
      * @param {boolean=} inner - look up the most inner scope, default value is false.
      * @returns {Scope?} upper scope for the node.
      */

@@ -12,7 +12,7 @@
 
 const expect = require("chai").expect,
     parse = require("typescript-eslint-parser").parse,
-    analyze = require("../src").analyze;
+    analyze = require("..").analyze;
 
 //------------------------------------------------------------------------------
 // Tests

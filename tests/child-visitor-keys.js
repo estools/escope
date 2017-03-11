@@ -26,8 +26,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("childVisitorKeys option", function() {
-    it("should handle as a known node if the childVisitorKeys option was given.", function() {
+describe("childVisitorKeys option", () => {
+    it("should handle as a known node if the childVisitorKeys option was given.", () => {
         const ast = espree(`
             var foo = 0;
         `);
@@ -46,7 +46,7 @@ describe("childVisitorKeys option", function() {
         );
     });
 
-    it("should not visit to properties which are not given.", function() {
+    it("should not visit to properties which are not given.", () => {
         const ast = espree(`
             let foo = bar;
         `);
@@ -56,7 +56,7 @@ describe("childVisitorKeys option", function() {
             argument: ast.body[0].declarations[0].init
         };
 
-        var result = analyze(
+        const result = analyze(
             ast,
             {
                 childVisitorKeys: {
@@ -72,7 +72,7 @@ describe("childVisitorKeys option", function() {
         expect(globalScope.through).to.have.length(0);
     });
 
-    it("should visit to given properties.", function() {
+    it("should visit to given properties.", () => {
         const ast = espree(`
             let foo = bar;
         `);
@@ -82,7 +82,7 @@ describe("childVisitorKeys option", function() {
             argument: ast.body[0].declarations[0].init
         };
 
-        var result = analyze(
+        const result = analyze(
             ast,
             {
                 childVisitorKeys: {

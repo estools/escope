@@ -25,8 +25,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("implicit global reference", function() {
-    it("assignments global scope", function() {
+describe("implicit global reference", () => {
+    it("assignments global scope", () => {
         const ast = espree(`
             var x = 20;
             x = 300;
@@ -47,7 +47,7 @@ describe("implicit global reference", function() {
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql([]);
     });
 
-    it("assignments global scope without definition", function() {
+    it("assignments global scope without definition", () => {
         const ast = espree(`
             x = 300;
             x = 300;
@@ -69,7 +69,7 @@ describe("implicit global reference", function() {
         );
     });
 
-    it("assignments global scope without definition eval", function() {
+    it("assignments global scope without definition eval", () => {
         const ast = espree(`
             function inner() {
                 eval(str);
@@ -96,7 +96,7 @@ describe("implicit global reference", function() {
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql([]);
     });
 
-    it("assignment leaks", function() {
+    it("assignment leaks", () => {
         const ast = espree(`
             function outer() {
                 x = 20;
@@ -123,7 +123,7 @@ describe("implicit global reference", function() {
         );
     });
 
-    it("assignment doesn\'t leak", function() {
+    it("assignment doesn't leak", () => {
         const ast = espree(`
             function outer() {
                 function inner() {
@@ -154,7 +154,7 @@ describe("implicit global reference", function() {
         expect(scopes[0].implicit.variables.map(variable => variable.name)).to.be.eql([]);
     });
 
-    it("for-in-statement leaks", function() {
+    it("for-in-statement leaks", () => {
         const ast = espree(`
             function outer() {
                 for (x in y) { }
@@ -180,7 +180,7 @@ describe("implicit global reference", function() {
         );
     });
 
-    it("for-in-statement doesn\'t leaks", function() {
+    it("for-in-statement doesn't leaks", () => {
         const ast = espree(`
             function outer() {
                 function inner() {

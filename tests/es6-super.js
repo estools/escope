@@ -26,8 +26,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 super", function() {
-    it("is not handled as reference", function() {
+describe("ES6 super", () => {
+    it("is not handled as reference", () => {
         const ast = espree(`
             class Hello {
                 constructor() {
@@ -40,10 +40,12 @@ describe("ES6 super", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(4);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("Hello");

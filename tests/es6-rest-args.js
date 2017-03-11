@@ -28,18 +28,20 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 rest arguments", function() {
-    it("materialize rest argument in scope", function() {
+describe("ES6 rest arguments", () => {
+    it("materialize rest argument in scope", () => {
         const ast = espree(`
             function foo(...bar) {
                 return bar;
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;

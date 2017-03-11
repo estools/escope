@@ -28,8 +28,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 class", function() {
-    it("declaration name creates class scope", function() {
+describe("ES6 class", () => {
+    it("declaration name creates class scope", () => {
         const ast = espree(`
             class Derived extends Base {
                 constructor() {
@@ -38,10 +38,12 @@ describe("ES6 class", function() {
             new Derived();
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -68,7 +70,7 @@ describe("ES6 class", function() {
         expect(scope.references).to.have.length(0);
     });
 
-    it("expression name creates class scope#1", function() {
+    it("expression name creates class scope#1", () => {
         const ast = espree(`
             (class Derived extends Base {
                 constructor() {
@@ -76,10 +78,12 @@ describe("ES6 class", function() {
             });
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -100,7 +104,7 @@ describe("ES6 class", function() {
         expect(scope.block.type).to.be.equal("FunctionExpression");
     });
 
-    it("expression name creates class scope#2", function() {
+    it("expression name creates class scope#2", () => {
         const ast = espree(`
             (class extends Base {
                 constructor() {
@@ -108,10 +112,12 @@ describe("ES6 class", function() {
             });
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -128,7 +134,7 @@ describe("ES6 class", function() {
         expect(scope.block.type).to.be.equal("FunctionExpression");
     });
 
-    it("computed property key may refer variables", function() {
+    it("computed property key may refer variables", () => {
         const ast = espree(`
             (function () {
                 var yuyushiki = 42;
@@ -142,10 +148,12 @@ describe("ES6 class", function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(5);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -170,7 +178,7 @@ describe("ES6 class", function() {
         expect(scope.references[1].identifier.name).to.be.equal("yuyushiki");
     });
 
-    it("regression #49", function() {
+    it("regression #49", () => {
         const ast = espree(`
             class Shoe {
                 constructor() {
@@ -180,10 +188,12 @@ describe("ES6 class", function() {
             let shoe = new Shoe();
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(3);
 
         const scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;

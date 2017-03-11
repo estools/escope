@@ -28,8 +28,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 new.target", function() {
-    it("should not make references of new.target", function() {
+describe("ES6 new.target", () => {
+    it("should not make references of new.target", () => {
         const ast = espree(`
             class A {
                 constructor() {
@@ -38,10 +38,12 @@ describe("ES6 new.target", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(3);
 
         const scope = scopeManager.scopes[2];
+
         expect(scope.type).to.be.equal("function");
         expect(scope.block.type).to.be.equal("FunctionExpression");
         expect(scope.isStrict).to.be.true;

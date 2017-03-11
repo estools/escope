@@ -28,8 +28,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 iteration scope", function() {
-    it("let materialize iteration scope for ForInStatement#1", function() {
+describe("ES6 iteration scope", () => {
+    it("let materialize iteration scope for ForInStatement#1", () => {
         const ast = espree(`
             (function () {
                 let i = 20;
@@ -39,10 +39,12 @@ describe("ES6 iteration scope", function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(5);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(0);
 
@@ -56,6 +58,7 @@ describe("ES6 iteration scope", function() {
         expect(scope.references[0].resolved).to.be.equal(scope.variables[1]);
 
         let iterScope = scope = scopeManager.scopes[2];
+
         expect(scope.type).to.be.equal("TDZ");
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("i");
@@ -82,7 +85,7 @@ describe("ES6 iteration scope", function() {
         expect(scope.references[1].resolved).to.be.equal(iterScope.variables[0]);
     });
 
-    it("let materialize iteration scope for ForInStatement#2", function() {
+    it("let materialize iteration scope for ForInStatement#2", () => {
         const ast = espree(`
             (function () {
                 let i = 20;
@@ -92,10 +95,12 @@ describe("ES6 iteration scope", function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(5);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(0);
 
@@ -109,6 +114,7 @@ describe("ES6 iteration scope", function() {
         expect(scope.references[0].resolved).to.be.equal(scope.variables[1]);
 
         let iterScope = scope = scopeManager.scopes[2];
+
         expect(scope.type).to.be.equal("TDZ");
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal("i");
@@ -145,7 +151,7 @@ describe("ES6 iteration scope", function() {
         expect(scope.references[1].resolved).to.be.equal(iterScope.variables[0]);
     });
 
-    it("let materialize iteration scope for ForStatement#2", function() {
+    it("let materialize iteration scope for ForStatement#2", () => {
         const ast = espree(`
             (function () {
                 let i = 20;
@@ -156,14 +162,17 @@ describe("ES6 iteration scope", function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(4);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(0);
 
         const functionScope = scope = scopeManager.scopes[1];
+
         expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal("arguments");
@@ -176,6 +185,7 @@ describe("ES6 iteration scope", function() {
         expect(scope.references[1].resolved).to.be.equal(scope.variables[2]);
 
         const iterScope = scope = scopeManager.scopes[2];
+
         expect(scope.type).to.be.equal("for");
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal("i");

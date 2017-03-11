@@ -28,18 +28,20 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 object", function() {
-    it("method definition", function() {
+describe("ES6 object", () => {
+    it("method definition", () => {
         const ast = espree(`
             ({
                 constructor() {
                 }
             })`);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -53,7 +55,7 @@ describe("ES6 object", function() {
         expect(scope.references).to.have.length(0);
     });
 
-    it("computed property key may refer variables", function() {
+    it("computed property key may refer variables", () => {
         const ast = espree(`
             (function () {
                 var yuyushiki = 42;
@@ -67,10 +69,12 @@ describe("ES6 object", function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(4);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;

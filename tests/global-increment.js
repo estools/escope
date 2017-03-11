@@ -28,13 +28,15 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("global increment", function() {
-    it("becomes read/write", function() {
+describe("global increment", () => {
+    it("becomes read/write", () => {
         const ast = espree("b++;");
 
         const scopeManager = analyze(ast);
+
         expect(scopeManager.scopes).to.have.length(1);
         const globalScope = scopeManager.scopes[0];
+
         expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(1);

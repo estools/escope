@@ -28,16 +28,18 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("function name", function() {
-    it("should create its special scope", function() {
+describe("function name", () => {
+    it("should create its special scope", () => {
         const ast = espree(`
             (function name() {
             }());
         `);
 
         const scopeManager = analyze(ast);
+
         expect(scopeManager.scopes).to.have.length(3);
         const globalScope = scopeManager.scopes[0];
+
         expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
@@ -45,6 +47,7 @@ describe("function name", function() {
 
         // Function expression name scope
         let scope = scopeManager.scopes[1];
+
         expect(scope.type).to.be.equal("function-expression-name");
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("name");

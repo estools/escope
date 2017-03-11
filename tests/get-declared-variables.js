@@ -27,7 +27,7 @@ const visit = require("esrecurse").visit;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ScopeManager.prototype.getDeclaredVariables", function() {
+describe("ScopeManager.prototype.getDeclaredVariables", () => {
     /* eslint-disable require-jsdoc */
     function verify(ast, type, expectedNamesList) {
         const scopeManager = analyze(ast, {
@@ -43,6 +43,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
                 expect(actual).to.have.length(expected.length);
                 if (actual.length > 0) {
                     const end = actual.length - 1;
+
                     for (let i = 0; i <= end; i++) {
                         expect(actual[i].name).to.be.equal(expected[i]);
                     }
@@ -55,7 +56,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
         expect(expectedNamesList).to.have.length(0);
     }
 
-    it("should get variables that declared on `VariableDeclaration`", function() {
+    it("should get variables that declared on `VariableDeclaration`", () => {
         const ast = espree(`
             var {a, x: [b], y: {c = 0}} = foo;
             let {d, x: [e], y: {f = 0}} = foo;
@@ -71,7 +72,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `VariableDeclaration` in for-in/of", function() {
+    it("should get variables that declared on `VariableDeclaration` in for-in/of", () => {
         const ast = espree(`
             for (var {a, x: [b], y: {c = 0}} in foo) {
                 let g;
@@ -90,7 +91,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `VariableDeclarator`", function() {
+    it("should get variables that declared on `VariableDeclarator`", () => {
         const ast = espree(`
             var {a, x: [b], y: {c = 0}} = foo;
             let {d, x: [e], y: {f = 0}} = foo;
@@ -107,7 +108,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `FunctionDeclaration`", function() {
+    it("should get variables that declared on `FunctionDeclaration`", () => {
         const ast = espree(`
             function foo({a, x: [b], y: {c = 0}}, [d, e]) {
                 let z;
@@ -124,7 +125,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `FunctionExpression`", function() {
+    it("should get variables that declared on `FunctionExpression`", () => {
         const ast = espree(`
             (function foo({a, x: [b], y: {c = 0}}, [d, e]) {
                 let z;
@@ -142,7 +143,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ArrowFunctionExpression`", function() {
+    it("should get variables that declared on `ArrowFunctionExpression`", () => {
         const ast = espree(`
             (({a, x: [b], y: {c = 0}}, [d, e]) => {
                 let z;
@@ -159,7 +160,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ClassDeclaration`", function() {
+    it("should get variables that declared on `ClassDeclaration`", () => {
         const ast = espree(`
             class A { foo(x) { let y; } }
             class B { foo(x) { let y; } }
@@ -172,7 +173,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ClassExpression`", function() {
+    it("should get variables that declared on `ClassExpression`", () => {
         const ast = espree(`
             (class A { foo(x) { let y; } });
             (class B { foo(x) { let y; } });
@@ -185,7 +186,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `CatchClause`", function() {
+    it("should get variables that declared on `CatchClause`", () => {
         const ast = espree(`
             try {} catch ({a, b}) {
                 let x;
@@ -202,7 +203,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ImportDeclaration`", function() {
+    it("should get variables that declared on `ImportDeclaration`", () => {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
@@ -217,7 +218,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ImportSpecifier`", function() {
+    it("should get variables that declared on `ImportSpecifier`", () => {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
@@ -231,7 +232,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ImportDefaultSpecifier`", function() {
+    it("should get variables that declared on `ImportDefaultSpecifier`", () => {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
@@ -244,7 +245,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should get variables that declared on `ImportNamespaceSpecifier`", function() {
+    it("should get variables that declared on `ImportNamespaceSpecifier`", () => {
         const ast = espree(`
             import "aaa";
             import * as a from "bbb";
@@ -257,7 +258,7 @@ describe("ScopeManager.prototype.getDeclaredVariables", function() {
     });
 
 
-    it("should not get duplicate even if it's declared twice", function() {
+    it("should not get duplicate even if it's declared twice", () => {
         const ast = espree("var a = 0, a = 1;");
 
         verify(ast, "VariableDeclaration", [

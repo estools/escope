@@ -25,8 +25,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("optimistic", function() {
-    it("direct call to eval", function() {
+describe("optimistic", () => {
+    it("direct call to eval", () => {
         const ast = espree(`
             function outer() {
                 eval(str);
@@ -37,7 +37,7 @@ describe("optimistic", function() {
             }
         `);
 
-        const scopes = analyze(ast, {optimistic: true}).scopes;
+        const scopes = analyze(ast, { optimistic: true }).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
@@ -56,7 +56,7 @@ describe("optimistic", function() {
         );
     });
 
-    it("with statement", function() {
+    it("with statement", () => {
         const ast = espree(`
             function outer() {
                 eval(str);
@@ -67,7 +67,7 @@ describe("optimistic", function() {
             }
         `, "script");
 
-        const scopes = analyze(ast, {optimistic: true}).scopes;
+        const scopes = analyze(ast, { optimistic: true }).scopes;
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [

@@ -28,8 +28,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 arrow function expression", function() {
-    it("materialize scope for arrow function expression", function() {
+describe("ES6 arrow function expression", () => {
+    it("materialize scope for arrow function expression", () => {
         const ast = espree(`
             var arrow = () => {
                 let i = 0;
@@ -38,10 +38,12 @@ describe("ES6 arrow function expression", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -52,18 +54,21 @@ describe("ES6 arrow function expression", function() {
         expect(scope.block.type).to.be.equal("ArrowFunctionExpression");
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(2);
+
         // There's no "arguments"
         expect(scope.variables[0].name).to.be.equal("i");
         expect(scope.variables[1].name).to.be.equal("j");
     });
 
-    it("generate bindings for parameters", function() {
+    it("generate bindings for parameters", () => {
         const ast = espree("var arrow = (a, b, c, d) => {}");
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.block.type).to.be.equal("Program");
         expect(scope.isStrict).to.be.false;
@@ -74,6 +79,7 @@ describe("ES6 arrow function expression", function() {
         expect(scope.block.type).to.be.equal("ArrowFunctionExpression");
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(4);
+
         // There's no "arguments"
         expect(scope.variables[0].name).to.be.equal("a");
         expect(scope.variables[1].name).to.be.equal("b");

@@ -3,8 +3,9 @@
 const expect = require("chai").expect;
 const analyze = require("..").analyze;
 
-describe("object expression", function() {
-    it("doesn\'t require property type", function() {
+describe("object expression", () => {
+    it("doesn't require property type", () => {
+
         // Hardcoded AST.  Escope adds an extra "Property"
         // key/value to ObjectExpressions, so we're not using
         // it parse a program string.
@@ -37,6 +38,7 @@ describe("object expression", function() {
         };
 
         const scope = analyze(ast).scopes[0];
+
         expect(scope.variables).to.have.length(1);
         expect(scope.references).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal("a");

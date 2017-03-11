@@ -28,19 +28,22 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("label", function() {
-    it("should not create variables", function() {
+describe("label", () => {
+    it("should not create variables", () => {
         const ast = espree("function bar() { q: for(;;) { break q; } }");
 
         const scopeManager = analyze(ast);
+
         expect(scopeManager.scopes).to.have.length(2);
         const globalScope = scopeManager.scopes[0];
+
         expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(1);
         expect(globalScope.variables[0].name).to.be.equal("bar");
         expect(globalScope.references).to.have.length(0);
 
         const scope = scopeManager.scopes[1];
+
         expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("arguments");
@@ -48,7 +51,7 @@ describe("label", function() {
         expect(scope.references).to.have.length(0);
     });
 
-    it("should count child node references", function() {
+    it("should count child node references", () => {
         const ast = espree(`
             var foo = 5;
 
@@ -59,8 +62,10 @@ describe("label", function() {
         `);
 
         const scopeManager = analyze(ast);
+
         expect(scopeManager.scopes).to.have.length(1);
         const globalScope = scopeManager.scopes[0];
+
         expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(1);
         expect(globalScope.variables[0].name).to.be.equal("foo");

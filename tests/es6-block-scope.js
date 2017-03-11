@@ -28,8 +28,8 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("ES6 block scope", function() {
-    it("let is materialized in ES6 block scope#1", function() {
+describe("ES6 block scope", () => {
+    it("let is materialized in ES6 block scope#1", () => {
         const ast = espree(`
             {
                 let i = 20;
@@ -37,10 +37,12 @@ describe("ES6 block scope", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);  // Program and BlcokStatement scope.
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(0);  // No variable in Program scope.
 
@@ -53,7 +55,7 @@ describe("ES6 block scope", function() {
         expect(scope.references[1].identifier.name).to.be.equal("i");
     });
 
-    it("let is materialized in ES6 block scope#2", function() {
+    it("let is materialized in ES6 block scope#2", () => {
         const ast = espree(`
             {
                 let i = 20;
@@ -62,10 +64,12 @@ describe("ES6 block scope", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);  // Program and BlcokStatement scope.
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(1);  // No variable in Program scope.
         expect(scope.variables[0].name).to.be.equal("i");
@@ -80,7 +84,7 @@ describe("ES6 block scope", function() {
         expect(scope.references[2].identifier.name).to.be.equal("i");
     });
 
-    it("function delaration is materialized in ES6 block scope", function() {
+    it("function delaration is materialized in ES6 block scope", () => {
         const ast = espree(`
             {
                 function test() {
@@ -89,10 +93,12 @@ describe("ES6 block scope", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
+
         expect(scope.type).to.be.equal("global");
         expect(scope.variables).to.have.length(0);
 
@@ -110,7 +116,7 @@ describe("ES6 block scope", function() {
         expect(scope.references).to.have.length(0);
     });
 
-    it("let is not hoistable#1", function() {
+    it("let is not hoistable#1", () => {
         const ast = espree(`
             var i = 42; (1)
             {
@@ -120,16 +126,19 @@ describe("ES6 block scope", function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(2);
 
         const globalScope = scopeManager.scopes[0];
+
         expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(1);
         expect(globalScope.variables[0].name).to.be.equal("i");
         expect(globalScope.references).to.have.length(1);
 
         const scope = scopeManager.scopes[1];
+
         expect(scope.type).to.be.equal("block");
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("i");
@@ -139,7 +148,7 @@ describe("ES6 block scope", function() {
         expect(scope.references[2].resolved).to.be.equal(scope.variables[0]);
     });
 
-    it("let is not hoistable#2", function() {
+    it("let is not hoistable#2", () => {
         const ast = espree(`
             (function () {
                 var i = 42; // (1)
@@ -158,20 +167,24 @@ describe("ES6 block scope", function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
         expect(scopeManager.scopes).to.have.length(4);
 
         const globalScope = scopeManager.scopes[0];
+
         expect(globalScope.type).to.be.equal("global");
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
         let scope = scopeManager.scopes[1];
+
         expect(scope.type).to.be.equal("function");
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal("arguments");
         expect(scope.variables[1].name).to.be.equal("i");
         const v1 = scope.variables[1];
+
         expect(scope.references).to.have.length(3);
         expect(scope.references[0].resolved).to.be.equal(v1);
         expect(scope.references[1].resolved).to.be.equal(v1);
@@ -182,6 +195,7 @@ describe("ES6 block scope", function() {
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("i");
         const v3 = scope.variables[0];
+
         expect(scope.references).to.have.length(3);
         expect(scope.references[0].resolved).to.be.equal(v3);
         expect(scope.references[1].resolved).to.be.equal(v3);
@@ -192,6 +206,7 @@ describe("ES6 block scope", function() {
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal("i");
         const v2 = scope.variables[0];
+
         expect(scope.references).to.have.length(3);
         expect(scope.references[0].resolved).to.be.equal(v2);
         expect(scope.references[1].resolved).to.be.equal(v2);

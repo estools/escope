@@ -28,19 +28,22 @@ const expect = require("chai").expect;
 const espree = require("./util/espree");
 const analyze = require("..").analyze;
 
-describe("References:", function() {
-    describe("When there is a `let` declaration on global,", function() {
-        it("the reference on global should be resolved.", function() {
+describe("References:", () => {
+    describe("When there is a `let` declaration on global,", () => {
+        it("the reference on global should be resolved.", () => {
             const ast = espree("let a = 0;");
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -49,7 +52,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("the reference in functions should be resolved.", function() {
+        it("the reference in functions should be resolved.", () => {
             const ast = espree(`
                 let a = 0;
                 function foo() {
@@ -57,14 +60,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -73,21 +79,24 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.true;
         });
 
-        it("the reference in default parameters should be resolved.", function() {
+        it("the reference in default parameters should be resolved.", () => {
             const ast = espree(`
                 let a = 0;
                 function foo(b = a) {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -97,18 +106,21 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `const` declaration on global,", function() {
-        it("the reference on global should be resolved.", function() {
+    describe("When there is a `const` declaration on global,", () => {
+        it("the reference on global should be resolved.", () => {
             const ast = espree("const a = 0;");
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -117,7 +129,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("the reference in functions should be resolved.", function() {
+        it("the reference in functions should be resolved.", () => {
             const ast = espree(`
                 const a = 0;
                 function foo() {
@@ -125,14 +137,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -142,18 +157,21 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `var` declaration on global,", function() {
-        it("the reference on global should NOT be resolved.", function() {
+    describe("When there is a `var` declaration on global,", () => {
+        it("the reference on global should NOT be resolved.", () => {
             const ast = espree("var a = 0;");
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.be.null;
@@ -162,7 +180,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("the reference in functions should NOT be resolved.", function() {
+        it("the reference in functions should NOT be resolved.", () => {
             const ast = espree(`
                 var a = 0;
                 function foo() {
@@ -170,14 +188,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.be.null;
@@ -187,21 +208,24 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `function` declaration on global,", function() {
-        it("the reference on global should NOT be resolved.", function() {
+    describe("When there is a `function` declaration on global,", () => {
+        it("the reference on global should NOT be resolved.", () => {
             const ast = espree(`
                 function a() {}
                 a();
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, a]
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.be.null;
@@ -210,7 +234,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.true;
         });
 
-        it("the reference in functions should NOT be resolved.", function() {
+        it("the reference in functions should NOT be resolved.", () => {
             const ast = espree(`
                 function a() {}
                 function foo() {
@@ -218,14 +242,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(3);  // [global, a, foo]
 
             const scope = scopeManager.scopes[2];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.be.null;
@@ -235,21 +262,24 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `class` declaration on global,", function() {
-        it("the reference on global should be resolved.", function() {
+    describe("When there is a `class` declaration on global,", () => {
+        it("the reference on global should be resolved.", () => {
             const ast = espree(`
                 class A {}
                 let b = new A();
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, A]
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(2);  // [A, b]
             expect(scope.references).to.have.length(2);  // [b, A]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("A");
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -258,7 +288,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.true;
         });
 
-        it("the reference in functions should be resolved.", function() {
+        it("the reference in functions should be resolved.", () => {
             const ast = espree(`
                 class A {}
                 function foo() {
@@ -266,14 +296,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(3);  // [global, A, foo]
 
             const scope = scopeManager.scopes[2];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, A]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("A");
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -283,22 +316,25 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `let` declaration in functions,", function() {
-        it("the reference on the function should be resolved.", function() {
+    describe("When there is a `let` declaration in functions,", () => {
+        it("the reference on the function should be resolved.", () => {
             const ast = espree(`
                 function foo() {
                     let a = 0;
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
+
             expect(scope.variables).to.have.length(2);  // [arguments, a]
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[1]);
@@ -307,7 +343,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("the reference in nested functions should be resolved.", function() {
+        it("the reference in nested functions should be resolved.", () => {
             const ast = espree(`
                 function foo() {
                     let a = 0;
@@ -317,14 +353,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(3);  // [global, foo, bar]
 
             const scope = scopeManager.scopes[2];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scopeManager.scopes[1].variables[1]);
@@ -334,22 +373,25 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `var` declaration in functions,", function() {
-        it("the reference on the function should be resolved.", function() {
+    describe("When there is a `var` declaration in functions,", () => {
+        it("the reference on the function should be resolved.", () => {
             const ast = espree(`
                 function foo() {
                     var a = 0;
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
+
             expect(scope.variables).to.have.length(2);  // [arguments, a]
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[1]);
@@ -358,7 +400,7 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("the reference in nested functions should be resolved.", function() {
+        it("the reference in nested functions should be resolved.", () => {
             const ast = espree(`
                 function foo() {
                     var a = 0;
@@ -368,14 +410,17 @@ describe("References:", function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(3);  // [global, foo, bar]
 
             const scope = scopeManager.scopes[2];
+
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
             const reference = scope.references[1];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scopeManager.scopes[1].variables[1]);
@@ -385,18 +430,21 @@ describe("References:", function() {
         });
     });
 
-    describe("When there is a `let` declaration with destructuring assignment", function() {
-        it("\"let [a] = [1];\", the reference should be resolved.", function() {
+    describe("When there is a `let` declaration with destructuring assignment", () => {
+        it("\"let [a] = [1];\", the reference should be resolved.", () => {
             const ast = espree("let [a] = [1];");
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -405,17 +453,20 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("\"let {a} = {a: 1};\", the reference should be resolved.", function() {
+        it("\"let {a} = {a: 1};\", the reference should be resolved.", () => {
             const ast = espree("let {a} = {a: 1};");
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -424,17 +475,20 @@ describe("References:", function() {
             expect(reference.isRead()).to.be.false;
         });
 
-        it("\"let {a: {a}} = {a: {a: 1}};\", the reference should be resolved.", function() {
+        it("\"let {a: {a}} = {a: {a: 1}};\", the reference should be resolved.", () => {
             const ast = espree("let {a: {a}} = {a: {a: 1}};");
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
+
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
             const reference = scope.references[0];
+
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal("a");
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -444,7 +498,7 @@ describe("References:", function() {
         });
     });
 
-    describe("Reference.init should be a boolean value of whether it is one to initialize or not.", function() {
+    describe("Reference.init should be a boolean value of whether it is one to initialize or not.", () => {
         const trueCodes = [
             "var a = 0;",
             "let a = 0;",
@@ -480,13 +534,15 @@ describe("References:", function() {
         ];
 
         trueCodes.forEach(code =>
-            it(`"${code}", all references should be true.`, function() {
+            it(`"${code}", all references should be true.`, () => {
                 const ast = espree(code);
 
-                const scopeManager = analyze(ast, {ecmaVersion: 6});
+                const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
                 const scope = scopeManager.scopes[scopeManager.scopes.length - 1];
+
                 expect(scope.variables).to.have.length.of.at.least(1);
                 expect(scope.references).to.have.length.of.at.least(1);
 
@@ -511,14 +567,17 @@ describe("References:", function() {
             "let a; for ({a} in []);",
             "let a; for ({a = 0} in []);"
         ];
+
         falseCodes.forEach(code =>
-            it(`"${code}", all references should be false.`, function() {
+            it(`"${code}", all references should be false.`, () => {
                 const ast = espree(code);
 
-                const scopeManager = analyze(ast, {ecmaVersion: 6});
+                const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
                 const scope = scopeManager.scopes[scopeManager.scopes.length - 1];
+
                 expect(scope.variables).to.have.length(1);
                 expect(scope.references).to.have.length.of.at.least(1);
 
@@ -547,17 +606,20 @@ describe("References:", function() {
             "let a,b; b = a.foo;"
         ];
         falseCodes.forEach(code =>
-            it(`"${code}", readonly references of "a" should be undefined.`, function() {
+            it(`"${code}", readonly references of "a" should be undefined.`, () => {
                 const ast = espree(code);
 
-                const scopeManager = analyze(ast, {ecmaVersion: 6});
+                const scopeManager = analyze(ast, { ecmaVersion: 6 });
+
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
                 const scope = scopeManager.scopes[0];
+
                 expect(scope.variables).to.have.length.of.at.least(1);
                 expect(scope.variables[0].name).to.equal("a");
 
                 const references = scope.variables[0].references;
+
                 expect(references).to.have.length.of.at.least(1);
 
                 references.forEach(reference => {

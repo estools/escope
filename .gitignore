@@ -1,21 +1,9 @@
-# Emacs
-*~
-\#*\#
-
-# Node modules
-node_modules/
-/build/
+/node_modules
+coverage/
+build/
 npm-debug.log
-
-# Cover
-.coverage_data/
-cover_html/
-
-npm-debug.log
-.vimrc.local
-
-# JSDoc
-/out/
-
-/lib/
-/powered-test/
+.DS_Store
+.idea
+*.iml
+/.vscode
+.sublimelinterrc

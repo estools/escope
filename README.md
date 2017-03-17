@@ -1,25 +1,31 @@
-Escope ([escope](http://github.com/estools/escope)) is
-[ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm)
-scope analyzer extracted from [esmangle project](http://github.com/estools/esmangle).
+# ESLint Scope
 
-[![Build Status](https://travis-ci.org/estools/escope.png?branch=master)](https://travis-ci.org/estools/escope)
+ESLint Scope is the [ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm) scope analyzer used in ESLint. It is a fork of [escope](http://github.com/estools/escope).
 
-### Example
+## Usage
+
+Install:
+
+```
+npm i eslint-scope --save
+```
+
+Example:
 
 ```js
-var escope = require('escope');
-var esprima = require('esprima');
+var eslintScope = require('eslint-scope');
+var espree = require('espree');
 var estraverse = require('estraverse');
 
-var ast = esprima.parse(code);
-var scopeManager = escope.analyze(ast);
+var ast = espree.parse(code);
+var scopeManager = eslintScope.analyze(ast);
 
 var currentScope = scopeManager.acquire(ast);   // global scope
 
 estraverse.traverse(ast, {
     enter: function(node, parent) {
         // do stuff
-        
+
         if (/Function/.test(node.type)) {
             currentScope = scopeManager.acquire(node);  // get current function scope
         }
@@ -28,52 +34,21 @@ estraverse.traverse(ast, {
         if (/Function/.test(node.type)) {
             currentScope = currentScope.upper;  // set to parent scope
         }
-        
+
         // do stuff
     }
 });
 ```
 
-### Document
+## Contributing
 
-Generated JSDoc is [here](http://estools.github.io/escope/).
+Issues and pull requests will be triaged and responded to as quickly as possible. We operate under the [ESLint Contributor Guidelines](http://eslint.org/docs/developer-guide/contributing), so please be sure to read them before contributing. If you're not sure where to dig in, check out the [issues](https://github.com/eslint/eslint-scope/issues).
 
-### Demos and Tools
+## Build Commands
 
-Demonstration is [here](http://mazurov.github.io/escope-demo/) by [Sasha Mazurov](https://github.com/mazurov) (twitter: [@mazurov](http://twitter.com/mazurov)). [issue](https://github.com/estools/escope/issues/14)
+* `npm test` - run all linting and tests
+* `npm run lint` - run all linting
 
-![Demo](https://f.cloud.github.com/assets/75759/462920/7aa6dd40-b4f5-11e2-9f07-9f4e8d0415f9.gif)
+## License
 
-
-And there are tools constructed on Escope.
-
-- [Esmangle](https://github.com/estools/esmangle) is a minifier / mangler / optimizer.
-- [Eslevels](https://github.com/mazurov/eslevels) is a scope levels analyzer and [SublimeText plugin for scope context coloring](https://github.com/mazurov/sublime-levels) is constructed on it.
-- [Esgoggles](https://github.com/keeyipchan/esgoggles) is JavaScript code browser.
-
-
-### License
-
-Copyright (C) 2012-2013 [Yusuke Suzuki](http://github.com/Constellation)
- (twitter: [@Constellation](http://twitter.com/Constellation)) and other contributors.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ESLint Scope is licensed under a permissive BSD 2-clause license.

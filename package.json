@@ -21,6 +21,11 @@
     "alpharelease": "eslint-prerelease alpha",
     "betarelease": "eslint-prerelease beta"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "lib"
+  ],
   "dependencies": {
     "esrecurse": "^4.1.0",
     "estraverse": "^4.1.1"

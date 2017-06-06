@@ -28,7 +28,7 @@ import Variable from './variable';
  * @class Definition
  */
 export default class Definition {
-    constructor(type, name, node, parent, index, kind) {
+    constructor(type, name, node, parent, index, kind, inner) {
         /**
          * @member {String} Definition#type - type of the occurrence (e.g. "Parameter", "Variable", ...).
          */
@@ -53,6 +53,10 @@ export default class Definition {
          * @member {String?} Definition#kind - the kind of the declaration statement.
          */
         this.kind = kind;
+        /**
+         * @member {Variable} Definition#inner - the reference to the inner scope variable.
+         */
+        this.inner = inner;
     }
 }
 

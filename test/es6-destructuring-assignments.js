@@ -921,7 +921,7 @@ describe('ES6 destructuring assignments', function() {
                     hello: {
                         world
                     }
-                }) = object;
+                } = object);
             }());
         `);
 
@@ -970,7 +970,7 @@ describe('ES6 destructuring assignments', function() {
                     hello: {
                         world
                     }
-                }) = object;
+                } = object);
             }());
         `);
 

@@ -23,7 +23,6 @@
 */
 
 import { Syntax } from 'estraverse';
-import Map from 'es6-map';
 
 import Reference from './reference';
 import Variable from './variable';

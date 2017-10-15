@@ -22,7 +22,6 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import WeakMap from 'es6-weak-map';
 import Scope from './scope';
 import assert from 'assert';
 

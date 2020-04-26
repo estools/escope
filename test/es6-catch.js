@@ -21,7 +21,7 @@
 //  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import { expect } from 'chai';
-import { parse } from '../third_party/esprima';
+import { parse } from 'esprima';
 import { analyze } from '..';
 
 describe('ES6 catch', function() {

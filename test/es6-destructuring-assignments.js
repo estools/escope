@@ -22,7 +22,7 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import harmony from '../third_party/esprima';
+import * as harmony from 'esprima';
 import espree from '../third_party/espree';
 import { analyze } from '..';
 
@@ -1067,7 +1067,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.variables[1].name).to.be.equal('a');
         expect(scope.variables[2].name).to.be.equal('b');
         expect(scope.variables[3].name).to.be.equal('rest');
-        expect(scope.variables[3].defs[0].rest).to.be.false;
+        expect(scope.variables[3].defs[0].rest).to.be.true;
         expect(scope.variables[4].name).to.be.equal('rest2');
         expect(scope.variables[4].defs[0].rest).to.be.true;
         expect(scope.references).to.have.length(0);

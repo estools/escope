@@ -22,7 +22,7 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { parse as esprima } from '../third_party/esprima';
+import { parse as esprima } from 'esprima';
 import espree from '../third_party/espree';
 import { analyze } from '..';
 

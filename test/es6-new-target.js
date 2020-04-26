@@ -23,8 +23,7 @@
 
 import { expect } from 'chai';
 import { analyze } from '..';
-
-const parse = require('../third_party/espree');
+import parse from '../third_party/espree';
 
 describe('ES6 new.target', function() {
     it('should not make references of new.target', function() {

@@ -18,6 +18,7 @@
       "web": "http://github.com/Constellation"
     }
   ],
+  "keywords": ["scope", "analysis"],
   "repository": {
     "type": "git",
     "url": "https://github.com/estools/escope.git"

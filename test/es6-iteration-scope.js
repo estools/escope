@@ -39,11 +39,11 @@ describe('ES6 iteration scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(5);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -52,7 +52,7 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[0].identifier.name).to.be.equal('i');
         expect(scope.references[0].resolved).to.be.equal(scope.variables[1]);
 
-        let iterScope = scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('TDZ');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('i');
@@ -61,7 +61,8 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[0].identifier.name).to.be.equal('i');
         expect(scope.references[0].resolved).to.be.equal(scope.variables[0]);
 
-        iterScope = scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
+        const iterScope = scope;
         expect(scope.type).to.be.equal('for');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('i');
@@ -69,7 +70,7 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[0].identifier.name).to.be.equal('i');
         expect(scope.references[0].resolved).to.be.equal(scope.variables[0]);
 
-        scope = scopeManager.scopes[4];
+        [, , , , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(2);
@@ -92,11 +93,11 @@ describe('ES6 iteration scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(5);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -105,7 +106,8 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[0].identifier.name).to.be.equal('i');
         expect(scope.references[0].resolved).to.be.equal(scope.variables[1]);
 
-        let iterScope = scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
+        let iterScope = scope;
         expect(scope.type).to.be.equal('TDZ');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal('i');
@@ -118,7 +120,8 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[0].identifier.name).to.be.equal('i');
         expect(scope.references[0].resolved).to.be.equal(scope.variables[0]);
 
-        iterScope = scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
+        iterScope = scope;
         expect(scope.type).to.be.equal('for');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal('i');
@@ -132,7 +135,7 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[2].identifier.name).to.be.equal('k');
         expect(scope.references[2].resolved).to.be.equal(scope.variables[2]);
 
-        scope = scopeManager.scopes[4];
+        [, , , , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(2);
@@ -156,11 +159,12 @@ describe('ES6 iteration scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
 
-        const functionScope = scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
+        const functionScope = scope;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -172,7 +176,8 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[1].identifier.name).to.be.equal('obj');
         expect(scope.references[1].resolved).to.be.equal(scope.variables[2]);
 
-        const iterScope = scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
+        const iterScope = scope;
         expect(scope.type).to.be.equal('for');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.be.equal('i');
@@ -197,7 +202,7 @@ describe('ES6 iteration scope', function() {
         expect(scope.references[6].identifier.name).to.be.equal('i');
         expect(scope.references[6].resolved).to.be.equal(scope.variables[0]);
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(4);

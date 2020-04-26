@@ -35,13 +35,13 @@ describe('nodejsScope option', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6, nodejsScope: true });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.true;
@@ -59,20 +59,20 @@ describe('nodejsScope option', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6, nodejsScope: true, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('v');

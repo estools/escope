@@ -30,8 +30,6 @@ import Definition from './definition';
 import assert from 'assert';
 
 function isStrictScope(scope, block, isMethodDefinition, useDirective) {
-    let body, i, iz, stmt, expr;
-
     // When upper scope is exists and strict, inner scope is also strict.
     if (scope.upper && scope.upper.isStrict) {
         return true;
@@ -54,11 +52,12 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
         return false;
     }
 
+    let body;
     if (scope.type === 'function') {
         if (block.type === Syntax.Program) {
             body = block;
         } else {
-            body = block.body;
+            ({ body } = block);
         }
     } else if (scope.type === 'global') {
         body = block;
@@ -68,8 +67,8 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
 
     // Search 'use strict' directive.
     if (useDirective) {
-        for (i = 0, iz = body.body.length; i < iz; ++i) {
-            stmt = body.body[i];
+        for (let i = 0, iz = body.body.length; i < iz; ++i) {
+            const stmt = body.body[i];
             if (stmt.type !== Syntax.DirectiveStatement) {
                 break;
             }
@@ -78,12 +77,12 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
             }
         }
     } else {
-        for (i = 0, iz = body.body.length; i < iz; ++i) {
-            stmt = body.body[i];
+        for (let i = 0, iz = body.body.length; i < iz; ++i) {
+            const stmt = body.body[i];
             if (stmt.type !== Syntax.ExpressionStatement) {
                 break;
             }
-            expr = stmt.expression;
+            const expr = stmt.expression;
             if (expr.type !== Syntax.Literal || typeof expr.value !== 'string') {
                 break;
             }
@@ -102,11 +101,9 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
 }
 
 function registerScope(scopeManager, scope) {
-    let scopes;
-
     scopeManager.scopes.push(scope);
 
-    scopes = scopeManager.__nodeToScope.get(scope.block);
+    const scopes = scopeManager.__nodeToScope.get(scope.block);
     if (scopes) {
         scopes.push(scope);
     } else {
@@ -293,10 +290,9 @@ export default class Scope {
     }
 
     __resolve(ref) {
-        let variable, name;
-        name = ref.identifier.name;
+        const { name } = ref.identifier;
         if (this.set.has(name)) {
-            variable = this.set.get(name);
+            const variable = this.set.get(name);
             variable.references.push(ref);
             variable.stack = variable.stack && ref.from.variableScope === this.variableScope;
             if (ref.tainted) {
@@ -405,11 +401,10 @@ export default class Scope {
      * @return {Reference}
      */
     resolve(ident) {
-        let ref, i, iz;
         assert(this.__isClosed(), 'Scope should be closed.');
         assert(ident.type === Syntax.Identifier, 'Target should be identifier.');
-        for (i = 0, iz = this.references.length; i < iz; ++i) {
-            ref = this.references[i];
+        for (let i = 0, iz = this.references.length; i < iz; ++i) {
+            const ref = this.references[i];
             if (ref.identifier === ident) {
                 return ref;
             }

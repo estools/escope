@@ -128,9 +128,8 @@ export default class Referencer extends esrecurse.Visitor {
 
     materializeIterationScope(node) {
         // Generate iteration scope for upper ForIn/ForOf Statements.
-        let letOrConstDecl;
         this.scopeManager.__nestForScope(node);
-        letOrConstDecl = node.left;
+        const letOrConstDecl = node.left;
         this.visitVariableDeclaration(this.currentScope(), Variable.Variable, letOrConstDecl, 0);
         this.visitPattern(letOrConstDecl.declarations[0].id, (pattern) => {
             this.currentScope().__referencing(pattern, Reference.WRITE, node.right, null, true, true);
@@ -163,7 +162,6 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     visitFunction(node) {
-        let i, iz;
         // FunctionDeclaration name is defined in upper scope
         // NOTE: Not referring variableScope. It is intended.
         // Since
@@ -192,7 +190,7 @@ export default class Referencer extends esrecurse.Visitor {
         this.scopeManager.__nestFunctionScope(node, this.isInnerMethodDefinition);
 
         // Process parameter declarations.
-        for (i = 0, iz = node.params.length; i < iz; ++i) {
+        for (let i = 0, iz = node.params.length; i < iz; ++i) {
             this.visitPattern(node.params[i], { processRightHandNodes: true }, (pattern, info) => {
                 this.currentScope().__define(pattern,
                     new ParameterDefinition(
@@ -264,12 +262,12 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     visitProperty(node) {
-        let previous, isMethodDefinition;
+        let previous;
         if (node.computed) {
             this.visit(node.key);
         }
 
-        isMethodDefinition = node.type === Syntax.MethodDefinition;
+        const isMethodDefinition = node.type === Syntax.MethodDefinition;
         if (isMethodDefinition) {
             previous = this.pushInnerMethodDefinition(true);
         }
@@ -314,10 +312,8 @@ export default class Referencer extends esrecurse.Visitor {
 
     visitVariableDeclaration(variableTargetScope, type, node, index, fromTDZ) {
         // If this was called to initialize a TDZ scope, this needs to make definitions, but doesn't make references.
-        let decl, init;
-
-        decl = node.declarations[index];
-        init = decl.init;
+        const decl = node.declarations[index];
+        const { init } = decl;
         this.visitPattern(decl.id, { processRightHandNodes: !fromTDZ }, (pattern, info) => {
             variableTargetScope.__define(pattern,
                 new Definition(
@@ -494,10 +490,9 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     VariableDeclaration(node) {
-        let variableTargetScope, i, iz, decl;
-        variableTargetScope = (node.kind === 'var') ? this.currentScope().variableScope : this.currentScope();
-        for (i = 0, iz = node.declarations.length; i < iz; ++i) {
-            decl = node.declarations[i];
+        const variableTargetScope = (node.kind === 'var') ? this.currentScope().variableScope : this.currentScope();
+        for (let i = 0, iz = node.declarations.length; i < iz; ++i) {
+            const decl = node.declarations[i];
             this.visitVariableDeclaration(variableTargetScope, Variable.Variable, node, i);
             if (decl.init) {
                 this.visit(decl.init);
@@ -507,15 +502,13 @@ export default class Referencer extends esrecurse.Visitor {
 
     // sec 13.11.8
     SwitchStatement(node) {
-        let i, iz;
-
         this.visit(node.discriminant);
 
         if (this.scopeManager.__isES6()) {
             this.scopeManager.__nestSwitchScope(node);
         }
 
-        for (i = 0, iz = node.cases.length; i < iz; ++i) {
+        for (let i = 0, iz = node.cases.length; i < iz; ++i) {
             this.visit(node.cases[i]);
         }
 
@@ -543,11 +536,9 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     ImportDeclaration(node) {
-        let importer;
-
         assert(this.scopeManager.__isES6() && this.scopeManager.isModule(), 'ImportDeclaration should appear when the mode is ES6 and in the module context.');
 
-        importer = new Importer(node, this);
+        const importer = new Importer(node, this);
         importer.visit(node);
     }
 

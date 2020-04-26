@@ -39,7 +39,7 @@ describe('ES6 new.target', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        const scope = scopeManager.scopes[2];
+        const [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionExpression');
         expect(scope.isStrict).to.be.true;

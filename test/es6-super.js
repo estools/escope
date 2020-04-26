@@ -42,25 +42,25 @@ describe('ES6 super', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('Hello');
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('class');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('Hello');
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
         expect(scope.references).to.have.length(0);  // super is specially handled like `this`.
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');

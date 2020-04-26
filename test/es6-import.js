@@ -32,12 +32,12 @@ describe('import declaration', function() {
 
         const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
@@ -52,12 +52,12 @@ describe('import declaration', function() {
 
         const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
@@ -72,12 +72,12 @@ describe('import declaration', function() {
 
         const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
@@ -91,12 +91,12 @@ describe('import declaration', function() {
 
         const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);

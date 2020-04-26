@@ -31,7 +31,7 @@ describe('global increment', function() {
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(1);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(1);

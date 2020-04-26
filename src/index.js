@@ -71,15 +71,13 @@ function defaultOptions() {
 }
 
 function updateDeeply(target, override) {
-    let key, val;
-
     function isHashObject(target) {
         return typeof target === 'object' && target instanceof Object && !(target instanceof Array) && !(target instanceof RegExp);
     }
 
-    for (key in override) {
-        if (override.hasOwnProperty(key)) {
-            val = override[key];
+    for (const key in override) {
+        if (Object.hasOwnProperty.call(override, key)) {
+            const val = override[key];
             if (isHashObject(val)) {
                 if (isHashObject(target[key])) {
                     updateDeeply(target[key], val);
@@ -115,13 +113,11 @@ function updateDeeply(target, override) {
  * @return {ScopeManager}
  */
 export function analyze(tree, providedOptions) {
-    let scopeManager, referencer, options;
+    const options = updateDeeply(defaultOptions(), providedOptions);
 
-    options = updateDeeply(defaultOptions(), providedOptions);
+    const scopeManager = new ScopeManager(options);
 
-    scopeManager = new ScopeManager(options);
-
-    referencer = new Referencer(options, scopeManager);
+    const referencer = new Referencer(options, scopeManager);
     referencer.visit(tree);
 
     assert(scopeManager.__currentScope === null, 'currentScope should be null.');

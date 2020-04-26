@@ -37,11 +37,11 @@ describe('ES6 block scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);  // Program and BlcokStatement scope.
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);  // No variable in Program scope.
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(1);  // `i` in block scope.
         expect(scope.variables[0].name).to.be.equal('i');
@@ -62,12 +62,12 @@ describe('ES6 block scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);  // Program and BlcokStatement scope.
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(1);  // No variable in Program scope.
         expect(scope.variables[0].name).to.be.equal('i');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(1);  // `i` in block scope.
         expect(scope.variables[0].name).to.be.equal('i');
@@ -89,18 +89,18 @@ describe('ES6 block scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('test');
         expect(scope.references).to.have.length(1);
         expect(scope.references[0].identifier.name).to.be.equal('test');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -120,13 +120,13 @@ describe('ES6 block scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(1);
         expect(globalScope.variables[0].name).to.be.equal('i');
         expect(globalScope.references).to.have.length(1);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('i');
@@ -158,37 +158,37 @@ describe('ES6 block scope', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);
 
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        let scope = scopeManager.scopes[1];
+        let [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal('arguments');
         expect(scope.variables[1].name).to.be.equal('i');
-        const v1 = scope.variables[1];
+        const [, v1] = scope.variables;
         expect(scope.references).to.have.length(3);
         expect(scope.references[0].resolved).to.be.equal(v1);
         expect(scope.references[1].resolved).to.be.equal(v1);
         expect(scope.references[2].resolved).to.be.equal(v1);
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('i');
-        const v3 = scope.variables[0];
+        const [v3] = scope.variables;
         expect(scope.references).to.have.length(3);
         expect(scope.references[0].resolved).to.be.equal(v3);
         expect(scope.references[1].resolved).to.be.equal(v3);
         expect(scope.references[2].resolved).to.be.equal(v3);
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('i');
-        const v2 = scope.variables[0];
+        const [v2] = scope.variables;
         expect(scope.references).to.have.length(3);
         expect(scope.references[0].resolved).to.be.equal(v2);
         expect(scope.references[1].resolved).to.be.equal(v2);

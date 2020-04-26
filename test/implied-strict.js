@@ -38,17 +38,17 @@ describe('impliedStrict option', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 5, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;
@@ -62,12 +62,12 @@ describe('impliedStrict option', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 3, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.false;
@@ -81,17 +81,17 @@ describe('impliedStrict option', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 5, nodejsScope: true, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;
@@ -106,16 +106,16 @@ describe('impliedStrict option', function() {
         const scopeManager = analyze(ast, { ecmaVersion: 6, impliedStrict: true, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;

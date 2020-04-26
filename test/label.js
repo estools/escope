@@ -31,13 +31,13 @@ describe('label', function() {
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(1);
         expect(globalScope.variables[0].name).to.be.equal('bar');
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -57,7 +57,7 @@ describe('label', function() {
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(1);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(1);
         expect(globalScope.variables[0].name).to.be.equal('foo');

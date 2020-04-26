@@ -37,12 +37,12 @@ describe('with', function() {
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(3);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        let scope = scopeManager.scopes[1];
+        let [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -50,7 +50,7 @@ describe('with', function() {
         expect(scope.references).to.have.length(1);
         expect(scope.references[0].resolved).to.be.null;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('with');
         expect(scope.variables).to.have.length(0);
         expect(scope.isArgumentsMaterialized()).to.be.true;

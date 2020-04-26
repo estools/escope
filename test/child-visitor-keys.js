@@ -65,7 +65,7 @@ describe('childVisitorKeys option', function() {
         );
 
         expect(result.scopes).to.have.length(1);
-        const globalScope = result.scopes[0];
+        const [globalScope] = result.scopes;
 
         // `bar` in TestNode has not been visited.
         expect(globalScope.through).to.have.length(0);
@@ -91,7 +91,7 @@ describe('childVisitorKeys option', function() {
         );
 
         expect(result.scopes).to.have.length(1);
-        const globalScope = result.scopes[0];
+        const [globalScope] = result.scopes;
 
         // `bar` in TestNode has been visited.
         expect(globalScope.through).to.have.length(1);

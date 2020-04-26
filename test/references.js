@@ -33,11 +33,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -57,11 +57,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
-            const scope = scopeManager.scopes[1];
+            const [, scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -80,11 +80,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
-            const scope = scopeManager.scopes[1];
+            const [, scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -101,11 +101,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -125,11 +125,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
-            const scope = scopeManager.scopes[1];
+            const [, scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -146,11 +146,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.be.null;
@@ -170,11 +170,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
-            const scope = scopeManager.scopes[1];
+            const [, scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.be.null;
@@ -194,11 +194,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, a]
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.be.null;
@@ -218,11 +218,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, a, foo]
 
-            const scope = scopeManager.scopes[2];
+            const [, , scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.be.null;
@@ -242,11 +242,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, A]
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [A, b]
             expect(scope.references).to.have.length(2);  // [b, A]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('A');
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -266,11 +266,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, A, foo]
 
-            const scope = scopeManager.scopes[2];
+            const [, , scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, A]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('A');
             expect(reference.resolved).to.equal(scopeManager.scopes[0].variables[0]);
@@ -291,11 +291,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
-            const scope = scopeManager.scopes[1];
+            const [, scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, a]
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[1]);
@@ -317,11 +317,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, foo, bar]
 
-            const scope = scopeManager.scopes[2];
+            const [, , scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scopeManager.scopes[1].variables[1]);
@@ -342,11 +342,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
-            const scope = scopeManager.scopes[1];
+            const [, scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, a]
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[1]);
@@ -368,11 +368,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, foo, bar]
 
-            const scope = scopeManager.scopes[2];
+            const [, , scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(2);  // [arguments, b]
             expect(scope.references).to.have.length(2);  // [b, a]
 
-            const reference = scope.references[1];
+            const [, reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scopeManager.scopes[1].variables[1]);
@@ -389,11 +389,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -408,11 +408,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -427,11 +427,11 @@ describe('References:', function() {
             const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
-            const scope = scopeManager.scopes[0];
+            const [scope] = scopeManager.scopes;
             expect(scope.variables).to.have.length(1);
             expect(scope.references).to.have.length(1);
 
-            const reference = scope.references[0];
+            const [reference] = scope.references;
             expect(reference.from).to.equal(scope);
             expect(reference.identifier.name).to.equal('a');
             expect(reference.resolved).to.equal(scope.variables[0]);
@@ -550,11 +550,11 @@ describe('References:', function() {
                 const scopeManager = analyze(ast, { ecmaVersion: 6 });
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
-                const scope = scopeManager.scopes[0];
+                const [scope] = scopeManager.scopes;
                 expect(scope.variables).to.have.length.of.at.least(1);
                 expect(scope.variables[0].name).to.equal('a');
 
-                const { references } = scope.variables[0];
+                const [{ references }] = scope.variables;
                 expect(references).to.have.length.of.at.least(1);
 
                 references.forEach(reference => {

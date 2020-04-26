@@ -22,7 +22,7 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-var espree = require('espree');
+const espree = require('espree');
 
 module.exports = function (code) {
     return espree.parse(code, {
@@ -49,7 +49,7 @@ module.exports = function (code) {
 
         // enable es6 features.
         ecmaVersion: 6,
-        sourceType: "module"
+        sourceType: 'module'
     });
 };
 

@@ -2,5 +2,5 @@ node_modules
 lib
 
 !.eslintrc.js
-third_party
+third_party/esprima.js
 coverage

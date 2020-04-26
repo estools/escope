@@ -46,8 +46,6 @@
  * @module escope
  */
 
-/*jslint bitwise:true */
-
 import assert from 'assert';
 
 import ScopeManager from './scope-manager';

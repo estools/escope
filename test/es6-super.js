@@ -39,7 +39,7 @@ describe('ES6 super', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);
 
         let scope = scopeManager.scopes[0];

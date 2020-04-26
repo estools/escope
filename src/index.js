@@ -71,7 +71,7 @@ function defaultOptions() {
 }
 
 function updateDeeply(target, override) {
-    var key, val;
+    let key, val;
 
     function isHashObject(target) {
         return typeof target === 'object' && target instanceof Object && !(target instanceof Array) && !(target instanceof RegExp);
@@ -115,7 +115,7 @@ function updateDeeply(target, override) {
  * @return {ScopeManager}
  */
 export function analyze(tree, providedOptions) {
-    var scopeManager, referencer, options;
+    let scopeManager, referencer, options;
 
     options = updateDeeply(defaultOptions(), providedOptions);
 

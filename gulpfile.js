@@ -24,7 +24,7 @@
 
 'use strict';
 
-var gulp = require('gulp'),
+const gulp = require('gulp'),
     mocha = require('gulp-mocha'),
     babel = require('gulp-babel'),
     git = require('gulp-git'),
@@ -42,12 +42,12 @@ require('babel-register')({
     only: /escope\/(src|test)\//
 });
 
-var TEST = [ 'test/*.js' ];
-var SOURCE = [ 'src/**/*.js' ];
+const TEST = [ 'test/*.js' ];
+const SOURCE = [ 'src/**/*.js' ];
 
-var BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
+const BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
 
-var build = lazypipe()
+const build = lazypipe()
     .pipe(sourcemaps.init)
     .pipe(babel, BABEL_OPTIONS)
     .pipe(sourcemaps.write)
@@ -65,9 +65,9 @@ gulp.task('browserify', [ 'build' ], function () {
     return browserify({
         entries: [ './lib/index.js' ]
     })
-    .bundle()
-    .pipe(source('bundle.js'))
-    .pipe(gulp.dest('build'))
+        .bundle()
+        .pipe(source('bundle.js'))
+        .pipe(gulp.dest('build'));
 });
 
 gulp.task('test', [ 'build' ], function () {
@@ -100,7 +100,7 @@ function inc(importance) {
     // get all the files to bump version in
     return gulp.src(['./package.json'])
         // bump the version number in those files
-        .pipe(bump({type: importance}))
+        .pipe(bump({ type: importance }))
         // save it back to filesystem
         .pipe(gulp.dest('./'))
         // commit the changed version number
@@ -113,9 +113,9 @@ function inc(importance) {
         }));
 }
 
-gulp.task('patch', [ 'build' ], function () { return inc('patch'); })
-gulp.task('minor', [ 'build' ], function () { return inc('minor'); })
-gulp.task('major', [ 'build' ], function () { return inc('major'); })
+gulp.task('patch', [ 'build' ], function () { return inc('patch'); });
+gulp.task('minor', [ 'build' ], function () { return inc('minor'); });
+gulp.task('major', [ 'build' ], function () { return inc('major'); });
 
 gulp.task('travis', [ 'test' ]);
 gulp.task('default', [ 'travis' ]);

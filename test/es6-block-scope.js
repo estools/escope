@@ -34,7 +34,7 @@ describe('ES6 block scope', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);  // Program and BlcokStatement scope.
 
         let scope = scopeManager.scopes[0];
@@ -59,7 +59,7 @@ describe('ES6 block scope', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);  // Program and BlcokStatement scope.
 
         let scope = scopeManager.scopes[0];
@@ -86,7 +86,7 @@ describe('ES6 block scope', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
@@ -117,7 +117,7 @@ describe('ES6 block scope', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
         const globalScope = scopeManager.scopes[0];
@@ -155,7 +155,7 @@ describe('ES6 block scope', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);
 
         const globalScope = scopeManager.scopes[0];

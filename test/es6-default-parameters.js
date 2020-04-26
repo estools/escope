@@ -28,9 +28,9 @@ import { analyze } from '..';
 describe('ES6 default parameters:', function() {
     describe('a default parameter creates a writable reference for its initialization:', function() {
         const patterns = {
-            FunctionDeclaration: `function foo(a, b = 0) {}`,
-            FunctionExpression: `let foo = function(a, b = 0) {};`,
-            ArrowExpression: `let foo = (a, b = 0) => {};`
+            FunctionDeclaration: 'function foo(a, b = 0) {}',
+            FunctionExpression: 'let foo = function(a, b = 0) {};',
+            ArrowExpression: 'let foo = (a, b = 0) => {};'
         };
 
         for (const name in patterns) {
@@ -40,7 +40,7 @@ describe('ES6 default parameters:', function() {
                     const numVars = name === 'ArrowExpression' ? 2 : 3;
                     const ast = espree(code);
 
-                    const scopeManager = analyze(ast, {ecmaVersion: 6});
+                    const scopeManager = analyze(ast, { ecmaVersion: 6 });
                     expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
                     const scope = scopeManager.scopes[1];
@@ -82,7 +82,7 @@ describe('ES6 default parameters:', function() {
                     const numVars = name === 'ArrowExpression' ? 1 : 2;
                     const ast = espree(code);
 
-                    const scopeManager = analyze(ast, {ecmaVersion: 6});
+                    const scopeManager = analyze(ast, { ecmaVersion: 6 });
                     expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
                     const scope = scopeManager.scopes[1];
@@ -124,7 +124,7 @@ describe('ES6 default parameters:', function() {
                     const numVars = name === 'ArrowExpression' ? 1 : 2;
                     const ast = espree(code);
 
-                    const scopeManager = analyze(ast, {ecmaVersion: 6});
+                    const scopeManager = analyze(ast, { ecmaVersion: 6 });
                     expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
                     const scope = scopeManager.scopes[1];
@@ -166,7 +166,7 @@ describe('ES6 default parameters:', function() {
                     const numVars = name === 'ArrowExpression' ? 1 : 2;
                     const ast = espree(code);
 
-                    const scopeManager = analyze(ast, {ecmaVersion: 6});
+                    const scopeManager = analyze(ast, { ecmaVersion: 6 });
                     expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
                     const scope = scopeManager.scopes[1];
@@ -207,7 +207,7 @@ describe('ES6 default parameters:', function() {
                 it(name, function() {
                     const ast = espree(code);
 
-                    const scopeManager = analyze(ast, {ecmaVersion: 6});
+                    const scopeManager = analyze(ast, { ecmaVersion: 6 });
                     expect(scopeManager.scopes).to.have.length(3);  // [global, foo, anonymous]
 
                     const scope = scopeManager.scopes[2];

@@ -35,7 +35,7 @@ describe('ES6 class', function() {
             new Derived();
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
@@ -73,7 +73,7 @@ describe('ES6 class', function() {
             });
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
@@ -105,7 +105,7 @@ describe('ES6 class', function() {
             });
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
@@ -139,7 +139,7 @@ describe('ES6 class', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(5);
 
         let scope = scopeManager.scopes[0];
@@ -177,7 +177,7 @@ describe('ES6 class', function() {
             let shoe = new Shoe();
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
         const scope = scopeManager.scopes[0];

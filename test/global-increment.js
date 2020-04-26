@@ -27,7 +27,7 @@ import { analyze } from '..';
 
 describe('global increment', function() {
     it('becomes read/write', function() {
-        const ast = parse(`b++;`);
+        const ast = parse('b++;');
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(1);

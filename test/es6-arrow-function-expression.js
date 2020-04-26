@@ -35,7 +35,7 @@ describe('ES6 arrow function expression', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
@@ -55,9 +55,9 @@ describe('ES6 arrow function expression', function() {
     });
 
     it('generate bindings for parameters', function() {
-        const ast = parse(`var arrow = (a, b, c, d) => {}`);
+        const ast = parse('var arrow = (a, b, c, d) => {}');
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];

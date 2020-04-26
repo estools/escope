@@ -107,7 +107,7 @@ export default class ScopeManager {
      * @return {Scope?}
      */
     acquire(node, inner) {
-        var scopes, scope, i, iz;
+        let scopes, scope, i, iz;
 
         function predicate(scope) {
             if (scope.type === 'function' && scope.functionExpressionScope) {
@@ -167,7 +167,7 @@ export default class ScopeManager {
      * @return {Scope?} upper scope for the node.
      */
     release(node, inner) {
-        var scopes, scope;
+        let scopes, scope;
         scopes = this.__get(node);
         if (scopes && scopes.length) {
             scope = scopes[0].upper;

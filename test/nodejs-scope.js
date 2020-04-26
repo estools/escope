@@ -32,7 +32,7 @@ describe('nodejsScope option', function() {
             var hello = 20;
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6, nodejsScope: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, nodejsScope: true });
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
@@ -53,10 +53,10 @@ describe('nodejsScope option', function() {
     it('creates a function scope following the global scope immediately and creates module scope', function() {
         const ast = parse(`
             import {x as v} from "mod";`,
-            {sourceType: 'module' }
+        { sourceType: 'module' }
         );
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6, nodejsScope: true, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, nodejsScope: true, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];

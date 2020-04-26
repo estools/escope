@@ -55,7 +55,7 @@ describe('childVisitorKeys option', function() {
             argument: ast.body[0].declarations[0].init
         };
 
-        var result = analyze(
+        const result = analyze(
             ast,
             {
                 childVisitorKeys: {
@@ -81,7 +81,7 @@ describe('childVisitorKeys option', function() {
             argument: ast.body[0].declarations[0].init
         };
 
-        var result = analyze(
+        const result = analyze(
             ast,
             {
                 childVisitorKeys: {

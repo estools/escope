@@ -35,7 +35,7 @@ describe('impliedStrict option', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 5, impliedStrict: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 5, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
@@ -59,7 +59,7 @@ describe('impliedStrict option', function() {
             function foo() {}
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 3, impliedStrict: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 3, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(2);
 
         let scope = scopeManager.scopes[0];
@@ -78,7 +78,7 @@ describe('impliedStrict option', function() {
             function foo() {}
         `);
 
-        let scopeManager = analyze(ast, {ecmaVersion: 5, nodejsScope: true, impliedStrict: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 5, nodejsScope: true, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];
@@ -100,10 +100,10 @@ describe('impliedStrict option', function() {
     it('omits a module global scope when ensuring all user scopes are strict', function() {
         const ast = parse(`
             function foo() {}`,
-            {sourceType: 'module'}
+        { sourceType: 'module' }
         );
 
-        let scopeManager = analyze(ast, {ecmaVersion: 6, impliedStrict: true, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, impliedStrict: true, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(3);
 
         let scope = scopeManager.scopes[0];

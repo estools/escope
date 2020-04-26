@@ -36,7 +36,7 @@ describe('ES6 new.target', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
         const scope = scopeManager.scopes[2];

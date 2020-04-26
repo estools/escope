@@ -28,9 +28,9 @@ import { analyze } from '..';
 describe('References:', function() {
     describe('When there is a `let` declaration on global,', function() {
         it('the reference on global should be resolved.', function() {
-            const ast = espree(`let a = 0;`);
+            const ast = espree('let a = 0;');
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
@@ -54,7 +54,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
@@ -77,7 +77,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
@@ -96,9 +96,9 @@ describe('References:', function() {
 
     describe('When there is a `const` declaration on global,', function() {
         it('the reference on global should be resolved.', function() {
-            const ast = espree(`const a = 0;`);
+            const ast = espree('const a = 0;');
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
@@ -122,7 +122,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
@@ -141,9 +141,9 @@ describe('References:', function() {
 
     describe('When there is a `var` declaration on global,', function() {
         it('the reference on global should NOT be resolved.', function() {
-            const ast = espree(`var a = 0;`);
+            const ast = espree('var a = 0;');
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
@@ -167,7 +167,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
@@ -191,7 +191,7 @@ describe('References:', function() {
                 a();
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, a]
 
             const scope = scopeManager.scopes[0];
@@ -215,7 +215,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, a, foo]
 
             const scope = scopeManager.scopes[2];
@@ -239,7 +239,7 @@ describe('References:', function() {
                 let b = new A();
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, A]
 
             const scope = scopeManager.scopes[0];
@@ -263,7 +263,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, A, foo]
 
             const scope = scopeManager.scopes[2];
@@ -288,7 +288,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
@@ -314,7 +314,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, foo, bar]
 
             const scope = scopeManager.scopes[2];
@@ -339,7 +339,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(2);  // [global, foo]
 
             const scope = scopeManager.scopes[1];
@@ -365,7 +365,7 @@ describe('References:', function() {
                 }
             `);
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(3);  // [global, foo, bar]
 
             const scope = scopeManager.scopes[2];
@@ -384,9 +384,9 @@ describe('References:', function() {
 
     describe('When there is a `let` declaration with destructuring assignment', function() {
         it('"let [a] = [1];", the reference should be resolved.', function() {
-            const ast = espree(`let [a] = [1];`);
+            const ast = espree('let [a] = [1];');
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
@@ -403,9 +403,9 @@ describe('References:', function() {
         });
 
         it('"let {a} = {a: 1};", the reference should be resolved.', function() {
-            const ast = espree(`let {a} = {a: 1};`);
+            const ast = espree('let {a} = {a: 1};');
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
@@ -422,9 +422,9 @@ describe('References:', function() {
         });
 
         it('"let {a: {a}} = {a: {a: 1}};", the reference should be resolved.', function() {
-            const ast = espree(`let {a: {a}} = {a: {a: 1}};`);
+            const ast = espree('let {a: {a}} = {a: {a: 1}};');
 
-            const scopeManager = analyze(ast, {ecmaVersion: 6});
+            const scopeManager = analyze(ast, { ecmaVersion: 6 });
             expect(scopeManager.scopes).to.have.length(1);
 
             const scope = scopeManager.scopes[0];
@@ -480,7 +480,7 @@ describe('References:', function() {
             it(`"${code}", all references should be true.`, function() {
                 const ast = espree(code);
 
-                const scopeManager = analyze(ast, {ecmaVersion: 6});
+                const scopeManager = analyze(ast, { ecmaVersion: 6 });
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
                 const scope = scopeManager.scopes[scopeManager.scopes.length - 1];
@@ -512,7 +512,7 @@ describe('References:', function() {
             it(`"${code}", all references should be false.`, function() {
                 const ast = espree(code);
 
-                const scopeManager = analyze(ast, {ecmaVersion: 6});
+                const scopeManager = analyze(ast, { ecmaVersion: 6 });
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
                 const scope = scopeManager.scopes[scopeManager.scopes.length - 1];
@@ -523,7 +523,7 @@ describe('References:', function() {
                     expect(reference.identifier.name).to.equal('a');
                     expect(reference.isWrite()).to.be.true;
                     expect(reference.init).to.be.false;
-                })
+                });
             })
         );
 
@@ -547,7 +547,7 @@ describe('References:', function() {
             it(`"${code}", readonly references of "a" should be undefined.`, function() {
                 const ast = espree(code);
 
-                const scopeManager = analyze(ast, {ecmaVersion: 6});
+                const scopeManager = analyze(ast, { ecmaVersion: 6 });
                 expect(scopeManager.scopes).to.be.length.of.at.least(1);
 
                 const scope = scopeManager.scopes[0];
@@ -562,7 +562,7 @@ describe('References:', function() {
                     expect(reference.init).to.be.undefined;
                 });
             })
-        )
+        );
     });
 });
 

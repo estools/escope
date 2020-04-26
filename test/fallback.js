@@ -34,8 +34,8 @@ describe('fallback option', function() {
         ast.body[0].declarations[0].init.type = 'NumericLiteral';
 
         expect(function() {
-            analyze(ast, {fallback: 'none'});
-        }).to.throw("Unknown node type NumericLiteral");
+            analyze(ast, { fallback: 'none' });
+        }).to.throw('Unknown node type NumericLiteral');
     });
 
     it('should not raise an error even if it encountered an unknown node when fallback is iteration.', function() {
@@ -46,7 +46,7 @@ describe('fallback option', function() {
         ast.body[0].declarations[0].init.type = 'NumericLiteral';
 
         analyze(ast); // default is `fallback: 'iteration'`
-        analyze(ast, {fallback: 'iteration'});
+        analyze(ast, { fallback: 'iteration' });
     });
 
     it('should not raise an error even if it encountered an unknown node when fallback is a function.', function() {
@@ -56,7 +56,7 @@ describe('fallback option', function() {
 
         ast.body[0].declarations[0].init.type = 'NumericLiteral';
 
-        analyze(ast, {fallback: node => Object.keys(node)});
+        analyze(ast, { fallback: node => Object.keys(node) });
     });
 });
 

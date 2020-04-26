@@ -30,7 +30,7 @@ import Definition from './definition';
 import assert from 'assert';
 
 function isStrictScope(scope, block, isMethodDefinition, useDirective) {
-    var body, i, iz, stmt, expr;
+    let body, i, iz, stmt, expr;
 
     // When upper scope is exists and strict, inner scope is also strict.
     if (scope.upper && scope.upper.isStrict) {
@@ -102,7 +102,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
 }
 
 function registerScope(scopeManager, scope) {
-    var scopes;
+    let scopes;
 
     scopeManager.scopes.push(scope);
 
@@ -131,7 +131,7 @@ export default class Scope {
          * @member {String} Scope#type
          */
         this.type = type;
-         /**
+        /**
          * The scoped {@link Variable}s of this scope, as <code>{ Variable.name
          * : Variable }</code>.
          * @member {Map} Scope#set
@@ -158,19 +158,19 @@ export default class Scope {
          * @member {esprima.Node} Scope#block
          */
         this.block = block;
-         /**
+        /**
          * The {@link Reference|references} that are not resolved with this scope.
          * @member {Reference[]} Scope#through
          */
         this.through = [];
-         /**
+        /**
          * The scoped {@link Variable}s of this scope. In the case of a
          * 'function' scope this includes the automatic argument <em>arguments</em> as
          * its first element, as well as all further formal arguments.
          * @member {Variable[]} Scope#variables
          */
         this.variables = [];
-         /**
+        /**
          * Any variable {@link Reference|reference} found in this scope. This
          * includes occurrences of local variables as well as variables from
          * parent scopes (including the global scope). For local variables
@@ -181,7 +181,7 @@ export default class Scope {
          */
         this.references = [];
 
-         /**
+        /**
          * For 'global' and 'function' scopes, this is a self-reference. For
          * other scope types this is the <em>variableScope</em> value of the
          * parent scope.
@@ -189,35 +189,35 @@ export default class Scope {
          */
         this.variableScope =
             (this.type === 'global' || this.type === 'function' || this.type === 'module') ? this : upperScope.variableScope;
-         /**
+        /**
          * Whether this scope is created by a FunctionExpression.
          * @member {boolean} Scope#functionExpressionScope
          */
         this.functionExpressionScope = false;
-         /**
+        /**
          * Whether this is a scope that contains an 'eval()' invocation.
          * @member {boolean} Scope#directCallToEvalScope
          */
         this.directCallToEvalScope = false;
-         /**
+        /**
          * @member {boolean} Scope#thisFound
          */
         this.thisFound = false;
 
         this.__left = [];
 
-         /**
+        /**
          * Reference to the parent {@link Scope|scope}.
          * @member {Scope} Scope#upper
          */
         this.upper = upperScope;
-         /**
+        /**
          * Whether 'use strict' is in effect in this scope.
          * @member {boolean} Scope#isStrict
          */
         this.isStrict = isStrictScope(this, block, isMethodDefinition, scopeManager.__useDirective());
 
-         /**
+        /**
          * List of nested {@link Scope}s.
          * @member {Scope[]} Scope#childScopes
          */
@@ -237,13 +237,13 @@ export default class Scope {
 
     __shouldStaticallyCloseForGlobal(ref) {
         // On global scope, let/const/class declarations should be resolved statically.
-        var name = ref.identifier.name;
+        const { name } = ref.identifier;
         if (!this.set.has(name)) {
             return false;
         }
 
-        var variable = this.set.get(name);
-        var defs = variable.defs;
+        const variable = this.set.get(name);
+        const { defs } = variable;
         return defs.length > 0 && defs.every(shouldBeStatically);
     }
 
@@ -273,7 +273,7 @@ export default class Scope {
     }
 
     __close(scopeManager) {
-        var closeRef;
+        let closeRef;
         if (this.__shouldStaticallyClose(scopeManager)) {
             closeRef = this.__staticCloseRef;
         } else if (this.type !== 'global') {
@@ -284,7 +284,7 @@ export default class Scope {
 
         // Try Resolving all references in this scope.
         for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            let ref = this.__left[i];
+            const ref = this.__left[i];
             closeRef.call(this, ref);
         }
         this.__left = null;
@@ -293,7 +293,7 @@ export default class Scope {
     }
 
     __resolve(ref) {
-        var variable, name;
+        let variable, name;
         name = ref.identifier.name;
         if (this.set.has(name)) {
             variable = this.set.get(name);
@@ -321,7 +321,7 @@ export default class Scope {
             return;
         }
 
-        var variables = this.__declaredVariables.get(node);
+        let variables = this.__declaredVariables.get(node);
         if (variables == null) {
             variables = [];
             this.__declaredVariables.set(node, variables);
@@ -332,7 +332,7 @@ export default class Scope {
     }
 
     __defineGeneric(name, set, variables, node, def) {
-        var variable;
+        let variable;
 
         variable = set.get(name);
         if (!variable) {
@@ -356,11 +356,11 @@ export default class Scope {
     __define(node, def) {
         if (node && node.type === Syntax.Identifier) {
             this.__defineGeneric(
-                    node.name,
-                    this.set,
-                    this.variables,
-                    node,
-                    def);
+                node.name,
+                this.set,
+                this.variables,
+                node,
+                def);
         }
     }
 
@@ -375,13 +375,13 @@ export default class Scope {
             return;
         }
 
-        let ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial, !!init);
+        const ref = new Reference(node, this, assign || Reference.READ, writeExpr, maybeImplicitGlobal, !!partial, !!init);
         this.references.push(ref);
         this.__left.push(ref);
     }
 
     __detectEval() {
-        var current;
+        let current;
         current = this;
         this.directCallToEvalScope = true;
         do {
@@ -405,7 +405,7 @@ export default class Scope {
      * @return {Reference}
      */
     resolve(ident) {
-        var ref, i, iz;
+        let ref, i, iz;
         assert(this.__isClosed(), 'Scope should be closed.');
         assert(ident.type === Syntax.Identifier, 'Target should be identifier.');
         for (i = 0, iz = this.references.length; i < iz; ++i) {
@@ -448,7 +448,7 @@ export default class Scope {
         if (this.set.has(name)) {
             return true;
         }
-        for (var i = 0, iz = this.through.length; i < iz; ++i) {
+        for (let i = 0, iz = this.through.length; i < iz; ++i) {
             if (this.through[i].identifier.name === name) {
                 return true;
             }
@@ -473,9 +473,9 @@ export class GlobalScope extends Scope {
     }
 
     __close(scopeManager) {
-        let implicit = [];
+        const implicit = [];
         for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            let ref = this.__left[i];
+            const ref = this.__left[i];
             if (ref.__maybeImplicitGlobal && !this.set.has(ref.identifier.name)) {
                 implicit.push(ref.__maybeImplicitGlobal);
             }
@@ -483,16 +483,16 @@ export class GlobalScope extends Scope {
 
         // create an implicit global variable from assignment expression
         for (let i = 0, iz = implicit.length; i < iz; ++i) {
-            let info = implicit[i];
+            const info = implicit[i];
             this.__defineImplicit(info.pattern,
-                    new Definition(
-                        Variable.ImplicitGlobalVariable,
-                        info.pattern,
-                        info.node,
-                        null,
-                        null,
-                        null
-                    ));
+                new Definition(
+                    Variable.ImplicitGlobalVariable,
+                    info.pattern,
+                    info.node,
+                    null,
+                    null,
+                    null
+                ));
 
         }
 
@@ -504,11 +504,11 @@ export class GlobalScope extends Scope {
     __defineImplicit(node, def) {
         if (node && node.type === Syntax.Identifier) {
             this.__defineGeneric(
-                    node.name,
-                    this.implicit.set,
-                    this.implicit.variables,
-                    node,
-                    def);
+                node.name,
+                this.implicit.set,
+                this.implicit.variables,
+                node,
+                def);
         }
     }
 }
@@ -523,14 +523,14 @@ export class FunctionExpressionNameScope extends Scope {
     constructor(scopeManager, upperScope, block) {
         super(scopeManager, 'function-expression-name', upperScope, block, false);
         this.__define(block.id,
-                new Definition(
-                    Variable.FunctionName,
-                    block.id,
-                    block,
-                    null,
-                    null,
-                    null
-                ));
+            new Definition(
+                Variable.FunctionName,
+                block.id,
+                block,
+                null,
+                null,
+                null
+            ));
         this.functionExpressionScope = true;
     }
 }
@@ -552,7 +552,7 @@ export class WithScope extends Scope {
         }
 
         for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            let ref = this.__left[i];
+            const ref = this.__left[i];
             ref.tainted = true;
             this.__delegateToUpperScope(ref);
         }
@@ -608,7 +608,7 @@ export class FunctionScope extends Scope {
             return true;
         }
 
-        let variable = this.set.get('arguments');
+        const variable = this.set.get('arguments');
         assert(variable, 'Always have arguments variable.');
         return variable.tainted || variable.references.length  !== 0;
     }
@@ -622,11 +622,11 @@ export class FunctionScope extends Scope {
 
     __defineArguments() {
         this.__defineGeneric(
-                'arguments',
-                this.set,
-                this.variables,
-                null,
-                null);
+            'arguments',
+            this.set,
+            this.variables,
+            null,
+            null);
         this.taints.set('arguments', true);
     }
 }

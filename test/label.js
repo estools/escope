@@ -27,7 +27,7 @@ import { analyze } from '..';
 
 describe('label', function() {
     it('should not create variables', function() {
-        const ast = parse(`function bar() { q: for(;;) { break q; } }`);
+        const ast = parse('function bar() { q: for(;;) { break q; } }');
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(2);

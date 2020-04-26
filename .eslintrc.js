@@ -45,10 +45,6 @@ module.exports = {
         'brace-style': ['error', '1tbs', { allowSingleLine: true }],
         'prefer-template': ['error']
     },
-    ecmaFeatures: {
-        jsx: false,
-        modules: true
-    },
     env: {
         node: true,
         es6: true

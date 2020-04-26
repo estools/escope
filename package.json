@@ -49,10 +49,10 @@
   },
   "license": "BSD-2-Clause",
   "nyc": {
-    "branches": 100,
-    "lines": 100,
-    "functions": 100,
-    "statements": 100,
+    "branches": 14,
+    "lines": 53,
+    "functions": 57,
+    "statements": 50,
     "reporter": [
       "html",
       "text"

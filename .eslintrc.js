@@ -23,16 +23,6 @@ module.exports = {
         }
     }],
     rules: {
-        eqeqeq: 0,
-        'no-use-before-define': 0,
-        'no-shadow': 0,
-        'no-new': 0,
-        'no-underscore-dangle': 0,
-        'no-multi-spaces': 0,
-        'no-native-reassign': 0,
-        'no-loop-func': 0,
-        'no-lone-blocks': 0,
-
         semi: ['error'],
         indent: ['error', 4, { SwitchCase: 1 }],
         'prefer-const': ['error'],

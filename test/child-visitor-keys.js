@@ -22,7 +22,7 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import esprima from 'esprima';
+import * as esprima from 'esprima';
 import { analyze } from '..';
 
 describe('childVisitorKeys option', function() {

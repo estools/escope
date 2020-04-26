@@ -109,7 +109,7 @@ describe('export declaration', function() {
     });
 
     it('should refer exported references#1', function() {
-        const ast = espree('export {x};', { sourceType: 'module' });
+        const ast = espree('var x = 5; export {x};', { sourceType: 'module' });
 
         const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
@@ -120,13 +120,13 @@ describe('export declaration', function() {
 
         const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
-        expect(scope.variables).to.have.length(0);
-        expect(scope.references).to.have.length(1);
+        expect(scope.variables).to.have.length(1);
+        expect(scope.references).to.have.length(2);
         expect(scope.references[0].identifier.name).to.be.equal('x');
     });
 
     it('should refer exported references#2', function() {
-        const ast = espree('export {v as x};', { sourceType: 'module' });
+        const ast = espree('var v = 5; export {v as x};', { sourceType: 'module' });
 
         const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
@@ -137,8 +137,8 @@ describe('export declaration', function() {
 
         const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
-        expect(scope.variables).to.have.length(0);
-        expect(scope.references).to.have.length(1);
+        expect(scope.variables).to.have.length(1);
+        expect(scope.references).to.have.length(2);
         expect(scope.references[0].identifier.name).to.be.equal('v');
     });
 

@@ -3,3 +3,4 @@ lib
 
 !.eslintrc.js
 third_party
+coverage

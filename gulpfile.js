@@ -25,41 +25,12 @@
 'use strict';
 
 const gulp = require('gulp'),
-    mocha = require('gulp-mocha'),
-    babel = require('gulp-babel'),
     git = require('gulp-git'),
     bump = require('gulp-bump'),
     filter = require('gulp-filter'),
     tagVersion = require('gulp-tag-version'),
-    sourcemaps = require('gulp-sourcemaps'),
-    plumber = require('gulp-plumber'),
     source = require('vinyl-source-stream'),
-    browserify = require('browserify'),
-    lazypipe = require('lazypipe'),
-    fs = require('fs');
-
-require('babel-register')({
-    only: /escope\/(src|test)\//
-});
-
-const TEST = [ 'test/*.js' ];
-const SOURCE = [ 'src/**/*.js' ];
-
-const BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
-
-const build = lazypipe()
-    .pipe(sourcemaps.init)
-    .pipe(babel, BABEL_OPTIONS)
-    .pipe(sourcemaps.write)
-    .pipe(gulp.dest, 'lib');
-
-gulp.task('build-for-watch', function () {
-    return gulp.src(SOURCE).pipe(plumber()).pipe(build());
-});
-
-gulp.task('build', function () {
-    return gulp.src(SOURCE).pipe(build());
-});
+    browserify = require('browserify');
 
 gulp.task('browserify', [ 'build' ], function () {
     return browserify({
@@ -68,18 +39,6 @@ gulp.task('browserify', [ 'build' ], function () {
         .bundle()
         .pipe(source('bundle.js'))
         .pipe(gulp.dest('build'));
-});
-
-gulp.task('test', [ 'build' ], function () {
-    return gulp.src(TEST)
-        .pipe(mocha({
-            reporter: 'spec',
-            timeout: 100000 // 100s
-        }));
-});
-
-gulp.task('watch', [ 'build-for-watch' ], function () {
-    gulp.watch(SOURCE, [ 'build-for-watch' ]);
 });
 
 /**
@@ -116,6 +75,3 @@ function inc(importance) {
 gulp.task('patch', [ 'build' ], function () { return inc('patch'); });
 gulp.task('minor', [ 'build' ], function () { return inc('minor'); });
 gulp.task('major', [ 'build' ], function () { return inc('major'); });
-
-gulp.task('travis', [ 'test' ]);
-gulp.task('default', [ 'travis' ]);

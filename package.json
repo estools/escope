@@ -23,36 +23,50 @@
     "url": "https://github.com/estools/escope.git"
   },
   "dependencies": {
-    "esrecurse": "^4.1.0",
-    "estraverse": "^4.1.1"
+    "esrecurse": "^4.2.1",
+    "estraverse": "^5.1.0"
   },
   "devDependencies": {
-    "babel": "^6.3.26",
-    "babel-preset-es2015": "^6.3.13",
-    "babel-register": "^6.3.13",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/register": "^7.9.0",
     "browserify": "^14.4.0",
-    "chai": "^4.0.2",
+    "chai": "^4.2.0",
     "eslint": "^6.8.0",
-    "espree": "^3.1.1",
-    "esprima": "^3.0.0",
-    "gulp": "^3.9.0",
-    "gulp-babel": "^6.1.1",
-    "gulp-bump": "^2.7.0",
-    "gulp-espower": "^1.0.2",
-    "gulp-filter": "^5.0.0",
-    "gulp-git": "^2.4.1",
-    "gulp-mocha": "^3.0.0",
-    "gulp-plumber": "^1.0.1",
-    "gulp-sourcemaps": "^2.6.0",
-    "gulp-tag-version": "^1.3.0",
-    "jsdoc": "^3.4.0",
-    "lazypipe": "^1.0.1",
-    "vinyl-source-stream": "^1.1.0"
+    "espree": "^6.2.1",
+    "esprima": "^4.0.1",
+    "gulp": "^4.0.2",
+    "gulp-bump": "^3.1.3",
+    "gulp-espower": "^1.1.0",
+    "gulp-filter": "^6.0.0",
+    "gulp-git": "^2.10.1",
+    "gulp-tag-version": "^1.3.1",
+    "jsdoc": "^3.6.4",
+    "mocha": "^7.1.2",
+    "nyc": "^15.0.1",
+    "vinyl-source-stream": "^2.0.0"
   },
   "license": "BSD-2-Clause",
+  "nyc": {
+    "branches": 100,
+    "lines": 100,
+    "functions": 100,
+    "statements": 100,
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "exclude": [
+      "test",
+      "third_party"
+    ]
+  },
   "scripts": {
-    "test": "gulp travis",
-    "unit-test": "gulp test",
+    "build-watch": "babel src/**/*.js --out-dir lib --source-maps --watch",
+    "build": "babel src/**/*.js --out-dir lib --source-maps",
+    "unit-test": "nyc mocha --require @babel/register test/*.js --timeout 100000",
+    "test": "npm run build && npm run unit-test",
     "lint": "eslint .",
     "jsdoc": "jsdoc src/*.js README.md"
   }

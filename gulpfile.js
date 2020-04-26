@@ -36,7 +36,6 @@ var gulp = require('gulp'),
     source = require('vinyl-source-stream'),
     browserify = require('browserify'),
     lazypipe = require('lazypipe'),
-    eslint = require('gulp-eslint'),
     fs = require('fs');
 
 require('babel-register')({
@@ -45,29 +44,6 @@ require('babel-register')({
 
 var TEST = [ 'test/*.js' ];
 var SOURCE = [ 'src/**/*.js' ];
-
-var ESLINT_OPTION = {
-    rules: {
-        'quotes': 0,
-        'eqeqeq': 0,
-        'no-use-before-define': 0,
-        'no-shadow': 0,
-        'no-new': 0,
-        'no-underscore-dangle': 0,
-        'no-multi-spaces': 0,
-        'no-native-reassign': 0,
-        'no-loop-func': 0,
-        'no-lone-blocks': 0
-    },
-    ecmaFeatures: {
-        jsx: false,
-        modules: true
-    },
-    env: {
-        node: true,
-        es6: true
-    }
-};
 
 var BABEL_OPTIONS = JSON.parse(fs.readFileSync('.babelrc', { encoding: 'utf8' }));
 
@@ -104,14 +80,6 @@ gulp.task('test', [ 'build' ], function () {
 
 gulp.task('watch', [ 'build-for-watch' ], function () {
     gulp.watch(SOURCE, [ 'build-for-watch' ]);
-});
-
-// Currently, not works for ES6.
-gulp.task('lint', function () {
-    return gulp.src(SOURCE)
-        .pipe(eslint(ESLINT_OPTION))
-        .pipe(eslint.formatEach('stylish', process.stderr))
-        .pipe(eslint.failOnError());
 });
 
 /**

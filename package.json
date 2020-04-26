@@ -2,6 +2,7 @@
   "name": "escope",
   "description": "ECMAScript scope analyzer",
   "homepage": "http://github.com/estools/escope",
+  "bugs": "http://github.com/estools/escope/issues",
   "main": "lib/index.js",
   "files": [
     "lib"
@@ -31,12 +32,12 @@
     "babel-register": "^6.3.13",
     "browserify": "^14.4.0",
     "chai": "^4.0.2",
+    "eslint": "^6.8.0",
     "espree": "^3.1.1",
     "esprima": "^3.0.0",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
     "gulp-bump": "^2.7.0",
-    "gulp-eslint": "^4.0.0",
     "gulp-espower": "^1.0.2",
     "gulp-filter": "^5.0.0",
     "gulp-git": "^2.4.1",
@@ -52,7 +53,7 @@
   "scripts": {
     "test": "gulp travis",
     "unit-test": "gulp test",
-    "lint": "gulp lint",
+    "lint": "eslint .",
     "jsdoc": "jsdoc src/*.js README.md"
   }
 }

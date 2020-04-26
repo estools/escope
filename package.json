@@ -11,13 +11,12 @@
   "engines": {
     "node": ">=4.0"
   },
-  "maintainers": [
-    {
-      "name": "Yusuke Suzuki",
-      "email": "utatane.tea@gmail.com",
-      "web": "http://github.com/Constellation"
-    }
-  ],
+  "author": {
+    "name": "Yusuke Suzuki",
+    "email": "utatane.tea@gmail.com",
+    "web": "http://github.com/Constellation"
+  },
+  "contributors": [],
   "keywords": ["scope", "analysis"],
   "repository": {
     "type": "git",

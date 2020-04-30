@@ -136,8 +136,7 @@ export default class ScopeManager {
                 }
             }
         } else {
-            for (let i = 0, iz = scopes.length; i < iz; ++i) {
-                const scope = scopes[i];
+            for (const scope of scopes) {
                 if (predicate(scope)) {
                     return scope;
                 }

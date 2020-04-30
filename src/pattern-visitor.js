@@ -73,8 +73,7 @@ export default class PatternVisitor extends esrecurse.Visitor {
     }
 
     ArrayPattern(pattern) {
-        for (let i = 0, iz = pattern.elements.length; i < iz; ++i) {
-            const element = pattern.elements[i];
+        for (const element of pattern.elements) {
             this.visit(element);
         }
     }

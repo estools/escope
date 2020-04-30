@@ -508,8 +508,8 @@ export default class Referencer extends esrecurse.Visitor {
             this.scopeManager.__nestSwitchScope(node);
         }
 
-        for (let i = 0, iz = node.cases.length; i < iz; ++i) {
-            this.visit(node.cases[i]);
+        for (const cse of node.cases) {
+            this.visit(cse);
         }
 
         this.close(node);

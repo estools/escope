@@ -67,8 +67,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
 
     // Search 'use strict' directive.
     if (useDirective) {
-        for (let i = 0, iz = body.body.length; i < iz; ++i) {
-            const stmt = body.body[i];
+        for (const stmt of body.body) {
             if (stmt.type !== Syntax.DirectiveStatement) {
                 break;
             }
@@ -77,8 +76,7 @@ function isStrictScope(scope, block, isMethodDefinition, useDirective) {
             }
         }
     } else {
-        for (let i = 0, iz = body.body.length; i < iz; ++i) {
-            const stmt = body.body[i];
+        for (const stmt of body.body) {
             if (stmt.type !== Syntax.ExpressionStatement) {
                 break;
             }
@@ -280,8 +278,7 @@ export default class Scope {
         }
 
         // Try Resolving all references in this scope.
-        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            const ref = this.__left[i];
+        for (const ref of this.__left) {
             closeRef.call(this, ref);
         }
         this.__left = null;
@@ -403,8 +400,7 @@ export default class Scope {
     resolve(ident) {
         assert(this.__isClosed(), 'Scope should be closed.');
         assert(ident.type === Syntax.Identifier, 'Target should be identifier.');
-        for (let i = 0, iz = this.references.length; i < iz; ++i) {
-            const ref = this.references[i];
+        for (const ref of this.references) {
             if (ref.identifier === ident) {
                 return ref;
             }
@@ -443,8 +439,8 @@ export default class Scope {
         if (this.set.has(name)) {
             return true;
         }
-        for (let i = 0, iz = this.through.length; i < iz; ++i) {
-            if (this.through[i].identifier.name === name) {
+        for (const thrgh of this.through) {
+            if (thrgh.identifier.name === name) {
                 return true;
             }
         }
@@ -469,16 +465,14 @@ export class GlobalScope extends Scope {
 
     __close(scopeManager) {
         const implicit = [];
-        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            const ref = this.__left[i];
+        for (const ref of this.__left) {
             if (ref.__maybeImplicitGlobal && !this.set.has(ref.identifier.name)) {
                 implicit.push(ref.__maybeImplicitGlobal);
             }
         }
 
         // create an implicit global variable from assignment expression
-        for (let i = 0, iz = implicit.length; i < iz; ++i) {
-            const info = implicit[i];
+        for (const info of implicit) {
             this.__defineImplicit(info.pattern,
                 new Definition(
                     Variable.ImplicitGlobalVariable,
@@ -546,8 +540,7 @@ export class WithScope extends Scope {
             return super.__close(scopeManager);
         }
 
-        for (let i = 0, iz = this.__left.length; i < iz; ++i) {
-            const ref = this.__left[i];
+        for (const ref of this.__left) {
             ref.tainted = true;
             this.__delegateToUpperScope(ref);
         }

@@ -24,9 +24,9 @@
 
 import { Syntax } from 'estraverse';
 
-import Reference from './reference';
-import Variable from './variable';
-import Definition from './definition';
+import Reference from './reference.js';
+import Variable from './variable.js';
+import Definition from './definition.js';
 import assert from 'assert';
 
 function isStrictScope(scope, block, isMethodDefinition, useDirective) {

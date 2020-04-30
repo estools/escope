@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ES6 default parameters:', function() {
     describe('a default parameter creates a writable reference for its initialization:', function() {

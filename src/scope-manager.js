@@ -22,7 +22,7 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// import Scope from './scope';
+// import Scope from './scope.js';
 import assert from 'assert';
 
 import {

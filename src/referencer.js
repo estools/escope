@@ -23,10 +23,10 @@
 */
 import { Syntax } from 'estraverse';
 import esrecurse from 'esrecurse';
-import Reference from './reference';
-import Variable from './variable';
-import PatternVisitor from './pattern-visitor';
-import { ParameterDefinition, Definition } from './definition';
+import Reference from './reference.js';
+import Variable from './variable.js';
+import PatternVisitor from './pattern-visitor.js';
+import { ParameterDefinition, Definition } from './definition.js';
 import assert from 'assert';
 
 function traverseIdentifierInPattern(options, rootPattern, referencer, callback) {

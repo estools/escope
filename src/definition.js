@@ -22,7 +22,7 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import Variable from './variable';
+import Variable from './variable.js';
 
 /**
  * @class Definition

@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('nodejsScope option', function() {
     it('creates a function scope following the global scope immediately', function() {

@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('ES6 arrow function expression', function() {
     it('materialize scope for arrow function expression', function() {

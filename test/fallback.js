@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import * as esprima from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('fallback option', function() {
     it('should raise an error when it encountered an unknown node if no fallback.', function() {

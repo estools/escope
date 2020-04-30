@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('ES6 block scope', function() {
     it('let is materialized in ES6 block scope#1', function() {

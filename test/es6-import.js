@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('import declaration', function() {
     // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-static-and-runtme-semantics-module-records

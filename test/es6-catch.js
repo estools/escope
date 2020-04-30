@@ -22,7 +22,7 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('ES6 catch', function() {
     it('takes binding pattern', function() {

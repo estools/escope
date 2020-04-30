@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('object expression', function() {
     it('doesn\'t require property type', function() {

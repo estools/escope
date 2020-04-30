@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import * as esprima from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('childVisitorKeys option', function() {
     it('should handle as a known node if the childVisitorKeys option was given.', function() {

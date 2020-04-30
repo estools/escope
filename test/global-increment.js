@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('global increment', function() {
     it('becomes read/write', function() {

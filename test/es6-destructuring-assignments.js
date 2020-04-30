@@ -23,8 +23,8 @@
 
 import { expect } from 'chai';
 import * as harmony from 'esprima';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ES6 destructuring assignments', function() {
     it('Pattern in var in ForInStatement', function() {

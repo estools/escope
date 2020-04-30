@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('ES6 iteration scope', function() {
     it('let materialize iteration scope for ForInStatement#1', function() {

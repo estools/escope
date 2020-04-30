@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse as parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('function name', function() {
     it('should create its special scope', function() {

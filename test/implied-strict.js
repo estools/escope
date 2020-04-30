@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('impliedStrict option', function() {
     it('ensures all user scopes are strict if ecmaVersion >= 5', function() {

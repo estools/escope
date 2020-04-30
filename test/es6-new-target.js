@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { analyze } from '..';
-import parse from '../third_party/espree';
+import { analyze } from '../src/index.js';
+import parse from '../third_party/espree.js';
 
 describe('ES6 new.target', function() {
     it('should not make references of new.target', function() {

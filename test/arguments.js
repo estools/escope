@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import * as esprima from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('arguments', function() {
     it('arguments are correctly materialized', function() {

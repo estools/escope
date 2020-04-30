@@ -23,8 +23,8 @@
 
 import { expect } from 'chai';
 import { visit } from 'esrecurse';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ScopeManager.prototype.getDeclaredVariables', function() {
     const verify = (ast, type, expectedNamesList) => {

@@ -23,8 +23,8 @@
 
 import { expect } from 'chai';
 import { parse as esprima } from 'esprima';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ES6 rest arguments', function() {
     it('materialize rest argument in scope (esprima: rest property of FunctionDeclaration)', function() {

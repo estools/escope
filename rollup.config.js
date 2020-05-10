@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import polyfills from 'rollup-plugin-node-polyfills';
 
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 
 /**
  * @external RollupConfig
@@ -39,7 +39,9 @@ function getRollupObject ({ minifying, format = 'umd' } = {}) {
                     'estraverse/estraverse.js': ['Syntax']
                 }
             }),
-            babel()
+            babel({
+                babelHelpers: 'bundled'
+            })
         ]
     };
     if (minifying) {

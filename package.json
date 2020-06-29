@@ -32,25 +32,25 @@
     "estraverse": "^5.1.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.6",
-    "@babel/preset-env": "^7.9.6",
-    "@babel/register": "^7.9.0",
-    "@rollup/plugin-babel": "^5.0.0",
-    "@rollup/plugin-commonjs": "^11.1.0",
-    "@rollup/plugin-json": "^4.0.3",
-    "@rollup/plugin-node-resolve": "^7.1.3",
+    "@babel/cli": "^7.10.3",
+    "@babel/core": "^7.10.3",
+    "@babel/preset-env": "^7.10.3",
+    "@babel/register": "^7.10.3",
+    "@rollup/plugin-babel": "^5.0.4",
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
     "babel-plugin-transform-es2017-object-entries": "0.0.5",
     "chai": "^4.2.0",
-    "eslint": "^7.0.0",
-    "espree": "^7.0.0",
+    "eslint": "^7.3.1",
+    "espree": "^7.1.0",
     "esprima": "^4.0.1",
     "jsdoc": "^3.6.4",
-    "mocha": "^7.1.2",
-    "nyc": "^15.0.1",
-    "rollup": "^2.8.2",
+    "mocha": "^8.0.1",
+    "nyc": "^15.1.0",
+    "rollup": "^2.18.1",
     "rollup-plugin-node-polyfills": "^0.2.1",
-    "rollup-plugin-terser": "^5.3.0"
+    "rollup-plugin-terser": "^6.1.0"
   },
   "license": "BSD-2-Clause",
   "nyc": {
@@ -72,7 +72,7 @@
     "build-watch": "babel src/**/*.js --out-dir lib --source-maps --watch",
     "build": "babel src/**/*.js --out-dir lib --source-maps",
     "unit-test": "nyc mocha --require @babel/register test/*.js --timeout 100000",
-    "test": "npm run build && npm run unit-test",
+    "test": "npm run build && npm run unit-test && npm run lint",
     "lint": "eslint .",
     "jsdoc": "jsdoc src/*.js README.md"
   }

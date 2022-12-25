@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { parse } from '../third_party/esprima';
-import { analyze } from '..';
+import { parse } from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('ES6 arrow function expression', function() {
     it('materialize scope for arrow function expression', function() {
@@ -35,16 +35,16 @@ describe('ES6 arrow function expression', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('ArrowFunctionExpression');
         expect(scope.isStrict).to.be.true;
@@ -55,18 +55,18 @@ describe('ES6 arrow function expression', function() {
     });
 
     it('generate bindings for parameters', function() {
-        const ast = parse(`var arrow = (a, b, c, d) => {}`);
+        const ast = parse('var arrow = (a, b, c, d) => {}');
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('ArrowFunctionExpression');
         expect(scope.isStrict).to.be.true;

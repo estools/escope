@@ -22,9 +22,9 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-var espree = require('espree');
+import espree from 'espree';
 
-module.exports = function (code) {
+export default function (code) {
     return espree.parse(code, {
 
         // attach range information to each node
@@ -49,8 +49,8 @@ module.exports = function (code) {
 
         // enable es6 features.
         ecmaVersion: 6,
-        sourceType: "module"
+        sourceType: 'module'
     });
-};
+}
 
 /* vim: set sw=4 ts=4 et tw=80 : */

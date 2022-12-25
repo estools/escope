@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { parse } from '../third_party/esprima';
-import { analyze } from '..';
+import { parse } from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('ES6 switch', function() {
     it('materialize scope', function() {
@@ -40,10 +40,10 @@ describe('ES6 switch', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
@@ -51,7 +51,7 @@ describe('ES6 switch', function() {
         expect(scope.references).to.have.length(1);
         expect(scope.references[0].identifier.name).to.be.equal('ok');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('switch');
         expect(scope.block.type).to.be.equal('SwitchStatement');
         expect(scope.isStrict).to.be.false;

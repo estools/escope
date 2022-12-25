@@ -22,9 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { analyze } from '..';
-
-const parse = require('../third_party/espree');
+import { analyze } from '../src/index.js';
+import parse from '../third_party/espree.js';
 
 describe('ES6 new.target', function() {
     it('should not make references of new.target', function() {
@@ -36,10 +35,10 @@ describe('ES6 new.target', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        const scope = scopeManager.scopes[2];
+        const [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionExpression');
         expect(scope.isStrict).to.be.true;

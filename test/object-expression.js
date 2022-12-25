@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('object expression', function() {
     it('doesn\'t require property type', function() {
@@ -34,7 +34,7 @@ describe('object expression', function() {
             }]
         };
 
-        const scope = analyze(ast).scopes[0];
+        const [scope] = analyze(ast).scopes;
         expect(scope.variables).to.have.length(1);
         expect(scope.references).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal('a');

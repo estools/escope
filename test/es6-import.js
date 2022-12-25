@@ -22,22 +22,22 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('import declaration', function() {
     // http://people.mozilla.org/~jorendorff/es6-draft.html#sec-static-and-runtme-semantics-module-records
     it('should import names from source', function() {
-        const ast = espree(`import v from "mod";`, {sourceType: 'module'});
+        const ast = espree('import v from "mod";', { sourceType: 'module' });
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
@@ -47,17 +47,17 @@ describe('import declaration', function() {
     });
 
     it('should import namespaces', function() {
-        const ast = espree( `import * as ns from "mod";`, {sourceType: 'module'
+        const ast = espree( 'import * as ns from "mod";', { sourceType: 'module'
         });
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
@@ -67,17 +67,17 @@ describe('import declaration', function() {
     });
 
     it('should import insided names#1', function() {
-        const ast = espree(`import {x} from "mod";`, {sourceType: 'module'
+        const ast = espree('import {x} from "mod";', { sourceType: 'module'
         });
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);
@@ -87,16 +87,16 @@ describe('import declaration', function() {
     });
 
     it('should import insided names#2', function() {
-        const ast = espree(`import {x as v} from "mod";`, {sourceType: 'module'});
+        const ast = espree('import {x as v} from "mod";', { sourceType: 'module' });
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(2);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        const scope = scopeManager.scopes[1];
+        const [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
         expect(scope.variables).to.have.length(1);

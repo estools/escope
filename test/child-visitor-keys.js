@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import esprima from 'esprima';
-import { analyze } from '..';
+import * as esprima from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('childVisitorKeys option', function() {
     it('should handle as a known node if the childVisitorKeys option was given.', function() {
@@ -55,7 +55,7 @@ describe('childVisitorKeys option', function() {
             argument: ast.body[0].declarations[0].init
         };
 
-        var result = analyze(
+        const result = analyze(
             ast,
             {
                 childVisitorKeys: {
@@ -65,7 +65,7 @@ describe('childVisitorKeys option', function() {
         );
 
         expect(result.scopes).to.have.length(1);
-        const globalScope = result.scopes[0];
+        const [globalScope] = result.scopes;
 
         // `bar` in TestNode has not been visited.
         expect(globalScope.through).to.have.length(0);
@@ -81,7 +81,7 @@ describe('childVisitorKeys option', function() {
             argument: ast.body[0].declarations[0].init
         };
 
-        var result = analyze(
+        const result = analyze(
             ast,
             {
                 childVisitorKeys: {
@@ -91,7 +91,7 @@ describe('childVisitorKeys option', function() {
         );
 
         expect(result.scopes).to.have.length(1);
-        const globalScope = result.scopes[0];
+        const [globalScope] = result.scopes;
 
         // `bar` in TestNode has been visited.
         expect(globalScope.through).to.have.length(1);

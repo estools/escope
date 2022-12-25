@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import esprima from 'esprima';
-import { analyze } from '..';
+import * as esprima from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('catch', function() {
     it('creates scope', function() {
@@ -37,19 +37,19 @@ describe('catch', function() {
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(3);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
 
-        let scope = scopeManager.scopes[1];
+        let [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
         expect(scope.isArgumentsMaterialized()).to.be.false;
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('catch');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('e');

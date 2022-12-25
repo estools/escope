@@ -22,9 +22,9 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import harmony from '../third_party/esprima';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import * as harmony from 'esprima';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ES6 destructuring assignments', function() {
     it('Pattern in var in ForInStatement', function() {
@@ -34,17 +34,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -75,17 +75,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);  // [global, function, TDZ, for]
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.equal('array');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.equal('TDZ');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.equal('a');
@@ -95,7 +95,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.references[0].identifier.name).to.equal('array');
         expect(scope.references[0].isWrite()).to.be.false;
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.equal('for');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.equal('a');
@@ -123,10 +123,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -134,7 +134,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left[0].identifier.name).to.equal('d');
         expect(scope.implicit.left[1].identifier.name).to.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.equal('arguments');
@@ -173,10 +173,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);  // [global, function, TDZ, for]
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -186,7 +186,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left[1].identifier.name).to.equal('d');
         expect(scope.implicit.left[1].from.type).to.equal('for');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.equal('TDZ');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.equal('a');
@@ -196,7 +196,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.references[0].identifier.name).to.equal('array');
         expect(scope.references[0].isWrite()).to.be.false;
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.equal('for');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.equal('a');
@@ -234,10 +234,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -246,7 +246,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left[1].identifier.name).to.equal('e');
         expect(scope.implicit.left[2].identifier.name).to.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.equal('arguments');
@@ -299,10 +299,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);  // [global, function, TDZ, for]
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -314,7 +314,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left[2].identifier.name).to.equal('e');
         expect(scope.implicit.left[2].from.type).to.equal('for');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.equal('TDZ');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.equal('a');
@@ -324,7 +324,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.references[0].identifier.name).to.equal('array');
         expect(scope.references[0].isWrite()).to.be.false;
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.equal('for');
         expect(scope.variables).to.have.length(3);
         expect(scope.variables[0].name).to.equal('a');
@@ -375,10 +375,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -386,7 +386,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left[0].identifier.name).to.equal('d');
         expect(scope.implicit.left[1].identifier.name).to.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.equal('arguments');
@@ -426,10 +426,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -437,7 +437,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left[0].identifier.name).to.equal('d');
         expect(scope.implicit.left[1].identifier.name).to.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.equal('arguments');
@@ -470,17 +470,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -511,17 +511,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        let scopeManager = analyze(ast, {ecmaVersion: 6});
+        let scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -550,17 +550,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        scopeManager = analyze(ast, {ecmaVersion: 6});
+        scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        scope = scopeManager.scopes[0];
+        [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
 
         expect(scope.variables).to.have.length(6);
@@ -606,17 +606,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('object');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -653,17 +653,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('object');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(8);
         const expectedVariableNames = [
@@ -705,10 +705,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -720,7 +720,7 @@ describe('ES6 destructuring assignments', function() {
             'array'
         ]);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -749,17 +749,17 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.equal('arguments');
@@ -789,10 +789,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        let scopeManager = analyze(ast, {ecmaVersion: 6});
+        let scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -804,7 +804,7 @@ describe('ES6 destructuring assignments', function() {
             'array'
         ]);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -830,10 +830,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        scopeManager = analyze(ast, {ecmaVersion: 6});
+        scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        scope = scopeManager.scopes[0];
+        [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -847,7 +847,7 @@ describe('ES6 destructuring assignments', function() {
             'array'
         ]);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
 
         expect(scope.variables).to.have.length(1);
@@ -878,10 +878,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -893,7 +893,7 @@ describe('ES6 destructuring assignments', function() {
             'array'
         ]);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.equal('arguments');
@@ -925,10 +925,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -940,7 +940,7 @@ describe('ES6 destructuring assignments', function() {
             'object'
         ]);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -974,10 +974,10 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
@@ -993,7 +993,7 @@ describe('ES6 destructuring assignments', function() {
             'object'
         ]);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -1022,10 +1022,10 @@ describe('ES6 destructuring assignments', function() {
             }(array));
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(1);
@@ -1033,7 +1033,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -1049,10 +1049,10 @@ describe('ES6 destructuring assignments', function() {
             }(array));
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(1);
@@ -1060,14 +1060,14 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(5);
         expect(scope.variables[0].name).to.be.equal('arguments');
         expect(scope.variables[1].name).to.be.equal('a');
         expect(scope.variables[2].name).to.be.equal('b');
         expect(scope.variables[3].name).to.be.equal('rest');
-        expect(scope.variables[3].defs[0].rest).to.be.false;
+        expect(scope.variables[3].defs[0].rest).to.be.true;
         expect(scope.variables[4].name).to.be.equal('rest2');
         expect(scope.variables[4].defs[0].rest).to.be.true;
         expect(scope.references).to.have.length(0);
@@ -1080,14 +1080,14 @@ describe('ES6 destructuring assignments', function() {
         // scopeManager = analyze(ast, {ecmaVersion: 6});
         // expect(scopeManager.scopes).to.have.length(2);
 
-        // scope = scopeManager.scopes[0];
+        // [scope] = scopeManager.scopes;
         // expect(scope.type).to.be.equal('global');
         // expect(scope.variables).to.have.length(0);
         // expect(scope.references).to.have.length(0);
         // expect(scope.implicit.left).to.have.length(1);
         // expect(scope.implicit.left[0].identifier.name).to.be.equal('array');
 
-        // scope = scopeManager.scopes[1];
+        // [, scope] = scopeManager.scopes;
         // expect(scope.type).to.be.equal('function');
 
         // expect(scope.variables).to.have.length(6);
@@ -1132,10 +1132,10 @@ describe('ES6 destructuring assignments', function() {
             }(object));
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(1);
@@ -1143,7 +1143,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('object');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(4);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -1165,10 +1165,10 @@ describe('ES6 destructuring assignments', function() {
             }(object));
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(1);
@@ -1176,7 +1176,7 @@ describe('ES6 destructuring assignments', function() {
         expect(scope.implicit.left).to.have.length(1);
         expect(scope.implicit.left[0].identifier.name).to.be.equal('object');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(8);
         const expectedVariableNames = [
@@ -1202,15 +1202,15 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(5);
         const expectedVariableNames = [
@@ -1244,15 +1244,15 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(5);
         const expectedVariableNames = [
@@ -1287,15 +1287,15 @@ describe('ES6 destructuring assignments', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.equal('global');
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.equal('function');
         expect(scope.variables).to.have.length(5);
         const expectedVariableNames = [

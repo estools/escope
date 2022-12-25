@@ -1,0 +1,8 @@
+node_modules
+lib
+
+!.eslintrc.js
+coverage
+
+# jsdoc
+out

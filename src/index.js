@@ -46,15 +46,13 @@
  * @module escope
  */
 
-/*jslint bitwise:true */
-
 import assert from 'assert';
 
-import ScopeManager from './scope-manager';
-import Referencer from './referencer';
-import Reference from './reference';
-import Variable from './variable';
-import Scope from './scope';
+import ScopeManager from './scope-manager.js';
+import Referencer from './referencer.js';
+import Reference from './reference.js';
+import Variable from './variable.js';
+import Scope from './scope.js';
 import { version } from '../package.json';
 
 function defaultOptions() {
@@ -71,24 +69,20 @@ function defaultOptions() {
 }
 
 function updateDeeply(target, override) {
-    var key, val;
-
     function isHashObject(target) {
         return typeof target === 'object' && target instanceof Object && !(target instanceof Array) && !(target instanceof RegExp);
     }
 
-    for (key in override) {
-        if (override.hasOwnProperty(key)) {
-            val = override[key];
-            if (isHashObject(val)) {
-                if (isHashObject(target[key])) {
-                    updateDeeply(target[key], val);
-                } else {
-                    target[key] = updateDeeply({}, val);
-                }
+    for (const [key, val] of Object.entries(override || {})) {
+        if (isHashObject(val)) {
+            // istanbul ignore if
+            if (isHashObject(target[key])) {
+                updateDeeply(target[key], val);
             } else {
-                target[key] = val;
+                target[key] = updateDeeply({}, val);
             }
+        } else {
+            target[key] = val;
         }
     }
     return target;
@@ -115,13 +109,11 @@ function updateDeeply(target, override) {
  * @return {ScopeManager}
  */
 export function analyze(tree, providedOptions) {
-    var scopeManager, referencer, options;
+    const options = updateDeeply(defaultOptions(), providedOptions);
 
-    options = updateDeeply(defaultOptions(), providedOptions);
+    const scopeManager = new ScopeManager(options);
 
-    scopeManager = new ScopeManager(options);
-
-    referencer = new Referencer(options, scopeManager);
+    const referencer = new Referencer(options, scopeManager);
     referencer.visit(tree);
 
     assert(scopeManager.__currentScope === null, 'currentScope should be null.');

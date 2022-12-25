@@ -23,8 +23,8 @@
 
 import { expect } from 'chai';
 import { visit } from 'esrecurse';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ScopeManager.prototype.getDeclaredVariables', function() {
     const verify = (ast, type, expectedNamesList) => {
@@ -206,7 +206,7 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+        { sourceType: 'module' }
         );
 
         verify(ast, 'ImportDeclaration', [
@@ -222,7 +222,7 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+        { sourceType: 'module' }
         );
 
         verify(ast, 'ImportSpecifier', [
@@ -237,7 +237,7 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+        { sourceType: 'module' }
         );
 
         verify(ast, 'ImportDefaultSpecifier', [
@@ -251,7 +251,7 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
             import "aaa";
             import * as a from "bbb";
             import b, {c, x as d} from "ccc";`,
-            {sourceType: 'module'}
+        { sourceType: 'module' }
         );
 
         verify(ast, 'ImportNamespaceSpecifier', [
@@ -261,7 +261,7 @@ describe('ScopeManager.prototype.getDeclaredVariables', function() {
 
 
     it('should not get duplicate even if it\'s declared twice', function() {
-        const ast = espree(`var a = 0, a = 1;`);
+        const ast = espree('var a = 0, a = 1;');
 
         verify(ast, 'VariableDeclaration', [
             ['a']

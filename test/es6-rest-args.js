@@ -22,9 +22,9 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { parse as esprima } from '../third_party/esprima';
-import espree from '../third_party/espree';
-import { analyze } from '..';
+import { parse as esprima } from 'esprima';
+import espree from '../third_party/espree.js';
+import { analyze } from '../src/index.js';
 
 describe('ES6 rest arguments', function() {
     it('materialize rest argument in scope (esprima: rest property of FunctionDeclaration)', function() {
@@ -34,16 +34,16 @@ describe('ES6 rest arguments', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal('arguments');
@@ -59,16 +59,16 @@ describe('ES6 rest arguments', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(1);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(2);
         expect(scope.variables[0].name).to.be.equal('arguments');

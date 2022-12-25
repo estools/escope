@@ -23,7 +23,7 @@
 
 import { expect } from 'chai';
 import { parse as parse } from 'esprima';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 
 describe('function name', function() {
     it('should create its special scope', function() {
@@ -34,14 +34,14 @@ describe('function name', function() {
 
         const scopeManager = analyze(ast);
         expect(scopeManager.scopes).to.have.length(3);
-        const globalScope = scopeManager.scopes[0];
+        const [globalScope] = scopeManager.scopes;
         expect(globalScope.type).to.be.equal('global');
         expect(globalScope.variables).to.have.length(0);
         expect(globalScope.references).to.have.length(0);
         expect(globalScope.isArgumentsMaterialized()).to.be.true;
 
         // Function expression name scope
-        let scope = scopeManager.scopes[1];
+        let [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function-expression-name');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('name');
@@ -50,7 +50,7 @@ describe('function name', function() {
         expect(scope.upper === globalScope).to.be.true;
 
         // Function scope
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.variables).to.have.length(1);
         expect(scope.variables[0].name).to.be.equal('arguments');

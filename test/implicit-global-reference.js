@@ -22,7 +22,7 @@
 
 
 import { expect } from 'chai';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 import { parse } from 'esprima';
 
 describe('implicit global reference', function() {

@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { parse } from '../third_party/esprima';
-import { analyze } from '..';
+import { parse } from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('impliedStrict option', function() {
     it('ensures all user scopes are strict if ecmaVersion >= 5', function() {
@@ -35,20 +35,20 @@ describe('impliedStrict option', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 5, impliedStrict: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 5, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;
@@ -59,15 +59,15 @@ describe('impliedStrict option', function() {
             function foo() {}
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 3, impliedStrict: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 3, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(2);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.false;
@@ -78,20 +78,20 @@ describe('impliedStrict option', function() {
             function foo() {}
         `);
 
-        let scopeManager = analyze(ast, {ecmaVersion: 5, nodejsScope: true, impliedStrict: true});
+        const scopeManager = analyze(ast, { ecmaVersion: 5, nodejsScope: true, impliedStrict: true });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;
@@ -100,22 +100,22 @@ describe('impliedStrict option', function() {
     it('omits a module global scope when ensuring all user scopes are strict', function() {
         const ast = parse(`
             function foo() {}`,
-            {sourceType: 'module'}
+        { sourceType: 'module' }
         );
 
-        let scopeManager = analyze(ast, {ecmaVersion: 6, impliedStrict: true, sourceType: 'module'});
+        const scopeManager = analyze(ast, { ecmaVersion: 6, impliedStrict: true, sourceType: 'module' });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('module');
         expect(scope.isStrict).to.be.true;
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionDeclaration');
         expect(scope.isStrict).to.be.true;

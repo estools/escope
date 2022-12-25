@@ -31,7 +31,7 @@ function getLast(xs) {
 
 export default class PatternVisitor extends esrecurse.Visitor {
     static isPattern(node) {
-        var nodeType = node.type;
+        const nodeType = node.type;
         return (
             nodeType === Syntax.Identifier ||
             nodeType === Syntax.ObjectPattern ||
@@ -73,9 +73,7 @@ export default class PatternVisitor extends esrecurse.Visitor {
     }
 
     ArrayPattern(pattern) {
-        var i, iz, element;
-        for (i = 0, iz = pattern.elements.length; i < iz; ++i) {
-            element = pattern.elements[i];
+        for (const element of pattern.elements) {
             this.visit(element);
         }
     }

@@ -22,7 +22,7 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-import Scope from './scope';
+// import Scope from './scope.js';
 import assert from 'assert';
 
 import {
@@ -107,8 +107,6 @@ export default class ScopeManager {
      * @return {Scope?}
      */
     acquire(node, inner) {
-        var scopes, scope, i, iz;
-
         function predicate(scope) {
             if (scope.type === 'function' && scope.functionExpressionScope) {
                 return false;
@@ -119,7 +117,7 @@ export default class ScopeManager {
             return true;
         }
 
-        scopes = this.__get(node);
+        const scopes = this.__get(node);
         if (!scopes || scopes.length === 0) {
             return null;
         }
@@ -131,15 +129,14 @@ export default class ScopeManager {
         }
 
         if (inner) {
-            for (i = scopes.length - 1; i >= 0; --i) {
-                scope = scopes[i];
+            for (let i = scopes.length - 1; i >= 0; --i) {
+                const scope = scopes[i];
                 if (predicate(scope)) {
                     return scope;
                 }
             }
         } else {
-            for (i = 0, iz = scopes.length; i < iz; ++i) {
-                scope = scopes[i];
+            for (const scope of scopes) {
                 if (predicate(scope)) {
                     return scope;
                 }
@@ -167,10 +164,9 @@ export default class ScopeManager {
      * @return {Scope?} upper scope for the node.
      */
     release(node, inner) {
-        var scopes, scope;
-        scopes = this.__get(node);
+        const scopes = this.__get(node);
         if (scopes && scopes.length) {
-            scope = scopes[0].upper;
+            const scope = scopes[0].upper;
             if (!scope) {
                 return null;
             }
@@ -196,7 +192,7 @@ export default class ScopeManager {
         return this.__nestScope(new GlobalScope(this, node));
     }
 
-    __nestBlockScope(node, isMethodDefinition) {
+    __nestBlockScope(node /* , isMethodDefinition */) {
         return this.__nestScope(new BlockScope(this, this.__currentScope, node));
     }
 

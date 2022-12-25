@@ -22,7 +22,7 @@
 
 
 import { expect } from 'chai';
-import { analyze } from '..';
+import { analyze } from '../src/index.js';
 import { parse } from 'esprima';
 
 describe('optimistic', function() {
@@ -37,7 +37,7 @@ describe('optimistic', function() {
             }
         `);
 
-        const { scopes } = analyze(ast, {optimistic: true});
+        const { scopes } = analyze(ast, { optimistic: true });
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [
@@ -67,7 +67,7 @@ describe('optimistic', function() {
             }
         `);
 
-        const { scopes } = analyze(ast, {optimistic: true});
+        const { scopes } = analyze(ast, { optimistic: true });
 
         expect(scopes.map(scope => scope.variables.map(variable => variable.name))).to.be.eql(
             [

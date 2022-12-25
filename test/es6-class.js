@@ -22,8 +22,8 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { expect } from 'chai';
-import { parse } from '../third_party/esprima';
-import { analyze } from '..';
+import { parse } from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('ES6 class', function() {
     it('declaration name creates class scope', function() {
@@ -35,10 +35,10 @@ describe('ES6 class', function() {
             new Derived();
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
@@ -48,7 +48,7 @@ describe('ES6 class', function() {
         expect(scope.references[0].identifier.name).to.be.equal('Base');
         expect(scope.references[1].identifier.name).to.be.equal('Derived');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('class');
         expect(scope.block.type).to.be.equal('ClassDeclaration');
         expect(scope.isStrict).to.be.true;
@@ -56,7 +56,7 @@ describe('ES6 class', function() {
         expect(scope.variables[0].name).to.be.equal('Derived');
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionExpression');
         expect(scope.isStrict).to.be.true;
@@ -73,10 +73,10 @@ describe('ES6 class', function() {
             });
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
@@ -84,7 +84,7 @@ describe('ES6 class', function() {
         expect(scope.references).to.have.length(1);
         expect(scope.references[0].identifier.name).to.be.equal('Base');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('class');
         expect(scope.block.type).to.be.equal('ClassExpression');
         expect(scope.isStrict).to.be.true;
@@ -92,7 +92,7 @@ describe('ES6 class', function() {
         expect(scope.variables[0].name).to.be.equal('Derived');
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionExpression');
     });
@@ -105,10 +105,10 @@ describe('ES6 class', function() {
             });
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
@@ -116,11 +116,11 @@ describe('ES6 class', function() {
         expect(scope.references).to.have.length(1);
         expect(scope.references[0].identifier.name).to.be.equal('Base');
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('class');
         expect(scope.block.type).to.be.equal('ClassExpression');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionExpression');
     });
@@ -139,15 +139,15 @@ describe('ES6 class', function() {
             }());
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(5);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('function');
         expect(scope.block.type).to.be.equal('FunctionExpression');
         expect(scope.isStrict).to.be.false;
@@ -157,7 +157,7 @@ describe('ES6 class', function() {
         expect(scope.references).to.have.length(1);
         expect(scope.references[0].identifier.name).to.be.equal('yuyushiki');
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('class');
         expect(scope.block.type).to.be.equal('ClassExpression');
         expect(scope.isStrict).to.be.true;
@@ -177,10 +177,10 @@ describe('ES6 class', function() {
             let shoe = new Shoe();
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(3);
 
-        const scope = scopeManager.scopes[0];
+        const [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;

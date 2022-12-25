@@ -21,8 +21,8 @@
 //  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import { expect } from 'chai';
-import { parse } from '../third_party/esprima';
-import { analyze } from '..';
+import { parse } from 'esprima';
+import { analyze } from '../src/index.js';
 
 describe('ES6 catch', function() {
     it('takes binding pattern', function() {
@@ -38,24 +38,24 @@ describe('ES6 catch', function() {
             }
         `);
 
-        const scopeManager = analyze(ast, {ecmaVersion: 6});
+        const scopeManager = analyze(ast, { ecmaVersion: 6 });
         expect(scopeManager.scopes).to.have.length(4);
 
-        let scope = scopeManager.scopes[0];
+        let [scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('global');
         expect(scope.block.type).to.be.equal('Program');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[1];
+        [, scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.block.type).to.be.equal('BlockStatement');
         expect(scope.isStrict).to.be.false;
         expect(scope.variables).to.have.length(0);
         expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[2];
+        [, , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('catch');
         expect(scope.block.type).to.be.equal('CatchClause');
         expect(scope.isStrict).to.be.false;
@@ -70,7 +70,7 @@ describe('ES6 catch', function() {
         // expect(scope.variables[3].name).to.be.equal('d');
         // expect(scope.references).to.have.length(0);
 
-        scope = scopeManager.scopes[3];
+        [, , , scope] = scopeManager.scopes;
         expect(scope.type).to.be.equal('block');
         expect(scope.block.type).to.be.equal('BlockStatement');
         expect(scope.isStrict).to.be.false;

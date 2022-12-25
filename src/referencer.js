@@ -233,17 +233,7 @@ export default class Referencer extends esrecurse.Visitor {
     }
 
     visitClass(node) {
-        if (node.type === Syntax.ClassDeclaration) {
-            this.currentScope().__define(node.id,
-                    new Definition(
-                        Variable.ClassName,
-                        node.id,
-                        node,
-                        null,
-                        null,
-                        null
-                    ));
-        }
+        var innerVariable;
 
         // FIXME: Maybe consider TDZ.
         this.visit(node.superClass);
@@ -251,7 +241,7 @@ export default class Referencer extends esrecurse.Visitor {
         this.scopeManager.__nestClassScope(node);
 
         if (node.id) {
-            this.currentScope().__define(node.id,
+            innerVariable = this.currentScope().__define(node.id,
                     new Definition(
                         Variable.ClassName,
                         node.id,
@@ -261,6 +251,19 @@ export default class Referencer extends esrecurse.Visitor {
         this.visit(node.body);
 
         this.close(node);
+
+        if (node.type === Syntax.ClassDeclaration) {
+            this.currentScope().__define(node.id,
+                    new Definition(
+                        Variable.ClassName,
+                        node.id,
+                        node,
+                        null,
+                        null,
+                        null,
+                        innerVariable
+                    ));
+        }
     }
 
     visitProperty(node) {

@@ -351,11 +351,13 @@ export default class Scope {
         if (node) {
             variable.identifiers.push(node);
         }
+
+        return variable;
     }
 
     __define(node, def) {
         if (node && node.type === Syntax.Identifier) {
-            this.__defineGeneric(
+            return this.__defineGeneric(
                     node.name,
                     this.set,
                     this.variables,
@@ -503,7 +505,7 @@ export class GlobalScope extends Scope {
 
     __defineImplicit(node, def) {
         if (node && node.type === Syntax.Identifier) {
-            this.__defineGeneric(
+            return this.__defineGeneric(
                     node.name,
                     this.implicit.set,
                     this.implicit.variables,
